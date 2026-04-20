@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Card } from '../types'
 import { useWorkStore } from '../store'
+import { eventBus } from '@core/events/EventBus'
+import { WORK_EVENTS } from '../events'
+import { completeWorkFocusSession, interruptWorkFocusSession, startWorkFocusSession } from '../focus'
 
 interface Props {
   card: Card
@@ -8,12 +11,13 @@ interface Props {
 }
 
 export function CardDetailModal({ card, onClose }: Props) {
-  const { updateCard, deleteCard } = useWorkStore()
+  const { updateCard, deleteCard, currentFocusSession } = useWorkStore()
   const [title, setTitle] = useState(card.title)
   const [content, setContent] = useState(card.content ?? '')
   const [description, setDescription] = useState(card.description ?? '')
   const [saving, setSaving] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
+  const isActiveFocusTask = currentFocusSession?.taskId === card.id
 
   // Close on ESC
   useEffect(() => {
@@ -33,15 +37,21 @@ export function CardDetailModal({ card, onClose }: Props) {
         [title, description, content, card.id],
       )
     }
+    eventBus.emit(WORK_EVENTS.TASK_UPDATED, { taskId: card.id, title, description })
     setSaving(false)
     onClose()
   }
 
   const handleDelete = async () => {
+    if (isActiveFocusTask) {
+      await interruptWorkFocusSession()
+    }
+
     deleteCard(card.id)
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [card.id])
     }
+    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: card.id })
     onClose()
   }
 
@@ -87,6 +97,40 @@ export function CardDetailModal({ card, onClose }: Props) {
               placeholder="Descripción opcional..."
               className="w-full rounded-xl border border-border bg-surface-light/60 px-4 py-2.5 text-sm text-white/80 placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
+          </div>
+
+          <div className="rounded-xl border border-border bg-surface-light/50 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.16em] text-muted">Focus Engine</p>
+                <p className="mt-1 text-sm text-white/90">
+                  {isActiveFocusTask ? 'Esta tarea está en sesión activa.' : 'Convertí esta tarea en el foco actual.'}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => startWorkFocusSession(card.id)}
+                  disabled={isActiveFocusTask}
+                  className="rounded-xl border border-accent/30 px-3 py-2 text-xs text-accent-light transition-colors hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Start Focus
+                </button>
+                <button
+                  onClick={() => interruptWorkFocusSession()}
+                  disabled={!isActiveFocusTask}
+                  className="rounded-xl border border-warning/30 px-3 py-2 text-xs text-warning transition-colors hover:bg-warning/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Pause
+                </button>
+                <button
+                  onClick={() => completeWorkFocusSession()}
+                  disabled={!isActiveFocusTask}
+                  className="rounded-xl border border-success/30 px-3 py-2 text-xs text-success transition-colors hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Stop
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Content (rich text area) */}

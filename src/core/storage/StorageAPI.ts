@@ -38,9 +38,10 @@ const ALLOWED_TABLE_COLUMNS: Record<string, Set<string>> = {
   ]),
   work_boards: new Set(['id', 'name']),
   work_columns: new Set(['id', 'board_id', 'name', 'position']),
-  work_cards: new Set(['id', 'column_id', 'title', 'description', 'labels', 'due_date', 'position']),
+  work_cards: new Set(['id', 'column_id', 'title', 'description', 'labels', 'due_date', 'position', 'content']),
   work_notes: new Set(['id', 'title', 'content', 'tags', 'created_at', 'updated_at']),
   work_links: new Set(['id', 'title', 'url', 'category']),
+  work_focus_sessions: new Set(['id', 'task_id', 'start_time', 'end_time', 'duration', 'interrupted']),
 }
 
 function assertTableName(table: string): void {

@@ -4,7 +4,7 @@ import { useWorkStore } from './store'
 import { WORK_EVENTS } from './events'
 import { WorkDashboard } from './pages/WorkDashboard'
 import { WorkSummaryWidget } from './components/WorkSummaryWidget'
-import type { Board, Column, Card, Note, Link } from './types'
+import type { Board, Column, Card, Note, Link, FocusSession } from './types'
 
 const workPlugin: PluginManifest = {
   id: 'work',
@@ -69,6 +69,22 @@ const workPlugin: PluginManifest = {
       version: 3,
       up: `ALTER TABLE work_cards ADD COLUMN content TEXT DEFAULT '';`,
     },
+    {
+      version: 4,
+      up: `
+        CREATE TABLE IF NOT EXISTS work_focus_sessions (
+          id TEXT PRIMARY KEY,
+          task_id TEXT,
+          start_time INTEGER NOT NULL,
+          end_time INTEGER,
+          duration INTEGER,
+          interrupted INTEGER DEFAULT 0,
+          FOREIGN KEY (task_id) REFERENCES work_cards(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_work_focus_sessions_task_id ON work_focus_sessions(task_id);
+        CREATE INDEX IF NOT EXISTS idx_work_focus_sessions_start_time ON work_focus_sessions(start_time);
+      `,
+    },
   ],
 
   widgets: [
@@ -107,6 +123,7 @@ const workPlugin: PluginManifest = {
     const cardsRaw = await api.storage.query('SELECT * FROM work_cards ORDER BY position ASC') as any[]
     const notesRaw = await api.storage.query('SELECT * FROM work_notes ORDER BY updated_at DESC') as any[]
     const links = await api.storage.query('SELECT * FROM work_links') as Link[]
+    const focusSessionsRaw = await api.storage.query('SELECT * FROM work_focus_sessions ORDER BY start_time DESC') as any[]
 
     const cards: Card[] = cardsRaw.map((row) => ({
       id: row.id,
@@ -128,15 +145,31 @@ const workPlugin: PluginManifest = {
       updatedAt: row.updated_at,
     }))
 
+    const focusSessions: FocusSession[] = focusSessionsRaw.map((row) => ({
+      id: row.id,
+      taskId: row.task_id ?? null,
+      startTime: Number(row.start_time),
+      endTime: row.end_time == null ? undefined : Number(row.end_time),
+      duration: row.duration == null ? undefined : Number(row.duration),
+      interrupted: Boolean(row.interrupted),
+    }))
+
     const store = useWorkStore.getState()
     store.setBoards(boards)
     store.setColumns(columns)
     store.setCards(cards)
     store.setNotes(notes)
     store.setLinks(links)
+    store.setFocusSessions(focusSessions)
 
     api.events.on(WORK_EVENTS.TASK_COMPLETED, () => {
       api.gamification.addPoints(10, 'Tarea completada')
+    })
+    api.events.on(WORK_EVENTS.FOCUS_COMPLETED, () => {
+      api.gamification.addPoints(5, 'Sesión de foco completada')
+    })
+    api.events.on(WORK_EVENTS.FOCUS_INTERRUPTED, () => {
+      api.gamification.addPoints(-2, 'Sesión de foco interrumpida')
     })
   },
 }

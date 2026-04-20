@@ -1,15 +1,18 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card } from '../types'
-import { FileText } from 'lucide-react'
+import { FileText, Pause, Play } from 'lucide-react'
 
 interface Props {
   card: Card
   onDelete: (id: string) => void
   onOpen: (card: Card) => void
+  onStartFocus: (card: Card) => void
+  onStopFocus: () => void
+  isFocusActive: boolean
 }
 
-export function SortableCard({ card, onDelete, onOpen }: Props) {
+export function SortableCard({ card, onDelete, onOpen, onStartFocus, onStopFocus, isFocusActive }: Props) {
   const {
     attributes,
     listeners,
@@ -34,8 +37,7 @@ export function SortableCard({ card, onDelete, onOpen }: Props) {
       {...listeners}
       className="group rounded-lg border border-border/50 bg-surface p-3 animate-fade-in select-none touch-none"
       onClick={(e) => {
-        // Only open modal on direct click, not on drag end
-        if (!(e.target as HTMLElement).closest('[data-delete]')) {
+        if (!(e.target as HTMLElement).closest('[data-delete], [data-focus]')) {
           onOpen(card)
         }
       }}
@@ -62,6 +64,32 @@ export function SortableCard({ card, onDelete, onOpen }: Props) {
           <span className="truncate">{card.content.slice(0, 40)}</span>
         </div>
       )}
+      <div className="mt-3 flex items-center justify-between gap-2">
+        <span className={`text-[10px] uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
+          {isFocusActive ? 'En foco' : 'Listo para foco'}
+        </span>
+        <button
+          type="button"
+          data-focus="true"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation()
+            if (isFocusActive) {
+              onStopFocus()
+              return
+            }
+            onStartFocus(card)
+          }}
+          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            isFocusActive
+              ? 'bg-warning/15 text-warning hover:bg-warning/25'
+              : 'bg-accent/15 text-accent-light hover:bg-accent/25'
+          }`}
+        >
+          {isFocusActive ? <Pause size={12} /> : <Play size={12} />}
+          {isFocusActive ? 'Pause' : 'Start Focus'}
+        </button>
+      </div>
     </div>
   )
 }

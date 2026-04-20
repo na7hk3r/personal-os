@@ -20,6 +20,7 @@ import {
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
 import { WORK_EVENTS } from '../events'
+import { interruptWorkFocusSession, startWorkFocusSession } from '../focus'
 import { SortableCard } from './SortableCard'
 import { CardDetailModal } from './CardDetailModal'
 import type { Card } from '../types'
@@ -44,10 +45,13 @@ function ColumnDropZone({ id, className, children }: ColumnDropZoneProps) {
 }
 
 export function KanbanBoard() {
-  const { columns, cards, addCard, moveCard, deleteCard } = useWorkStore()
+  const { columns, cards, addCard, moveCard, deleteCard, currentFocusSession } = useWorkStore()
   const [newCardTitle, setNewCardTitle] = useState<Record<string, string>>({})
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
+
+  const isDoneColumn = (columnId: string) =>
+    columnId === 'col-done' || columns.some((column) => column.id === columnId && /hecho|done/i.test(column.name))
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -131,6 +135,14 @@ export function KanbanBoard() {
       fromColumn: draggedCard.columnId,
       toColumn: targetColumnId,
     })
+
+    if (!isDoneColumn(draggedCard.columnId) && isDoneColumn(targetColumnId)) {
+      eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
+        taskId: draggedCard.id,
+        title: draggedCard.title,
+        columnId: targetColumnId,
+      })
+    }
   }
 
   const handleAddCard = async (columnId: string) => {
@@ -166,10 +178,15 @@ export function KanbanBoard() {
   }
 
   const handleDeleteCard = async (id: string) => {
+    if (currentFocusSession?.taskId === id) {
+      await interruptWorkFocusSession()
+    }
+
     deleteCard(id)
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [id])
     }
+    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id })
   }
 
   const sortedColumns = [...columns].sort((a, b) => a.position - b.position)
@@ -215,6 +232,9 @@ export function KanbanBoard() {
                         card={card}
                         onDelete={handleDeleteCard}
                         onOpen={setSelectedCard}
+                        onStartFocus={(selected) => startWorkFocusSession(selected.id)}
+                        onStopFocus={() => interruptWorkFocusSession()}
+                        isFocusActive={currentFocusSession?.taskId === card.id}
                       />
                     ))}
 

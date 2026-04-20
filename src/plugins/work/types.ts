@@ -21,6 +21,15 @@ export interface Card {
   position: number
 }
 
+export interface FocusSession {
+  id: string
+  taskId: string | null
+  startTime: number
+  endTime?: number
+  duration?: number
+  interrupted: boolean
+}
+
 export interface Note {
   id: string
   title: string
