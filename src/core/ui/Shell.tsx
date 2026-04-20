@@ -1,12 +1,21 @@
+import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 
 export function Shell() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
+  const theme = useCoreStore((s) => s.settings.theme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme || 'default')
+  }, [theme])
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[radial-gradient(circle_at_top_left,_#17314e_0%,_#0e1723_42%,_#070d14_100%)] text-white">
+    <div
+      className="flex h-screen overflow-hidden text-white"
+      style={{ background: 'var(--bg-gradient)' }}
+    >
       <Sidebar />
       <main
         className={`flex-1 overflow-y-auto transition-all duration-200 ${

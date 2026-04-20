@@ -19,6 +19,15 @@ class PluginManager {
   private pages: PageDefinition[] = []
   private navItems: NavItemDefinition[] = []
 
+  constructor() {
+    // Wire up persistence: all plugin events are logged to SQLite via the EventBus callback
+    eventBus.setPersistenceCallback((event, payload, source) => {
+      storageAPI
+        .logEvent(event, source, (payload as Record<string, unknown>) ?? {})
+        .catch((err) => console.error('[PluginManager] Failed to persist event:', err))
+    })
+  }
+
   private upsertById<T extends { id: string }>(collection: T[], items: T[]): T[] {
     const map = new Map(collection.map((item) => [item.id, item]))
     for (const item of items) {
@@ -127,7 +136,7 @@ class PluginManager {
         migrate: (pid, migrations) => storageAPI.migrate(pid, migrations),
       },
       events: {
-        emit: (event, payload) => eventBus.emit(event, payload),
+        emit: (event, payload) => eventBus.emit(event, payload, { source: pluginId, persist: true }),
         on: (event, handler) => eventBus.on(event, handler),
         off: (event, handler) => eventBus.off(event, handler),
       },

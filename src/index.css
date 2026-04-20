@@ -2,21 +2,145 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --chart-grid: #334155;
-  --chart-axis: #94a3b8;
-  --chart-tooltip-bg: #1e1e2e;
-  --chart-tooltip-border: #334155;
-  --chart-weight: #7c3aed;
-  --chart-meal-good: #22c55e;
-  --chart-meal-warn: #eab308;
-  --chart-meal-bad: #ef4444;
-  --chart-smoking: #f97316;
+/* ========== DESIGN TOKENS — TEMA DEFAULT (dark) ========== */
+:root,
+[data-theme="default"] {
+  /* Backgrounds — RGB para compatibilidad con opacidades Tailwind */
+  --color-base:             7 13 20;       /* #070d14 */
+  --color-surface:          30 30 46;      /* #1e1e2e */
+  --color-surface-light:    42 42 62;      /* #2a2a3e */
+  --color-surface-lighter:  54 54 80;      /* #363650 */
 
-  --scrollbar-size: 6px;
-  --scrollbar-thumb: #3b3b56;
+  /* Accent */
+  --color-accent:           124 58 237;    /* #7c3aed */
+  --color-accent-light:     167 139 250;   /* #a78bfa */
+
+  /* Typography */
+  --color-text:             226 232 240;   /* #e2e8f0 */
+  --color-muted:            148 163 184;   /* #94a3b8 */
+
+  /* Border */
+  --color-border:           51 65 85;      /* #334155 */
+
+  /* Gradient del fondo principal */
+  --bg-gradient: radial-gradient(circle at top left, #17314e 0%, #0e1723 42%, #070d14 100%);
+
+  /* Chart (vars de CSS para Recharts) */
+  --chart-grid:           #334155;
+  --chart-axis:           #94a3b8;
+  --chart-tooltip-bg:     #1e1e2e;
+  --chart-tooltip-border: #334155;
+  --chart-weight:         #7c3aed;
+  --chart-meal-good:      #22c55e;
+  --chart-meal-warn:      #eab308;
+  --chart-meal-bad:       #ef4444;
+  --chart-smoking:        #f97316;
+
+  /* Scrollbars */
+  --scrollbar-size:        6px;
+  --scrollbar-thumb:       #3b3b56;
   --scrollbar-thumb-hover: #7c3aed;
-  --scrollbar-track: transparent;
+  --scrollbar-track:       transparent;
+}
+
+/* ========== TEMA: LIGHT ========== */
+[data-theme="light"] {
+  --color-base:             248 250 252;   /* #f8fafc */
+  --color-surface:          255 255 255;   /* #ffffff */
+  --color-surface-light:    241 245 249;   /* #f1f5f9 */
+  --color-surface-lighter:  226 232 240;   /* #e2e8f0 */
+  --color-accent:           109 40 217;    /* #6d28d9 */
+  --color-accent-light:     91 33 182;     /* #5b21b6 */
+  --color-text:             15 23 42;      /* #0f172a */
+  --color-muted:            100 116 139;   /* #64748b */
+  --color-border:           203 213 225;   /* #cbd5e1 */
+
+  --bg-gradient: radial-gradient(circle at top left, #dbeafe 0%, #f1f5f9 42%, #f8fafc 100%);
+
+  --chart-grid:           #cbd5e1;
+  --chart-axis:           #64748b;
+  --chart-tooltip-bg:     #ffffff;
+  --chart-tooltip-border: #cbd5e1;
+  --chart-weight:         #6d28d9;
+  --scrollbar-thumb:       #94a3b8;
+  --scrollbar-thumb-hover: #6d28d9;
+}
+
+/* Light: overrides para texto blanco Tailwind que se usaría sobre fondos claros */
+[data-theme="light"] {
+  color: rgb(var(--color-text));
+}
+[data-theme="light"] .text-white {
+  color: rgb(var(--color-text)) !important;
+}
+
+/* ========== TEMA: CYBERPUNK ========== */
+[data-theme="cyberpunk"] {
+  --color-base:             3 0 12;        /* #03000c */
+  --color-surface:          10 5 25;       /* #0a0519 */
+  --color-surface-light:    18 8 40;       /* #120828 */
+  --color-surface-lighter:  28 12 56;      /* #1c0c38 */
+  --color-accent:           0 245 255;     /* #00f5ff — cian neon */
+  --color-accent-light:     255 0 230;     /* #ff00e6 — magenta neon */
+  --color-text:             224 224 255;   /* #e0e0ff */
+  --color-muted:            140 120 200;   /* #8c78c8 */
+  --color-border:           60 20 120;     /* #3c1478 */
+
+  --bg-gradient: radial-gradient(circle at top left, #1a0040 0%, #080015 42%, #03000c 100%);
+
+  --chart-grid:           #3c1478;
+  --chart-axis:           #8c78c8;
+  --chart-tooltip-bg:     #0a0519;
+  --chart-tooltip-border: #3c1478;
+  --chart-weight:         #00f5ff;
+  --scrollbar-thumb:       #3c1478;
+  --scrollbar-thumb-hover: #00f5ff;
+}
+
+/* ========== TEMA: CALMA ========== */
+[data-theme="calma"] {
+  --color-base:             10 14 25;      /* #0a0e19 */
+  --color-surface:          18 26 45;      /* #121a2d */
+  --color-surface-light:    26 38 64;      /* #1a2640 */
+  --color-surface-lighter:  36 52 82;      /* #243452 */
+  --color-accent:           96 165 250;    /* #60a5fa — azul suave */
+  --color-accent-light:     147 197 253;   /* #93c5fd */
+  --color-text:             219 234 254;   /* #dbeafe */
+  --color-muted:            125 155 195;   /* #7d9bc3 */
+  --color-border:           44 62 100;     /* #2c3e64 */
+
+  --bg-gradient: radial-gradient(circle at top left, #1a2d55 0%, #0d1830 42%, #080e1a 100%);
+
+  --chart-grid:           #2c3e64;
+  --chart-axis:           #7d9bc3;
+  --chart-tooltip-bg:     #121a2d;
+  --chart-tooltip-border: #2c3e64;
+  --chart-weight:         #60a5fa;
+  --scrollbar-thumb:       #2c3e64;
+  --scrollbar-thumb-hover: #60a5fa;
+}
+
+/* ========== TEMA: BOSQUE ========== */
+[data-theme="bosque"] {
+  --color-base:             4 10 6;        /* #040a06 */
+  --color-surface:          10 22 14;      /* #0a160e */
+  --color-surface-light:    18 38 24;      /* #122618 */
+  --color-surface-lighter:  26 52 34;      /* #1a3422 */
+  --color-accent:           34 197 94;     /* #22c55e — verde */
+  --color-accent-light:     74 222 128;    /* #4ade80 */
+  --color-text:             212 244 218;   /* #d4f4da */
+  --color-muted:            110 170 125;   /* #6eaa7d */
+  --color-border:           30 65 40;      /* #1e4128 */
+
+  --bg-gradient: radial-gradient(circle at top left, #0a2d14 0%, #06180a 42%, #030c05 100%);
+
+  --chart-grid:           #1e4128;
+  --chart-axis:           #6eaa7d;
+  --chart-tooltip-bg:     #0a160e;
+  --chart-tooltip-border: #1e4128;
+  --chart-weight:         #22c55e;
+  --scrollbar-thumb:       #1e4128;
+  --scrollbar-thumb-hover: #22c55e;
 }
 
 html, body, #root {

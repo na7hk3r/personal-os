@@ -5,6 +5,14 @@ import type { ComponentType } from 'react'
 export type EventHandler = (payload: unknown) => void
 export type UnsubscribeFn = () => void
 
+export interface EventLogEntry {
+  id: number
+  event_type: string
+  source: string
+  payload: string
+  created_at: string
+}
+
 // ─── Storage ───
 
 export interface QueryOptions {
@@ -50,6 +58,7 @@ export interface NavItemDefinition {
   icon: string
   path: string
   order?: number
+  parentId?: string
 }
 
 // ─── User Profile ───

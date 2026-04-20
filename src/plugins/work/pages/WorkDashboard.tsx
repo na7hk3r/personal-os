@@ -1,5 +1,6 @@
 import { useWorkStore } from '../store'
 import { KanbanBoard } from '../components/KanbanBoard'
+import { ClipboardList, ListChecks, NotebookPen } from 'lucide-react'
 
 export function WorkDashboard() {
   const { boards, cards, notes } = useWorkStore()
@@ -11,15 +12,24 @@ export function WorkDashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-surface-light rounded-xl border border-border p-4">
-          <p className="text-xs text-muted mb-1">📋 Tableros</p>
+          <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
+            <ClipboardList size={14} />
+            Tableros
+          </p>
           <p className="text-2xl font-bold">{boards.length}</p>
         </div>
         <div className="bg-surface-light rounded-xl border border-border p-4">
-          <p className="text-xs text-muted mb-1">🗂️ Tareas</p>
+          <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
+            <ListChecks size={14} />
+            Tareas
+          </p>
           <p className="text-2xl font-bold">{totalCards}</p>
         </div>
         <div className="bg-surface-light rounded-xl border border-border p-4">
-          <p className="text-xs text-muted mb-1">📝 Notas</p>
+          <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
+            <NotebookPen size={14} />
+            Notas
+          </p>
           <p className="text-2xl font-bold">{totalNotes}</p>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import type { Migration, StorageBridge } from '@core/types'
+import type { EventLogEntry, Migration, StorageBridge } from '@core/types'
 
 const MAX_GENERAL_READ_LIMIT = 500
 const DEFAULT_GENERAL_READ_LIMIT = 200
@@ -133,6 +133,19 @@ export class StorageAPI {
   async deleteRow(table: string, id: string | number): Promise<void> {
     assertTableName(table)
     await this.execute(`DELETE FROM ${table} WHERE id = ?`, [id])
+  }
+
+  async logEvent(type: string, source: string, payload: Record<string, unknown>): Promise<void> {
+    const sql = `INSERT INTO events_log (event_type, source, payload) VALUES (?, ?, ?)`
+    await this.execute(sql, [type, source, JSON.stringify(payload)])
+  }
+
+  async getRecentEvents(limit = 30): Promise<EventLogEntry[]> {
+    const safeLimit = Math.min(Math.max(1, limit), 200)
+    return this.query<EventLogEntry>(
+      `SELECT id, event_type, source, payload, created_at FROM events_log ORDER BY created_at DESC LIMIT ?`,
+      [safeLimit],
+    )
   }
 }
 

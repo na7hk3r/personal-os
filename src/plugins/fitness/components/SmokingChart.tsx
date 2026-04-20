@@ -1,6 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { useFitnessStore } from '../store'
 import { getSmokingChartData } from '../utils'
+import { Cigarette } from 'lucide-react'
 
 const CHART_STYLE = {
   grid: 'var(--chart-grid)',
@@ -24,7 +25,10 @@ export function SmokingChart() {
 
   return (
     <div className="bg-surface-light rounded-xl border border-border p-4">
-      <h4 className="text-sm font-semibold mb-4">🚬 Cigarrillos / día</h4>
+      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+        <Cigarette size={16} />
+        Cigarrillos / día
+      </h4>
       <ResponsiveContainer width="100%" height={250}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />

@@ -1,11 +1,77 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
+import {
+  LayoutDashboard,
+  SlidersHorizontal,
+  ChevronLeft,
+  ChevronRight,
+  Dumbbell,
+  SquarePen,
+  Ruler,
+  BriefcaseBusiness,
+  NotebookPen,
+  Link2,
+  type LucideIcon,
+} from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
+import { eventBus } from '../events/EventBus'
 
-const iconMap: Record<string, React.ComponentType<{ size?: number }>> = {
+const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
+  SlidersHorizontal,
+  Dumbbell,
+  SquarePen,
+  Ruler,
+  BriefcaseBusiness,
+  NotebookPen,
+  Link2,
 }
+
+function renderNavIcon(iconName: string, size = 18) {
+  const Icon = iconMap[iconName]
+  if (Icon) return <Icon size={size} />
+  return <LayoutDashboard size={size} />
+}
+
+function hasPluginActivityToday(pluginId: string): boolean {
+  const PLUGIN_EVENTS: Record<string, string[]> = {
+    fitness: [
+      'FITNESS_WEIGHT_RECORDED',
+      'FITNESS_DAILY_ENTRY_SAVED',
+      'FITNESS_MEAL_LOGGED',
+      'FITNESS_WORKOUT_COMPLETED',
+      'FITNESS_MEASUREMENT_SAVED',
+      'WEIGHT_RECORDED',
+      'DAILY_ENTRY_SAVED',
+      'MEAL_LOGGED',
+      'WORKOUT_COMPLETED',
+      'MEASUREMENT_SAVED',
+    ],
+    work: [
+      'WORK_TASK_CREATED',
+      'WORK_TASK_COMPLETED',
+      'WORK_TASK_MOVED',
+      'WORK_NOTE_CREATED',
+      'TASK_CREATED',
+      'TASK_COMPLETED',
+      'TASK_MOVED',
+      'NOTE_CREATED',
+    ],
+  }
+  const ONE_DAY = 86_400_000
+  const cutoff = Date.now() - ONE_DAY
+  const pluginEvents = new Set(PLUGIN_EVENTS[pluginId] ?? [])
+  return eventBus
+    .getHistory(100)
+    .some((h) => h.timestamp >= cutoff && pluginEvents.has(h.event))
+}
+
+const NAV_LINK_CLASS = (isActive: boolean) =>
+  `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+    isActive
+      ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
+      : 'text-muted hover:bg-surface-lighter hover:text-white'
+  }`
 
 export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
@@ -21,86 +87,122 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`fixed top-0 left-0 h-full bg-surface-light/95 border-r border-border flex flex-col transition-all duration-200 z-40 backdrop-blur-md ${
+      className={`fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-surface-light/95 backdrop-blur-md transition-all duration-200 ${
         sidebarCollapsed ? 'w-16' : 'w-56'
       }`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-border">
+      <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
-            <img src="/smc-logo-alt.png" alt="SMC" className="h-8 w-8 rounded border border-border/70" />
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-muted">Personal OS</p>
-              <p className="text-sm font-semibold text-white">Executive Suite</p>
+          <div className="flex min-w-0 items-center gap-2">
+            <img src="/smc-logo-alt.png" alt="SMC" className="h-8 w-8 shrink-0 rounded border border-border/70" />
+            <div className="min-w-0">
+              <p className="truncate text-xs uppercase tracking-[0.18em] text-muted">Personal OS</p>
+              <p className="truncate text-sm font-semibold text-white">Executive Suite</p>
             </div>
           </div>
         )}
         <button
           onClick={toggleCollapse}
-          className="p-1 rounded hover:bg-surface-lighter text-muted"
+          className="shrink-0 rounded p-1 text-muted hover:bg-surface-lighter"
         >
           {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-3 space-y-1 px-2 overflow-y-auto">
-        {/* Dashboard (always present) */}
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              isActive
-                ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
-                : 'text-muted hover:bg-surface-lighter hover:text-white'
-            }`
-          }
-        >
-          <LayoutDashboard size={18} />
-          {!sidebarCollapsed && <span>Dashboard</span>}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
+        {/* Core: Dashboard */}
+        <NavLink to="/" end className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <LayoutDashboard size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Dashboard</span>}
         </NavLink>
 
-        <NavLink
-          to="/control"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-              isActive
-                ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
-                : 'text-muted hover:bg-surface-lighter hover:text-white'
-            }`
-          }
-        >
-          <SlidersHorizontal size={18} />
-          {!sidebarCollapsed && <span>Control Center</span>}
+        {/* Core: Control Center */}
+        <NavLink to="/control" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <SlidersHorizontal size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Control Center</span>}
         </NavLink>
 
-        {!sidebarCollapsed && (
-          <p className="px-3 pt-3 pb-1 text-[10px] uppercase tracking-[0.18em] text-muted">Módulos</p>
-        )}
+        {/* Core: Notas */}
+        <NavLink to="/notes" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <NotebookPen size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Notas</span>}
+        </NavLink>
+
+        {/* Core: Enlaces */}
+        <NavLink to="/links" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <Link2 size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Enlaces</span>}
+        </NavLink>
 
         {/* Plugin nav items */}
-        {navItems.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
-                isActive
-                  ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
-                  : 'text-muted hover:bg-surface-lighter hover:text-white'
-              }`
-            }
-          >
-            <span className="text-lg">{item.icon}</span>
-            {!sidebarCollapsed && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+        {navItems.length > 0 && (
+          <>
+            {!sidebarCollapsed && (
+              <p className="px-3 pb-1 pt-3 text-[10px] uppercase tracking-[0.18em] text-muted">Módulos</p>
+            )}
+            {navItems.map((item) => {
+              const hasActivity = hasPluginActivityToday(item.pluginId)
+              const isChild = !!item.parentId
+
+              if (isChild) {
+                return (
+                  <NavLink
+                    key={item.id}
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `relative flex items-center gap-2 rounded-md text-xs transition-all duration-200 ${
+                        sidebarCollapsed ? 'justify-center px-3 py-2' : 'py-1.5 pl-8 pr-3'
+                      } ${
+                        isActive
+                          ? 'bg-accent/10 text-accent-light'
+                          : 'text-muted/70 hover:bg-surface-lighter/50 hover:text-muted'
+                      }`
+                    }
+                  >
+                    {sidebarCollapsed ? (
+                      renderNavIcon(item.icon, 18)
+                    ) : (
+                      <>
+                        <span className="text-[10px] text-muted/40">└</span>
+                        <span className="text-muted/80">{renderNavIcon(item.icon, 14)}</span>
+                        <span className="truncate">{item.label}</span>
+                      </>
+                    )}
+                  </NavLink>
+                )
+              }
+
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  end
+                  className={({ isActive }) =>
+                    `relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
+                      isActive
+                        ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
+                        : 'text-white/80 hover:bg-surface-lighter hover:text-white'
+                    }`
+                  }
+                >
+                  <span className="relative shrink-0 text-base leading-none">
+                    {renderNavIcon(item.icon, 18)}
+                    {hasActivity && (
+                      <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-surface-light bg-success" />
+                    )}
+                  </span>
+                  {!sidebarCollapsed && <span className="truncate">{item.label}</span>}
+                </NavLink>
+              )
+            })}
+          </>
+        )}
       </nav>
 
       {/* Footer */}
-      <div className="p-3 border-t border-border text-center text-xs text-muted">
+      <div className="border-t border-border p-3 text-center text-xs text-muted">
         {!sidebarCollapsed && (
           <div className="space-y-2">
             <img src="/ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />

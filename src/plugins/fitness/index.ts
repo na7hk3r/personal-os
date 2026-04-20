@@ -13,7 +13,7 @@ const fitnessPlugin: PluginManifest = {
   name: 'Fitness',
   version: '1.0.0',
   description: 'Control de peso, comidas, entrenos y hábitos de salud',
-  icon: '🏋️',
+  icon: 'Dumbbell',
 
   migrations: [
     {
@@ -65,7 +65,7 @@ const fitnessPlugin: PluginManifest = {
       pluginId: 'fitness',
       path: '/fitness',
       title: 'Fitness',
-      icon: '🏋️',
+      icon: 'Dumbbell',
       component: FitnessDashboard,
     },
     {
@@ -73,7 +73,7 @@ const fitnessPlugin: PluginManifest = {
       pluginId: 'fitness',
       path: '/fitness/tracking',
       title: 'Registro',
-      icon: '✏️',
+      icon: 'SquarePen',
       component: TrackingPage,
     },
     {
@@ -81,15 +81,15 @@ const fitnessPlugin: PluginManifest = {
       pluginId: 'fitness',
       path: '/fitness/measurements',
       title: 'Medidas',
-      icon: '📏',
+      icon: 'Ruler',
       component: MeasurementsPage,
     },
   ],
 
   navItems: [
-    { id: 'fitness-nav', pluginId: 'fitness', label: 'Fitness', icon: '🏋️', path: '/fitness', order: 10 },
-    { id: 'fitness-tracking-nav', pluginId: 'fitness', label: 'Registrar', icon: '✏️', path: '/fitness/tracking', order: 11 },
-    { id: 'fitness-measures-nav', pluginId: 'fitness', label: 'Medidas', icon: '📏', path: '/fitness/measurements', order: 12 },
+    { id: 'fitness-nav', pluginId: 'fitness', label: 'Fitness', icon: 'Dumbbell', path: '/fitness', order: 10 },
+    { id: 'fitness-tracking-nav', pluginId: 'fitness', label: 'Registrar', icon: 'SquarePen', path: '/fitness/tracking', order: 11, parentId: 'fitness-nav' },
+    { id: 'fitness-measures-nav', pluginId: 'fitness', label: 'Medidas', icon: 'Ruler', path: '/fitness/measurements', order: 12, parentId: 'fitness-nav' },
   ],
 
   events: {

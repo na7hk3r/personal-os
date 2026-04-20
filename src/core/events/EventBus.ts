@@ -1,14 +1,29 @@
 import type { EventHandler, UnsubscribeFn } from '../types'
 
+type PersistFn = (event: string, payload: unknown, source: string) => void
+
 export class EventBus {
   private listeners = new Map<string, Set<EventHandler>>()
   private history: { event: string; payload: unknown; timestamp: number }[] = []
   private maxHistory = 100
+  private persistFn: PersistFn | null = null
 
-  emit(event: string, payload?: unknown): void {
+  setPersistenceCallback(fn: PersistFn): void {
+    this.persistFn = fn
+  }
+
+  emit(event: string, payload?: unknown, options?: { source?: string; persist?: boolean }): void {
     this.history.push({ event, payload, timestamp: Date.now() })
     if (this.history.length > this.maxHistory) {
       this.history.shift()
+    }
+
+    if (this.persistFn && options?.source && options?.persist !== false) {
+      try {
+        this.persistFn(event, payload, options.source)
+      } catch (err) {
+        console.error(`[EventBus] Error persisting event "${event}":`, err)
+      }
     }
 
     const handlers = this.listeners.get(event)

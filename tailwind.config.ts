@@ -4,14 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Colores con CSS vars — soportan modificadores de opacidad (bg-surface/50) */
         surface: {
-          DEFAULT: '#1e1e2e',
-          light: '#2a2a3e',
-          lighter: '#363650',
+          DEFAULT: 'rgb(var(--color-surface) / <alpha-value>)',
+          light: 'rgb(var(--color-surface-light) / <alpha-value>)',
+          lighter: 'rgb(var(--color-surface-lighter) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#7c3aed',
-          light: '#a78bfa',
+          DEFAULT: 'rgb(var(--color-accent) / <alpha-value>)',
+          light: 'rgb(var(--color-accent-light) / <alpha-value>)',
+        },
+        muted: 'rgb(var(--color-muted) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        /* Colores estáticos (no temáticos) */
+        success: {
+          DEFAULT: '#22c55e',
+          light: '#4ade80',
+          dark: '#16a34a',
+        },
+        warning: {
+          DEFAULT: '#eab308',
+          light: '#facc15',
+          dark: '#ca8a04',
+        },
+        danger: {
+          DEFAULT: '#ef4444',
+          light: '#f87171',
+          dark: '#dc2626',
         },
         chart: {
           grid: '#334155',
@@ -24,8 +43,6 @@ export default {
           mealBad: '#ef4444',
           smoking: '#f97316',
         },
-        muted: '#94a3b8',
-        border: '#334155',
       },
       keyframes: {
         fadeIn: {

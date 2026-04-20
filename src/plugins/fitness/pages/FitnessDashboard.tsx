@@ -3,11 +3,15 @@ import { WeightChart } from '../components/WeightChart'
 import { MealChart } from '../components/MealChart'
 import { SmokingChart } from '../components/SmokingChart'
 import { MonthlySummary } from '../components/MonthlySummary'
+import { Dumbbell } from 'lucide-react'
 
 export function FitnessDashboard() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">🏋️ Fitness</h1>
+      <h1 className="text-2xl font-bold flex items-center gap-2">
+        <Dumbbell size={22} />
+        Fitness
+      </h1>
       <KpiCards />
       <MonthlySummary />
       <div className="bg-surface-light rounded-xl border border-border p-4">

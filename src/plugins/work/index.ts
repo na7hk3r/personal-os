@@ -3,8 +3,6 @@ import { registerPlugin } from '@core/plugins/PluginRegistry'
 import { useWorkStore } from './store'
 import { WORK_EVENTS } from './events'
 import { WorkDashboard } from './pages/WorkDashboard'
-import { NotesPage } from './pages/NotesPage'
-import { LinksPage } from './pages/LinksPage'
 import { WorkSummaryWidget } from './components/WorkSummaryWidget'
 import type { Board, Column, Card, Note, Link } from './types'
 
@@ -13,7 +11,7 @@ const workPlugin: PluginManifest = {
   name: 'Work',
   version: '1.0.0',
   description: 'Kanban boards, notas y enlaces de trabajo',
-  icon: '💼',
+  icon: 'BriefcaseBusiness',
 
   migrations: [
     {
@@ -67,6 +65,10 @@ const workPlugin: PluginManifest = {
           ('col-done', 'default', 'Hecho', 3);
       `,
     },
+    {
+      version: 3,
+      up: `ALTER TABLE work_cards ADD COLUMN content TEXT DEFAULT '';`,
+    },
   ],
 
   widgets: [
@@ -85,31 +87,13 @@ const workPlugin: PluginManifest = {
       pluginId: 'work',
       path: '/work',
       title: 'Work',
-      icon: '💼',
+      icon: 'BriefcaseBusiness',
       component: WorkDashboard,
-    },
-    {
-      id: 'work-notes',
-      pluginId: 'work',
-      path: '/work/notes',
-      title: 'Notas',
-      icon: '📝',
-      component: NotesPage,
-    },
-    {
-      id: 'work-links',
-      pluginId: 'work',
-      path: '/work/links',
-      title: 'Enlaces',
-      icon: '🔗',
-      component: LinksPage,
     },
   ],
 
   navItems: [
-    { id: 'work-nav', pluginId: 'work', label: 'Work', icon: '💼', path: '/work', order: 20 },
-    { id: 'work-notes-nav', pluginId: 'work', label: 'Notas', icon: '📝', path: '/work/notes', order: 21 },
-    { id: 'work-links-nav', pluginId: 'work', label: 'Enlaces', icon: '🔗', path: '/work/links', order: 22 },
+    { id: 'work-nav', pluginId: 'work', label: 'Work', icon: 'BriefcaseBusiness', path: '/work', order: 20 },
   ],
 
   events: {
@@ -129,6 +113,7 @@ const workPlugin: PluginManifest = {
       columnId: row.column_id,
       title: row.title,
       description: row.description,
+      content: row.content ?? '',
       labels: JSON.parse(row.labels || '[]'),
       dueDate: row.due_date,
       position: row.position,

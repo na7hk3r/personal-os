@@ -3,6 +3,9 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Shell } from './core/ui/Shell'
 import { Dashboard } from './core/ui/Dashboard'
 import { ControlCenter } from './core/ui/ControlCenter'
+import { CoreNotesPage } from './core/ui/pages/NotesPage'
+import { CoreLinksPage } from './core/ui/pages/LinksPage'
+import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
 import { useCoreStore } from './core/state/coreStore'
@@ -15,12 +18,17 @@ export function App() {
   const [ready, setReady] = useState(false)
   const activePluginIds = useCoreStore((s) => s.activePlugins)
   const setActivePlugins = useCoreStore((s) => s.setActivePlugins)
+  const onboardingComplete = useCoreStore((s) => s.onboardingComplete)
+  const loadFromStorage = useCoreStore((s) => s.loadFromStorage)
 
-  const pluginPages = useMemo(() => pluginManager.getActivePages(), [activePluginIds])
+  const pluginPages = useMemo(() => pluginManager.getActivePages(), [activePluginIds, ready])
 
   useEffect(() => {
     async function bootstrap() {
       try {
+        // Load persisted state first (onboarding flag, profile)
+        await loadFromStorage()
+
         const plugins = getAvailablePlugins()
         for (const manifest of plugins) {
           pluginManager.register(manifest)
@@ -39,7 +47,7 @@ export function App() {
       }
     }
     bootstrap()
-  }, [setActivePlugins])
+  }, [setActivePlugins, loadFromStorage])
 
   if (!ready) {
     return (
@@ -58,10 +66,13 @@ export function App() {
 
   return (
     <HashRouter>
+      {ready && !onboardingComplete && <OnboardingWizard />}
       <Routes>
         <Route element={<Shell />}>
           <Route index element={<Dashboard />} />
           <Route path="/control" element={<ControlCenter />} />
+          <Route path="/notes" element={<CoreNotesPage />} />
+          <Route path="/links" element={<CoreLinksPage />} />
           {pluginPages.map((page) => (
             <Route
               key={page.id}

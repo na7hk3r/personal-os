@@ -15,6 +15,7 @@ export interface Card {
   columnId: string
   title: string
   description: string
+  content: string
   labels: string[]
   dueDate: string | null
   position: number

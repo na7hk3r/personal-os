@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useFitnessStore } from '../store'
 import type { Measurement } from '../types'
+import { Ruler } from 'lucide-react'
 
 export function MeasurementsForm() {
   const { addMeasurement } = useFitnessStore()
@@ -44,7 +45,10 @@ export function MeasurementsForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-surface-light rounded-xl border border-border p-4">
-      <h4 className="text-sm font-semibold mb-3">📏 Registro de Medidas</h4>
+      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+        <Ruler size={16} />
+        Registro de Medidas
+      </h4>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div>
           <label className="text-xs text-muted">Fecha</label>

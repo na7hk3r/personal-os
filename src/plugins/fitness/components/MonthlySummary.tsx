@@ -1,5 +1,6 @@
 import { useFitnessStore } from '../store'
 import { getMealCompliancePercent, countWorkoutsMonth, averageField } from '../utils'
+import { BarChart3 } from 'lucide-react'
 
 export function MonthlySummary() {
   const entries = useFitnessStore((s) => s.entries)
@@ -22,7 +23,10 @@ export function MonthlySummary() {
 
   return (
     <div className="bg-surface-light rounded-xl border border-border p-4">
-      <h4 className="text-sm font-semibold mb-4">📊 Resumen – {monthName}</h4>
+      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+        <BarChart3 size={16} />
+        Resumen - {monthName}
+      </h4>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Stat label="Días registrados" value={totalDays} />
         <Stat label="Cumplimiento comidas" value={`${mealPct}%`} />
