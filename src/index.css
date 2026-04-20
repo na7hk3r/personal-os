@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --chart-grid: #334155;
+  --chart-axis: #94a3b8;
+  --chart-tooltip-bg: #1e1e2e;
+  --chart-tooltip-border: #334155;
+  --chart-weight: #7c3aed;
+  --chart-meal-good: #22c55e;
+  --chart-meal-warn: #eab308;
+  --chart-meal-bad: #ef4444;
+  --chart-smoking: #f97316;
+
+  --scrollbar-size: 6px;
+  --scrollbar-thumb: #3b3b56;
+  --scrollbar-thumb-hover: #7c3aed;
+  --scrollbar-track: transparent;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #1e1e2e;
+  color: #e2e8f0;
+}
+
+/* ========== SCROLLBARS GLOBALES ========== */
+
+/* Webkit (Chrome, Edge, Electron) */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 99px;
+  transition: background 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+/* ========== MICRO-INTERACCIONES BASE ========== */
+
+/* Focus ring premium */
+*:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Inputs y botones con transición suave */
+button,
+input,
+select,
+textarea {
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+/* ========== UTILIDADES REUTILIZABLES ========== */
+
+/* Tarjeta interactiva con efecto lift */
+.card-interactive {
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(124, 58, 237, 0.12);
+}
+
+/* Glow en acento */
+.glow-accent {
+  box-shadow: 0 0 8px 1px rgba(124, 58, 237, 0.45);
+}
+
+/* Barra de progreso animada */
+.progress-bar-fill {
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 6px 1px rgba(124, 58, 237, 0.5);
+}
+
+/* Scrollbar horizontal delgada para kanban */
+.scrollbar-kanban::-webkit-scrollbar {
+  height: 4px;
+}
+.scrollbar-kanban::-webkit-scrollbar-track {
+  background: #1e1e2e;
+  border-radius: 99px;
+}
+.scrollbar-kanban::-webkit-scrollbar-thumb {
+  background: #3b3b56;
+  border-radius: 99px;
+}
+.scrollbar-kanban::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed;
+}
