@@ -1,0 +1,42 @@
+/**
+ * Centralized plugin configuration and constants
+ * Prevents magic strings scattered across codebase
+ */
+
+export const PLUGIN_IDS = {
+  FITNESS: 'fitness',
+  WORK: 'work',
+} as const
+
+export type PluginId = typeof PLUGIN_IDS[keyof typeof PLUGIN_IDS]
+
+export const PLUGIN_NAMES: Record<PluginId, string> = {
+  [PLUGIN_IDS.FITNESS]: 'Fitness & Salud',
+  [PLUGIN_IDS.WORK]: 'Work & Productividad',
+}
+
+export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
+  [PLUGIN_IDS.FITNESS]: 'Registrá tu peso, comidas, entrenamientos y medidas corporales. Seguí tus hábitos día a día.',
+  [PLUGIN_IDS.WORK]: 'Tablero Kanban, notas y gestión de enlaces. Todo lo que necesitás para organizar tu trabajo.',
+}
+
+/**
+ * Check if a plugin ID is valid
+ */
+export function isValidPluginId(id: string): id is PluginId {
+  return Object.values(PLUGIN_IDS).includes(id as PluginId)
+}
+
+/**
+ * Get plugin name by ID
+ */
+export function getPluginName(pluginId: PluginId): string {
+  return PLUGIN_NAMES[pluginId] ?? pluginId
+}
+
+/**
+ * Get plugin description by ID
+ */
+export function getPluginDescription(pluginId: PluginId): string {
+  return PLUGIN_DESCRIPTIONS[pluginId] ?? ''
+}

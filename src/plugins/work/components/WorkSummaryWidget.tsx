@@ -1,8 +1,11 @@
 import { useWorkStore } from '../store'
-
-function isColumnMatch(name: string, pattern: RegExp) {
-  return pattern.test(name.toLowerCase())
-}
+import {
+  isDoneColumn,
+  isInProgressColumn,
+  isTodoColumn,
+  isBacklogColumn,
+  getColumnIds,
+} from '../utils/columnUtils'
 
 function formatFocusDuration(durationMs: number) {
   const totalMinutes = Math.floor(durationMs / 60_000)
@@ -17,29 +20,10 @@ export function WorkSummaryWidget() {
 
   const columnById = new Map(columns.map((col) => [col.id, col]))
 
-  const doneColumnIds = new Set(
-    columns
-      .filter((col) => col.id === 'col-done' || isColumnMatch(col.name, /hecho|done/))
-      .map((col) => col.id),
-  )
-
-  const inProgressColumnIds = new Set(
-    columns
-      .filter((col) => col.id === 'col-progress' || isColumnMatch(col.name, /progreso|progress/))
-      .map((col) => col.id),
-  )
-
-  const todoColumnIds = new Set(
-    columns
-      .filter((col) => col.id === 'col-todo' || isColumnMatch(col.name, /hacer|todo/))
-      .map((col) => col.id),
-  )
-
-  const backlogColumnIds = new Set(
-    columns
-      .filter((col) => col.id === 'col-backlog' || isColumnMatch(col.name, /backlog|idea/))
-      .map((col) => col.id),
-  )
+  const doneColumnIds = getColumnIds(columns, isDoneColumn)
+  const inProgressColumnIds = getColumnIds(columns, isInProgressColumn)
+  const todoColumnIds = getColumnIds(columns, isTodoColumn)
+  const backlogColumnIds = getColumnIds(columns, isBacklogColumn)
 
   const doneCount = cards.filter((card) => doneColumnIds.has(card.columnId)).length
   const inProgressCount = cards.filter((card) => inProgressColumnIds.has(card.columnId)).length

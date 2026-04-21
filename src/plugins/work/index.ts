@@ -118,41 +118,47 @@ const workPlugin: PluginManifest = {
   },
 
   async init(api: CoreAPI) {
-    const boards = await api.storage.query('SELECT * FROM work_boards') as Board[]
-    const columns = await api.storage.query('SELECT * FROM work_columns ORDER BY position ASC') as Column[]
-    const cardsRaw = await api.storage.query('SELECT * FROM work_cards ORDER BY position ASC') as any[]
-    const notesRaw = await api.storage.query('SELECT * FROM work_notes ORDER BY updated_at DESC') as any[]
-    const links = await api.storage.query('SELECT * FROM work_links') as Link[]
-    const focusSessionsRaw = await api.storage.query('SELECT * FROM work_focus_sessions ORDER BY start_time DESC') as any[]
+    const boards = await api.storage.query('SELECT * FROM work_boards')
+    const columns = await api.storage.query('SELECT * FROM work_columns ORDER BY position ASC')
+    const cardsRaw = await api.storage.query('SELECT * FROM work_cards ORDER BY position ASC')
+    const notesRaw = await api.storage.query('SELECT * FROM work_notes ORDER BY updated_at DESC')
+    const links = await api.storage.query('SELECT * FROM work_links')
+    const focusSessionsRaw = await api.storage.query('SELECT * FROM work_focus_sessions ORDER BY start_time DESC')
 
-    const cards: Card[] = cardsRaw.map((row) => ({
-      id: row.id,
-      columnId: row.column_id,
-      title: row.title,
-      description: row.description,
-      content: row.content ?? '',
-      labels: JSON.parse(row.labels || '[]'),
-      dueDate: row.due_date,
-      position: row.position,
-    }))
+    const cards: Card[] = Array.isArray(cardsRaw)
+      ? cardsRaw.map((row) => ({
+        id: (row as Record<string, unknown>).id,
+        columnId: (row as Record<string, unknown>).column_id,
+        title: (row as Record<string, unknown>).title,
+        description: (row as Record<string, unknown>).description,
+        content: ((row as Record<string, unknown>).content ?? '') as string,
+        labels: JSON.parse(((row as Record<string, unknown>).labels || '[]') as string),
+        dueDate: (row as Record<string, unknown>).due_date,
+        position: (row as Record<string, unknown>).position,
+      }))
+      : []
 
-    const notes: Note[] = notesRaw.map((row) => ({
-      id: row.id,
-      title: row.title,
-      content: row.content,
-      tags: JSON.parse(row.tags || '[]'),
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }))
+    const notes: Note[] = Array.isArray(notesRaw)
+      ? notesRaw.map((row) => ({
+        id: (row as Record<string, unknown>).id,
+        title: (row as Record<string, unknown>).title,
+        content: (row as Record<string, unknown>).content,
+        tags: JSON.parse(((row as Record<string, unknown>).tags || '[]') as string),
+        createdAt: (row as Record<string, unknown>).created_at,
+        updatedAt: (row as Record<string, unknown>).updated_at,
+      }))
+      : []
 
-    const focusSessions: FocusSession[] = focusSessionsRaw.map((row) => ({
-      id: row.id,
-      taskId: row.task_id ?? null,
-      startTime: Number(row.start_time),
-      endTime: row.end_time == null ? undefined : Number(row.end_time),
-      duration: row.duration == null ? undefined : Number(row.duration),
-      interrupted: Boolean(row.interrupted),
-    }))
+    const focusSessions: FocusSession[] = Array.isArray(focusSessionsRaw)
+      ? focusSessionsRaw.map((row) => ({
+        id: (row as Record<string, unknown>).id,
+        taskId: ((row as Record<string, unknown>).task_id ?? null) as string | null,
+        startTime: Number((row as Record<string, unknown>).start_time),
+        endTime: (row as Record<string, unknown>).end_time == null ? undefined : Number((row as Record<string, unknown>).end_time),
+        duration: (row as Record<string, unknown>).duration == null ? undefined : Number((row as Record<string, unknown>).duration),
+        interrupted: Boolean((row as Record<string, unknown>).interrupted),
+      }))
+      : []
 
     const store = useWorkStore.getState()
     store.setBoards(boards)

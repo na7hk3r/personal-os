@@ -3,23 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowRight, CalendarClock, CircleAlert, ListTodo } from 'lucide-react'
 import { useWorkStore } from '@plugins/work/store'
 import { useCoreStore } from '@core/state/coreStore'
+import {
+  isDoneColumn,
+  isInProgressColumn,
+  isTodoColumn,
+  getColumnIds,
+} from '@plugins/work/utils/columnUtils'
+import {
+  formatDueDate,
+  isDueDateOverdue,
+  isDueDateToday,
+  getStartOfToday,
+  getEndOfToday,
+} from '@core/utils/dateUtils'
 import type { Card, Column } from '@plugins/work/types'
-
-function isColumnMatch(name: string, pattern: RegExp): boolean {
-  return pattern.test(name.toLowerCase())
-}
-
-function isDoneColumn(col: Column): boolean {
-  return col.id === 'col-done' || isColumnMatch(col.name, /hecho|done/)
-}
-
-function isInProgressColumn(col: Column): boolean {
-  return col.id === 'col-progress' || isColumnMatch(col.name, /progreso|progress/)
-}
-
-function isTodoColumn(col: Column): boolean {
-  return col.id === 'col-todo' || isColumnMatch(col.name, /hacer|todo/)
-}
 
 interface TaskGroup {
   priorityTasks: Card[]
@@ -29,15 +26,13 @@ interface TaskGroup {
 }
 
 function computePriorityTasks(cards: Card[], columns: Column[]): TaskGroup {
-  const doneIds = new Set(columns.filter(isDoneColumn).map((c) => c.id))
-  const inProgressIds = new Set(columns.filter(isInProgressColumn).map((c) => c.id))
-  const todoIds = new Set(columns.filter(isTodoColumn).map((c) => c.id))
+  const doneIds = getColumnIds(columns, isDoneColumn)
+  const inProgressIds = getColumnIds(columns, isInProgressColumn)
+  const todoIds = getColumnIds(columns, isTodoColumn)
 
   const now = Date.now()
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  const endOfToday = new Date()
-  endOfToday.setHours(23, 59, 59, 999)
+  const startOfToday = getStartOfToday()
+  const endOfToday = getEndOfToday()
 
   const activeCards = cards.filter((c) => !doneIds.has(c.columnId))
   const inProgressCards = activeCards.filter((c) => inProgressIds.has(c.columnId))
@@ -54,14 +49,12 @@ function computePriorityTasks(cards: Card[], columns: Column[]): TaskGroup {
 
   const overdueCount = activeCards.filter((c) => {
     if (!c.dueDate) return false
-    const t = new Date(c.dueDate).getTime()
-    return !isNaN(t) && t < startOfToday.getTime()
+    return isDueDateOverdue(c.dueDate)
   }).length
 
   const dueTodayCount = activeCards.filter((c) => {
     if (!c.dueDate) return false
-    const t = new Date(c.dueDate).getTime()
-    return !isNaN(t) && t >= startOfToday.getTime() && t <= endOfToday.getTime()
+    return isDueDateToday(c.dueDate)
   }).length
 
   return {
@@ -70,41 +63,6 @@ function computePriorityTasks(cards: Card[], columns: Column[]): TaskGroup {
     dueTodayCount,
     totalPending: activeCards.length,
   }
-}
-
-function formatDueDate(dueDate: string | null): string | null {
-  if (!dueDate) return null
-  const t = new Date(dueDate).getTime()
-  if (isNaN(t)) return null
-
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const diff = Math.floor((t - start) / 86_400_000)
-
-  if (diff < 0) return `Vence hace ${Math.abs(diff)}d`
-  if (diff === 0) return 'Vence hoy'
-  if (diff === 1) return 'Vence mañana'
-  return `Vence en ${diff}d`
-}
-
-function isDueDateOverdue(dueDate: string | null): boolean {
-  if (!dueDate) return false
-  const t = new Date(dueDate).getTime()
-  if (isNaN(t)) return false
-  const startOfToday = new Date()
-  startOfToday.setHours(0, 0, 0, 0)
-  return t < startOfToday.getTime()
-}
-
-function isDueDateToday(dueDate: string | null): boolean {
-  if (!dueDate) return false
-  const t = new Date(dueDate).getTime()
-  if (isNaN(t)) return false
-  const start = new Date()
-  start.setHours(0, 0, 0, 0)
-  const end = new Date()
-  end.setHours(23, 59, 59, 999)
-  return t >= start.getTime() && t <= end.getTime()
 }
 
 export function MainDayTasks() {

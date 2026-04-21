@@ -89,6 +89,7 @@ class PluginManager {
     const entry = this.plugins.get(pluginId)
     if (!entry || entry.status !== 'active') return
 
+    // Call plugin deactivation hook
     entry.manifest.deactivate?.()
 
     // Remove UI registrations for this plugin
@@ -98,6 +99,13 @@ class PluginManager {
 
     this.setStatus(pluginId, 'inactive')
     eventBus.emit(CORE_EVENTS.PLUGIN_DEACTIVATED, { pluginId })
+  }
+
+  /**
+   * Directly set plugin status. Used for bootstrap to mark unselected plugins as inactive.
+   */
+  setPluginStatus(pluginId: string, status: PluginStatus): void {
+    this.setStatus(pluginId, status)
   }
 
   // Getters

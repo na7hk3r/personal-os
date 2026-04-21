@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useCoreStore } from '../../state/coreStore'
+import { pluginManager } from '../../plugins/PluginManager'
 import { StepWelcome } from './steps/StepWelcome'
 import { StepName } from './steps/StepName'
 import { StepPlugins, type PluginSelection } from './steps/StepPlugins'
@@ -75,14 +76,31 @@ export function OnboardingWizard() {
     const activeIds = Object.entries(plugins)
       .filter(([, v]) => v)
       .map(([k]) => k)
+
+    // Update Zustand store (triggers storage persistence)
     setActivePlugins(activeIds)
 
-    // Persist active plugins list
+    // Persist active plugins list to storage
     if (window.storage) {
       await window.storage.execute(
         `INSERT OR REPLACE INTO settings (key, value) VALUES ('activePlugins', ?)`,
         [JSON.stringify(activeIds)],
       )
+    }
+
+    // Synchronize PluginManager state with the new selection
+    for (const plugin of pluginManager.getAllPlugins()) {
+      if (activeIds.includes(plugin.manifest.id)) {
+        // Initialize if not already active
+        if (plugin.status === 'registered' || plugin.status === 'inactive') {
+          await pluginManager.initPlugin(plugin.manifest.id)
+        }
+      } else {
+        // Deactivate if currently active
+        if (plugin.status === 'active') {
+          pluginManager.deactivatePlugin(plugin.manifest.id)
+        }
+      }
     }
 
     await persistProfile()

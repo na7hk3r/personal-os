@@ -99,40 +99,44 @@ const fitnessPlugin: PluginManifest = {
 
   async init(api: CoreAPI) {
     // Load data from SQLite into Zustand store
-    const entries = await api.storage.query(
+    const rawEntries = await api.storage.query(
       'SELECT * FROM fitness_daily_entries ORDER BY date ASC',
-    ) as DailyEntry[]
+    )
 
-    const measurements = await api.storage.query(
+    const rawMeasurements = await api.storage.query(
       'SELECT * FROM fitness_measurements ORDER BY date ASC',
-    ) as Measurement[]
+    )
 
-    // Map snake_case → camelCase
-    const mappedEntries: DailyEntry[] = (entries as any[]).map((row) => ({
-      id: row.id,
-      date: row.date,
-      dayName: row.day_name,
-      weight: row.weight,
-      breakfast: row.breakfast,
-      lunch: row.lunch,
-      snack: row.snack,
-      dinner: row.dinner,
-      workout: row.workout,
-      cigarettes: row.cigarettes,
-      sleep: row.sleep,
-      notes: row.notes,
-    }))
+    // Map snake_case → camelCase with proper typing
+    const mappedEntries: DailyEntry[] = Array.isArray(rawEntries)
+      ? rawEntries.map((row) => ({
+        id: (row as Record<string, unknown>).id,
+        date: (row as Record<string, unknown>).date,
+        dayName: (row as Record<string, unknown>).day_name,
+        weight: (row as Record<string, unknown>).weight,
+        breakfast: (row as Record<string, unknown>).breakfast,
+        lunch: (row as Record<string, unknown>).lunch,
+        snack: (row as Record<string, unknown>).snack,
+        dinner: (row as Record<string, unknown>).dinner,
+        workout: (row as Record<string, unknown>).workout,
+        cigarettes: (row as Record<string, unknown>).cigarettes,
+        sleep: (row as Record<string, unknown>).sleep,
+        notes: (row as Record<string, unknown>).notes,
+      }))
+      : []
 
-    const mappedMeasurements: Measurement[] = (measurements as any[]).map((row) => ({
-      id: row.id,
-      date: row.date,
-      weight: row.weight,
-      armRelaxed: row.arm_relaxed,
-      armFlexed: row.arm_flexed,
-      chest: row.chest,
-      waist: row.waist,
-      leg: row.leg,
-    }))
+    const mappedMeasurements: Measurement[] = Array.isArray(rawMeasurements)
+      ? rawMeasurements.map((row) => ({
+        id: (row as Record<string, unknown>).id,
+        date: (row as Record<string, unknown>).date,
+        weight: (row as Record<string, unknown>).weight,
+        armRelaxed: (row as Record<string, unknown>).arm_relaxed,
+        armFlexed: (row as Record<string, unknown>).arm_flexed,
+        chest: (row as Record<string, unknown>).chest,
+        waist: (row as Record<string, unknown>).waist,
+        leg: (row as Record<string, unknown>).leg,
+      }))
+      : []
 
     useFitnessStore.getState().setEntries(mappedEntries)
     useFitnessStore.getState().setMeasurements(mappedMeasurements)

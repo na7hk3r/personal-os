@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
-
-const THEMES = [
-  { value: 'default', label: 'Default', description: 'Dark clásico — purples y slate' },
-  { value: 'cyberpunk', label: 'Cyberpunk', description: 'Negros profundos, cian y magenta neon' },
-  { value: 'calma', label: 'Calma', description: 'Azules profundos, relajado' },
-  { value: 'bosque', label: 'Bosque', description: 'Verdes oscuros, natural' },
-  { value: 'light', label: 'Light', description: 'Tonos claros, alto contraste' },
-] as const
+import { THEMES } from '../config/themes'
 
 interface FitnessPluginSettings {
   workoutTargetPerWeek: number

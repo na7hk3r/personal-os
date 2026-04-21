@@ -7,7 +7,12 @@
     "dev": "electron-vite dev",
     "build": "electron-vite build",
     "start": "electron-vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
   },
   "keywords": [],
   "author": "",
@@ -26,7 +31,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@electron/rebuild": "^4.0.3",
+    "@electron/rebuild": "^4.0.4",
     "@types/better-sqlite3": "^7.6.12",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

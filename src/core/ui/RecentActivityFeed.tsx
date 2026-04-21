@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { eventBus } from '@core/events/EventBus'
+import { useCoreStore } from '@core/state/coreStore'
 import type { EventLogEntry } from '@core/types'
 import { Bell, BriefcaseBusiness, Dumbbell, Inbox } from 'lucide-react'
 import { CORE_EVENTS } from '@core/events/events'
@@ -70,6 +71,7 @@ export function RecentActivityFeed() {
   const [loading, setLoading] = useState(true)
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>('all')
   const [timeFilter, setTimeFilter] = useState<ActivityTimeFilter>('all')
+  const activePlugins = useCoreStore((s) => s.activePlugins)
 
   const load = () => {
     storageAPI
@@ -87,44 +89,60 @@ export function RecentActivityFeed() {
     // Refresh feed when new events are emitted
     const delayedLoad = () => setTimeout(load, 60)
 
-    const unsubs = [
-      eventBus.on('FITNESS_WEIGHT_RECORDED', delayedLoad),
-      eventBus.on('FITNESS_DAILY_ENTRY_SAVED', delayedLoad),
-      eventBus.on('FITNESS_MEAL_LOGGED', delayedLoad),
-      eventBus.on('FITNESS_WORKOUT_COMPLETED', delayedLoad),
-      eventBus.on('FITNESS_MEASUREMENT_SAVED', delayedLoad),
-      eventBus.on('WORK_TASK_CREATED', delayedLoad),
-      eventBus.on('WORK_TASK_COMPLETED', delayedLoad),
-      eventBus.on('WORK_TASK_MOVED', delayedLoad),
-      eventBus.on('WORK_NOTE_CREATED', delayedLoad),
-      eventBus.on('WORK_TASK_UPDATED', delayedLoad),
-      eventBus.on('WORK_TASK_DELETED', delayedLoad),
-      eventBus.on('WORK_FOCUS_STARTED', delayedLoad),
-      eventBus.on('WORK_FOCUS_COMPLETED', delayedLoad),
-      eventBus.on('WORK_FOCUS_INTERRUPTED', delayedLoad),
+    const unsubs: Array<() => void> = []
+
+    // Subscribe to core events (always available)
+    unsubs.push(
       eventBus.on(CORE_EVENTS.PROFILE_UPDATED, delayedLoad),
       eventBus.on(CORE_EVENTS.SETTINGS_UPDATED, delayedLoad),
       eventBus.on(CORE_EVENTS.PLUGIN_ACTIVATED, delayedLoad),
       eventBus.on(CORE_EVENTS.PLUGIN_DEACTIVATED, delayedLoad),
-      // backward compatibility for old names
-      eventBus.on('WEIGHT_RECORDED', delayedLoad),
-      eventBus.on('DAILY_ENTRY_SAVED', delayedLoad),
-      eventBus.on('TASK_CREATED', delayedLoad),
-      eventBus.on('TASK_COMPLETED', delayedLoad),
-      eventBus.on('TASK_MOVED', delayedLoad),
-      eventBus.on('TASK_UPDATED', delayedLoad),
-      eventBus.on('TASK_DELETED', delayedLoad),
-      eventBus.on('NOTE_CREATED', delayedLoad),
-      eventBus.on('FOCUS_STARTED', delayedLoad),
-      eventBus.on('FOCUS_COMPLETED', delayedLoad),
-      eventBus.on('FOCUS_INTERRUPTED', delayedLoad),
-      eventBus.on('MEASUREMENT_SAVED', delayedLoad),
-      eventBus.on('MEAL_LOGGED', delayedLoad),
-      eventBus.on('WORKOUT_COMPLETED', delayedLoad),
-    ]
+    )
+
+    // Subscribe to fitness events only if plugin is active
+    if (activePlugins.includes('fitness')) {
+      unsubs.push(
+        eventBus.on('FITNESS_WEIGHT_RECORDED', delayedLoad),
+        eventBus.on('FITNESS_DAILY_ENTRY_SAVED', delayedLoad),
+        eventBus.on('FITNESS_MEAL_LOGGED', delayedLoad),
+        eventBus.on('FITNESS_WORKOUT_COMPLETED', delayedLoad),
+        eventBus.on('FITNESS_MEASUREMENT_SAVED', delayedLoad),
+        // Backward compatibility for old event names
+        eventBus.on('WEIGHT_RECORDED', delayedLoad),
+        eventBus.on('DAILY_ENTRY_SAVED', delayedLoad),
+        eventBus.on('MEAL_LOGGED', delayedLoad),
+        eventBus.on('WORKOUT_COMPLETED', delayedLoad),
+        eventBus.on('MEASUREMENT_SAVED', delayedLoad),
+      )
+    }
+
+    // Subscribe to work events only if plugin is active
+    if (activePlugins.includes('work')) {
+      unsubs.push(
+        eventBus.on('WORK_TASK_CREATED', delayedLoad),
+        eventBus.on('WORK_TASK_COMPLETED', delayedLoad),
+        eventBus.on('WORK_TASK_MOVED', delayedLoad),
+        eventBus.on('WORK_NOTE_CREATED', delayedLoad),
+        eventBus.on('WORK_TASK_UPDATED', delayedLoad),
+        eventBus.on('WORK_TASK_DELETED', delayedLoad),
+        eventBus.on('WORK_FOCUS_STARTED', delayedLoad),
+        eventBus.on('WORK_FOCUS_COMPLETED', delayedLoad),
+        eventBus.on('WORK_FOCUS_INTERRUPTED', delayedLoad),
+        // Backward compatibility for old event names
+        eventBus.on('TASK_CREATED', delayedLoad),
+        eventBus.on('TASK_COMPLETED', delayedLoad),
+        eventBus.on('TASK_MOVED', delayedLoad),
+        eventBus.on('NOTE_CREATED', delayedLoad),
+        eventBus.on('TASK_UPDATED', delayedLoad),
+        eventBus.on('TASK_DELETED', delayedLoad),
+        eventBus.on('FOCUS_STARTED', delayedLoad),
+        eventBus.on('FOCUS_COMPLETED', delayedLoad),
+        eventBus.on('FOCUS_INTERRUPTED', delayedLoad),
+      )
+    }
 
     return () => unsubs.forEach((unsub) => unsub())
-  }, [])
+  }, [activePlugins])
 
   const filteredEvents = events.filter((entry) => {
     if (sourceFilter !== 'all' && entry.source !== sourceFilter) return false

@@ -1,5 +1,11 @@
 import { CORE_EVENTS } from '@core/events/events'
 import { eventBus } from '@core/events/EventBus'
+import {
+  getElapsedMs,
+  findMostRecentEvent,
+  hasEventType,
+  COMMON_EVENT_SETS,
+} from '@core/utils/dateUtils'
 import type { EventLogEntry } from '@core/types'
 
 export interface GuidanceSuggestion {
@@ -21,19 +27,6 @@ export interface GuidanceHeroState {
 
 const ONE_DAY = 86_400_000
 const THREE_DAYS = ONE_DAY * 3
-
-const WEIGHT_EVENTS = new Set(['WEIGHT_RECORDED', 'FITNESS_WEIGHT_RECORDED'])
-const TASK_CREATED_EVENTS = new Set(['TASK_CREATED', 'WORK_TASK_CREATED'])
-const TASK_COMPLETED_EVENTS = new Set(['TASK_COMPLETED', 'WORK_TASK_COMPLETED'])
-const DAILY_ENTRY_EVENTS = new Set(['DAILY_ENTRY_SAVED', 'FITNESS_DAILY_ENTRY_SAVED'])
-
-function hasType(eventType: string, values: Set<string>): boolean {
-  return values.has(eventType)
-}
-
-function findLast(events: EventLogEntry[], types: Set<string>): EventLogEntry | undefined {
-  return events.find((e) => hasType(e.event_type, types))
-}
 
 function getElapsedMs(entry?: EventLogEntry): number | null {
   if (!entry) return null
@@ -60,9 +53,9 @@ export function buildSystemSuggestions(
   }
 
   if (active.has('fitness')) {
-    const lastWeight = findLast(events, WEIGHT_EVENTS)
+    const lastWeight = findMostRecentEvent(events, COMMON_EVENT_SETS.WEIGHT)
     const weightElapsed = getElapsedMs(lastWeight)
-    const lastDailyEntry = findLast(events, DAILY_ENTRY_EVENTS)
+    const lastDailyEntry = findMostRecentEvent(events, COMMON_EVENT_SETS.DAILY_ENTRY)
     const dailyElapsed = getElapsedMs(lastDailyEntry)
 
     if (!lastWeight) {
@@ -94,8 +87,8 @@ export function buildSystemSuggestions(
   }
 
   if (active.has('work')) {
-    const lastTaskCreated = findLast(events, TASK_CREATED_EVENTS)
-    const lastTaskCompleted = findLast(events, TASK_COMPLETED_EVENTS)
+    const lastTaskCreated = findMostRecentEvent(events, COMMON_EVENT_SETS.TASK_CREATED)
+    const lastTaskCompleted = findMostRecentEvent(events, COMMON_EVENT_SETS.TASK_COMPLETED)
     const completedElapsed = getElapsedMs(lastTaskCompleted)
 
     if (!lastTaskCreated) {

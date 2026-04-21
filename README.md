@@ -39,14 +39,19 @@ Personal OS es una aplicación modular que centraliza el seguimiento de hábitos
 
 ## Requisitos
 
-- Node.js 18+
+- Node.js 20+ (recomendado: LTS)
 - npm 9+
+- **Windows**: Visual Studio Build Tools 2022 (para compilar módulos nativos como `better-sqlite3`)
+- **macOS**: Command Line Tools (incluye compilador C++)
+- **Linux**: build-essential o equivalente
 
 ## Instalación y desarrollo
 
 ```bash
-# Instalar dependencias
-npm install
+# Clonar y instalar (incluye rebuild automático de better-sqlite3)
+git clone <repo>
+cd personal-os
+npm ci
 
 # Modo desarrollo (abre ventana Electron con HMR)
 npm run dev
@@ -60,6 +65,13 @@ npm start
 # Verificación de tipos TypeScript
 npm run typecheck
 ```
+
+### ℹ️ Notas sobre reproducibilidad
+
+- **`npm ci` vs `npm install`**: En clon nuevo, usa siempre `npm ci` para instalar exactamente las versiones del `package-lock.json`. Esto garantiza que todos trabajen con las mismas dependencias.
+- **Rebuild de módulos nativos**: El script `postinstall` ejecuta automáticamente `electron-rebuild` para `better-sqlite3`, compilando los binarios nativos para tu Electron y SO. No necesitas hacer nada extra; sucede al correr `npm ci`.
+- **`.nvmrc`**: Si usas `nvm`, corre `nvm use` antes de clonar el proyecto para garantizar Node 20.
+- **Commit de `package-lock.json`**: Siempre commiteá el lockfile; es lo que garantiza reproducibilidad.
 
 ## Estructura del proyecto
 

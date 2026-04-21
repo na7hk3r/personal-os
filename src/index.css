@@ -417,3 +417,81 @@ textarea {
   border-color: rgba(148, 163, 184, 0.34);
   box-shadow: 0 16px 34px rgba(2, 6, 23, 0.4);
 }
+
+/* ========== FADE IN ANIMATIONS ========== */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-fadeInDown {
+  animation: fadeInDown 0.3s ease-out;
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* ========== FOCUS STATES ========== */
+
+[data-theme="light"] *:focus-visible {
+  outline-color: #6d28d9;
+}
+
+[data-theme="cyberpunk"] *:focus-visible {
+  outline-color: #00f5ff;
+}
+
+[data-theme="calma"] *:focus-visible {
+  outline-color: #60a5fa;
+}
+
+[data-theme="bosque"] *:focus-visible {
+  outline-color: #22c55e;
+}

@@ -29,21 +29,28 @@ export function App() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        // Load persisted state first (onboarding flag, profile)
+        // Load persisted state first (onboarding flag, profile, activePlugins)
         await loadFromStorage()
         await loadGamificationFromStorage()
 
-        const plugins = getAvailablePlugins()
-        for (const manifest of plugins) {
+        // Register all plugins (but don't init yet)
+        const allPlugins = getAvailablePlugins()
+        for (const manifest of allPlugins) {
           pluginManager.register(manifest)
-          await pluginManager.initPlugin(manifest.id)
         }
 
-        const activeIds = pluginManager
-          .getAllPlugins()
-          .filter((plugin) => plugin.status === 'active')
-          .map((plugin) => plugin.manifest.id)
-        setActivePlugins(activeIds)
+        // Get active plugin IDs from store (loaded from storage)
+        const activeIds = useCoreStore.getState().activePlugins
+
+        // Initialize only the active plugins; deactivate others
+        for (const manifest of allPlugins) {
+          if (activeIds.includes(manifest.id)) {
+            await pluginManager.initPlugin(manifest.id)
+          } else {
+            // Ensure inactive plugins are in 'inactive' state (not 'registered')
+            pluginManager.setPluginStatus(manifest.id, 'inactive')
+          }
+        }
       } catch (err) {
         console.error('[App] Bootstrap failed:', err)
       } finally {
