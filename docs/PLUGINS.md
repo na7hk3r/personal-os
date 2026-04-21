@@ -1,5 +1,8 @@
 # Sistema de Plugins
 
+Guía complementaria obligatoria:
+- [PLUGIN_BASE_STRUCTURE.md](PLUGIN_BASE_STRUCTURE.md) para plantilla base estandarizada e integración end-to-end.
+
 ## Estructura de un plugin
 
 Un plugin es un objeto que implementa `PluginManifest` exportado desde `src/plugins/<nombre>/index.ts`.
@@ -196,3 +199,19 @@ Desde `Control Center`, el core permite guardar preferencias por plugin sin modi
   - vista predeterminada de tablero
 
 Estas preferencias se guardan en `settings` y pueden ser consumidas por componentes/plugins para ajustar su comportamiento.
+
+Regla de visibilidad en `Control Center`:
+
+- Si un plugin está desactivado, su bloque de configuración no se renderiza.
+- Si no hay plugins activos con configuración, la sección completa desaparece.
+
+## Capa visual premium de plugins
+
+Las páginas de plugins comparten una base visual premium desde `src/index.css`:
+
+- `plugin-shell`: contenedor con animación de entrada.
+- `plugin-shell-fitness`: atmósfera visual fitness (verde/teal).
+- `plugin-shell-work`: atmósfera visual work (cian/azul).
+- `plugin-panel`: paneles con hover y transición consistentes.
+
+Esto permite que cada plugin tenga identidad propia sin perder coherencia con la app principal.

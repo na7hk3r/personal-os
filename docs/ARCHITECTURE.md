@@ -128,6 +128,7 @@ interface CoreAPI {
 - Flag `onboardingComplete`.
 - Persistencia a/desde SQLite.
 - Soporte de configuración centralizada para módulos vía tabla `settings` (ej. `pluginSettings:fitness`, `pluginSettings:work`, `corePlannerTasksV1`).
+- Esta lista de plugins activos también condiciona la UI del `ControlCenter` (secciones por plugin visibles solo cuando el plugin está activo).
 
 #### `gamificationStore`
 - Puntos totales, nivel calculado (puntos / 100 + 1), racha de días.
@@ -154,6 +155,7 @@ Cada plugin es un módulo TypeScript que exporta un `PluginManifest`. Internamen
 - `events.ts` — Constantes de eventos con prefijo del plugin.
 - `components/` — Componentes React de UI.
 - `pages/` — Páginas completas montadas por el router.
+- Las páginas de plugins usan una capa visual premium definida en `index.css` (`plugin-shell`, `plugin-shell-fitness`, `plugin-shell-work`, `plugin-panel`) para diferenciar cada dominio sin romper integración temática.
 
 ### 8. Capa de dashboard
 

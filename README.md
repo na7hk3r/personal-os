@@ -17,7 +17,8 @@ Personal OS es una aplicación modular que centraliza el seguimiento de hábitos
 	- filtros por estado y categoría,
 	- drag and drop de tareas entre días.
 - Las tareas del Planner core se integran con gamificación como misión diaria y otorgan XP por complejidad.
-- `Control Center` incorpora configuración por plugin (Fitness y Work), persistida en `settings`.
+- `Control Center` incorpora configuración por plugin (Fitness y Work), persistida en `settings`, y solo muestra bloques de plugins activos.
+- Las pantallas de plugins ahora tienen una capa visual premium por dominio (Fitness/Work) con fondos diferenciados, animaciones de entrada y paneles con transiciones.
 - `Actividad Reciente` y la capa de gamificación consumen eventos de Fitness, Work y Core, incluyendo `CORE_PLANNER_TASK_COMPLETED`.
 
 ## Stack tecnológico
@@ -164,6 +165,15 @@ El módulo `Planner` forma parte del core (no es plugin) y centraliza tareas dia
 
 Esto permite centralizar configuración operativa sin entrar a páginas internas de cada plugin.
 
+La sección aparece únicamente para plugins activos y cada bloque se oculta automáticamente cuando su plugin está desactivado.
+
+## Evolución de documentación
+
+A medida que crece la documentación técnica, el proyecto incluye un plan para migrar a una knowledge base web versionada.
+
+- Plan: [docs/KNOWLEDGE_BASE_PLAN.md](docs/KNOWLEDGE_BASE_PLAN.md)
+- Guía de estructura base de plugins: [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md)
+
 ## Seguridad
 
 - **Context Isolation**: el renderer no tiene acceso directo a Node.js
@@ -182,6 +192,8 @@ Ver [docs/DATABASE.md](docs/DATABASE.md) para el esquema completo.
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitectura general del sistema
 - [docs/PLUGINS.md](docs/PLUGINS.md) — Sistema de plugins y cómo crear uno
+- [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md) — Estructura base estándar e integración de plugins
 - [docs/DATABASE.md](docs/DATABASE.md) — Esquema SQL completo
 - [docs/EVENTS.md](docs/EVENTS.md) — Catálogo de eventos del sistema
 - [docs/GAMIFICATION.md](docs/GAMIFICATION.md) — Sistema de gamificación
+- [docs/KNOWLEDGE_BASE_PLAN.md](docs/KNOWLEDGE_BASE_PLAN.md) — Roadmap para llevar documentación a sitio web
