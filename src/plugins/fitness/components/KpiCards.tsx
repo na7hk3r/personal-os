@@ -21,12 +21,12 @@ export function KpiCards() {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {cards.map((c) => (
-        <div key={c.label} className="bg-surface-light rounded-xl border border-border p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <c.icon size={16} className={c.color} />
+        <div key={c.label} className="bg-surface-light rounded-xl border border-border px-3 py-2.5">
+          <div className="mb-1.5 flex items-center gap-2">
+            <c.icon size={15} className={c.color} />
             <span className="text-xs text-muted">{c.label}</span>
           </div>
-          <p className="text-xl font-bold">{c.value}</p>
+          <p className="text-lg font-bold leading-tight">{c.value}</p>
         </div>
       ))}
     </div>

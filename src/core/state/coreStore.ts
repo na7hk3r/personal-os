@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import type { UserProfile } from '../types'
+import { eventBus } from '@core/events/EventBus'
+import { CORE_EVENTS } from '@core/events/events'
 
 interface CoreState {
   // Profile
@@ -46,6 +48,10 @@ export const useCoreStore = create<CoreState>((set, get) => ({
        VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`,
       [profile.name, profile.height, profile.age, profile.startDate, profile.weightGoal],
     )
+    eventBus.emit(CORE_EVENTS.PROFILE_UPDATED, {
+      name: profile.name,
+      hasGoal: Boolean(profile.weightGoal),
+    }, { source: 'core', persist: true })
   },
 
   settings: {
@@ -76,6 +82,10 @@ export const useCoreStore = create<CoreState>((set, get) => ({
       `INSERT OR REPLACE INTO settings (key, value) VALUES ('sidebarCollapsed', ?)`,
       [settings.sidebarCollapsed ? 'true' : 'false'],
     )
+    eventBus.emit(CORE_EVENTS.SETTINGS_UPDATED, {
+      theme: settings.theme,
+      sidebarCollapsed: settings.sidebarCollapsed,
+    }, { source: 'core', persist: true })
   },
 
   activePlugins: [],

@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
-import { eventBus } from '@core/events/EventBus'
 import { useCoreStore } from '@core/state/coreStore'
-import type { EventLogEntry } from '@core/types'
+import { buildSystemSuggestions, computeHeroState, subscribeGuidanceRefresh } from './systemGuidance'
 
 type DayState = 'on-track' | 'unstable' | 'disconnected'
 
@@ -12,68 +11,6 @@ interface HeroState {
   insight: string
   ctaLabel: string
   ctaPath: string
-}
-
-const FITNESS_WEIGHT_EVENTS = new Set(['WEIGHT_RECORDED', 'FITNESS_WEIGHT_RECORDED'])
-const WORK_DONE_EVENTS = new Set(['TASK_COMPLETED', 'WORK_TASK_COMPLETED'])
-
-function isOneOf(entry: EventLogEntry, values: Set<string>): boolean {
-  return values.has(entry.event_type)
-}
-
-function computeState(events: EventLogEntry[]): HeroState {
-  const now = Date.now()
-  const ONE_DAY = 86_400_000
-  const THREE_DAYS = ONE_DAY * 3
-
-  const lastEvent = events[0]
-
-  if (!lastEvent) {
-    return {
-      dayState: 'disconnected',
-      insight: 'Sin actividad registrada aún. Empezá ahora.',
-      ctaLabel: 'Registrar peso',
-      ctaPath: '/fitness/tracking',
-    }
-  }
-
-  const lastTs = new Date(lastEvent.created_at).getTime()
-  const elapsed = now - lastTs
-
-  // Check weight-specific gap for more actionable insight
-  const lastWeight = events.find((e) => isOneOf(e, FITNESS_WEIGHT_EVENTS))
-  const lastTask = events.find((e) => isOneOf(e, WORK_DONE_EVENTS))
-
-  if (elapsed < ONE_DAY) {
-    const insight = lastWeight
-      ? `Último registro: ${lastEvent.source === 'fitness' ? 'Fitness' : 'Work'} — todo en orden.`
-      : 'Hay actividad hoy. Seguí el ritmo.'
-    return {
-      dayState: 'on-track',
-      insight,
-      ctaLabel: 'Ver dashboard fitness',
-      ctaPath: '/fitness',
-    }
-  }
-
-  if (elapsed < THREE_DAYS) {
-    const days = Math.floor(elapsed / ONE_DAY)
-    const src = lastEvent.source === 'fitness' ? 'peso' : 'trabajo'
-    return {
-      dayState: 'unstable',
-      insight: `Hace ${days} ${days === 1 ? 'día' : 'días'} sin registrar ${src}.`,
-      ctaLabel: lastTask ? 'Retomar trabajo' : 'Registrar peso',
-      ctaPath: lastTask ? '/work' : '/fitness/tracking',
-    }
-  }
-
-  const days = Math.floor(elapsed / ONE_DAY)
-  return {
-    dayState: 'disconnected',
-    insight: `Hace ${days} días sin actividad. Volvé al sistema.`,
-    ctaLabel: 'Planificar día',
-    ctaPath: '/fitness/tracking',
-  }
 }
 
 function getGreeting(name: string): string {
@@ -125,6 +62,7 @@ const STATE_CONFIG: Record<DayState, { label: string; dot: string; border: strin
 export function SystemStatusHero() {
   const navigate = useNavigate()
   const profileName = useCoreStore((s) => s.profile.name)
+  const activePluginIds = useCoreStore((s) => s.activePlugins)
   const [heroState, setHeroState] = useState<HeroState>({
     dayState: 'on-track',
     insight: 'Cargando estado del sistema…',
@@ -135,30 +73,20 @@ export function SystemStatusHero() {
   useEffect(() => {
     const load = () => {
       storageAPI
-        .getRecentEvents(50)
-        .then((events) => setHeroState(computeState(events)))
+        .getRecentEvents(120)
+        .then((events) => {
+          const suggestions = buildSystemSuggestions(events, activePluginIds)
+          setHeroState(computeHeroState(events, suggestions, activePluginIds))
+        })
         .catch(() => {})
     }
 
     load()
 
-    // Event persistence is async; delay slightly before re-reading SQLite.
-    const delayedLoad = () => setTimeout(load, 60)
-    const unsubs = [
-      eventBus.on('FITNESS_WEIGHT_RECORDED', delayedLoad),
-      eventBus.on('FITNESS_DAILY_ENTRY_SAVED', delayedLoad),
-      eventBus.on('WORK_TASK_COMPLETED', delayedLoad),
-      eventBus.on('WORK_TASK_CREATED', delayedLoad),
-      eventBus.on('WORK_TASK_MOVED', delayedLoad),
-      // backward compatibility if old events are still emitted in some places
-      eventBus.on('WEIGHT_RECORDED', delayedLoad),
-      eventBus.on('TASK_COMPLETED', delayedLoad),
-      eventBus.on('TASK_CREATED', delayedLoad),
-      eventBus.on('TASK_MOVED', delayedLoad),
-    ]
+    const unsubs = subscribeGuidanceRefresh(load)
 
     return () => unsubs.forEach((u) => u())
-  }, [])
+  }, [activePluginIds])
 
   const cfg = STATE_CONFIG[heroState.dayState]
 

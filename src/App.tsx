@@ -9,6 +9,7 @@ import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
 import { useCoreStore } from './core/state/coreStore'
+import { useGamificationStore } from './core/gamification/gamificationStore'
 
 // Import and register plugins
 import './plugins/fitness'
@@ -20,6 +21,7 @@ export function App() {
   const setActivePlugins = useCoreStore((s) => s.setActivePlugins)
   const onboardingComplete = useCoreStore((s) => s.onboardingComplete)
   const loadFromStorage = useCoreStore((s) => s.loadFromStorage)
+  const loadGamificationFromStorage = useGamificationStore((s) => s.loadFromStorage)
 
   const pluginPages = useMemo(() => pluginManager.getActivePages(), [activePluginIds, ready])
 
@@ -28,6 +30,7 @@ export function App() {
       try {
         // Load persisted state first (onboarding flag, profile)
         await loadFromStorage()
+        await loadGamificationFromStorage()
 
         const plugins = getAvailablePlugins()
         for (const manifest of plugins) {
@@ -47,7 +50,7 @@ export function App() {
       }
     }
     bootstrap()
-  }, [setActivePlugins, loadFromStorage])
+  }, [setActivePlugins, loadFromStorage, loadGamificationFromStorage])
 
   if (!ready) {
     return (

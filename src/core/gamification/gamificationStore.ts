@@ -31,6 +31,15 @@ interface GamificationState {
   setStreak: (n: number) => void
   unlockAchievement: (id: string) => void
   checkAchievements: (stats: GamificationStats) => void
+  loadFromStorage: () => Promise<void>
+}
+
+interface PersistedGamificationState {
+  points: number
+  level: number
+  streak: number
+  history: { amount: number; reason: string; date: string }[]
+  unlockedIds: string[]
 }
 
 const POINTS_PER_LEVEL = 100
@@ -80,6 +89,27 @@ const DEFAULT_ACHIEVEMENTS: Achievement[] = [
   },
 ]
 
+const SETTINGS_KEY = 'gamificationState'
+
+function getPersistableState(state: Pick<GamificationState, 'points' | 'level' | 'streak' | 'history' | 'unlockedIds'>): PersistedGamificationState {
+  return {
+    points: state.points,
+    level: state.level,
+    streak: state.streak,
+    history: state.history.slice(0, 50),
+    unlockedIds: state.unlockedIds,
+  }
+}
+
+function persistState(state: Pick<GamificationState, 'points' | 'level' | 'streak' | 'history' | 'unlockedIds'>): void {
+  if (!window.storage) return
+  const payload = JSON.stringify(getPersistableState(state))
+  void window.storage.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+    [SETTINGS_KEY, payload],
+  )
+}
+
 export const useGamificationStore = create<GamificationState>((set, get) => ({
   points: 0,
   level: 1,
@@ -100,7 +130,7 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
 
       eventBus.emit(GAMIFICATION_EVENTS.POINTS_ADDED, { amount, reason, total: newPoints })
 
-      return {
+      const nextState = {
         points: newPoints,
         level: newLevel,
         history: [
@@ -108,10 +138,30 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
           ...s.history.slice(0, 49),
         ],
       }
+
+      persistState({
+        points: nextState.points,
+        level: nextState.level,
+        streak: s.streak,
+        history: nextState.history,
+        unlockedIds: s.unlockedIds,
+      })
+
+      return nextState
     })
   },
 
-  setStreak: (n) => set({ streak: n }),
+  setStreak: (n) =>
+    set((s) => {
+      persistState({
+        points: s.points,
+        level: s.level,
+        streak: n,
+        history: s.history,
+        unlockedIds: s.unlockedIds,
+      })
+      return { streak: n }
+    }),
 
   unlockAchievement: (id) => {
     const s = get()
@@ -119,7 +169,16 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
     const ach = s.achievements.find((a) => a.id === id)
     if (!ach) return
 
-    set({ unlockedIds: [...s.unlockedIds, id] })
+    const unlockedIds = [...s.unlockedIds, id]
+    set({ unlockedIds })
+
+    persistState({
+      points: s.points,
+      level: s.level,
+      streak: s.streak,
+      history: s.history,
+      unlockedIds,
+    })
 
     eventBus.emit(GAMIFICATION_EVENTS.ACHIEVEMENT_UNLOCKED, {
       id,
@@ -133,6 +192,37 @@ export const useGamificationStore = create<GamificationState>((set, get) => ({
       if (!s.unlockedIds.includes(ach.id) && ach.condition(stats)) {
         get().unlockAchievement(ach.id)
       }
+    }
+  },
+
+  loadFromStorage: async () => {
+    if (!window.storage) return
+
+    try {
+      const rows = (await window.storage.query(
+        `SELECT value FROM settings WHERE key = ? LIMIT 1`,
+        [SETTINGS_KEY],
+      )) as { value: string }[]
+
+      const raw = rows[0]?.value
+      if (!raw) return
+
+      const parsed = JSON.parse(raw) as Partial<PersistedGamificationState>
+      const points = Number(parsed.points ?? 0)
+      const level = Number(parsed.level ?? Math.floor(points / POINTS_PER_LEVEL) + 1)
+      const streak = Number(parsed.streak ?? 0)
+      const history = Array.isArray(parsed.history) ? parsed.history.slice(0, 50) : []
+      const unlockedIds = Array.isArray(parsed.unlockedIds) ? parsed.unlockedIds : []
+
+      set({
+        points,
+        level,
+        streak,
+        history,
+        unlockedIds,
+      })
+    } catch {
+      // ignore malformed persisted state
     }
   },
 }))

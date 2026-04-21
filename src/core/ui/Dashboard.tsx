@@ -14,6 +14,20 @@ export function Dashboard() {
   const navItems = pluginManager.getActiveNavItems()
   const allPlugins = pluginManager.getAllPlugins()
 
+  const hasFitnessKpi = widgets.some((w) => w.id === 'fitness-kpi')
+  const hasWorkSummary = widgets.some((w) => w.id === 'work-summary')
+  const useStackedPrimaryLayout = widgets.length === 2 && hasFitnessKpi && hasWorkSummary
+
+  const orderedWidgets = useStackedPrimaryLayout
+    ? [...widgets].sort((a, b) => {
+        const orderMap: Record<string, number> = {
+          'fitness-kpi': 0,
+          'work-summary': 1,
+        }
+        return (orderMap[a.id] ?? 99) - (orderMap[b.id] ?? 99)
+      })
+    : widgets
+
   // Map pluginId → first navItem path for click navigation
   const pluginPath: Record<string, string> = {}
   for (const item of navItems) {
@@ -33,16 +47,30 @@ export function Dashboard() {
 
       {/* 4. Modules + Activity feed */}
       {widgets.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className={`grid grid-cols-1 gap-4 xl:grid-cols-3 ${useStackedPrimaryLayout ? 'xl:min-h-[430px]' : ''}`}>
           {/* Modules: takes 2/3 width on xl */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:col-span-2">
-            {widgets.map((widget) => {
+          <div
+            className={`grid grid-cols-1 gap-4 xl:col-span-2 ${
+              useStackedPrimaryLayout ? 'xl:grid-rows-[0.82fr_1.18fr]' : 'md:grid-cols-2'
+            }`}
+          >
+            {orderedWidgets.map((widget) => {
               const Component = widget.component
               const path = pluginPath[widget.pluginId]
+              const stackedSizeClass = useStackedPrimaryLayout
+                ? widget.id === 'fitness-kpi'
+                  ? 'xl:min-h-[150px]'
+                  : widget.id === 'work-summary'
+                    ? 'xl:min-h-[260px]'
+                    : ''
+                : ''
+
               return (
                 <div
                   key={widget.id}
-                  className="group rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg transition-all duration-150 hover:border-accent/40 hover:shadow-xl"
+                  className={`group rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg transition-all duration-150 hover:border-accent/40 hover:shadow-xl ${
+                    useStackedPrimaryLayout ? 'h-full flex flex-col' : ''
+                  } ${stackedSizeClass}`}
                 >
                   <button
                     onClick={() => path && navigate(path)}
@@ -57,7 +85,9 @@ export function Dashboard() {
                       </span>
                     )}
                   </button>
-                  <Component />
+                  <div className={useStackedPrimaryLayout ? 'flex-1' : ''}>
+                    <Component />
+                  </div>
                 </div>
               )
             })}
