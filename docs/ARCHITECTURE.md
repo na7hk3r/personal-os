@@ -127,6 +127,7 @@ interface CoreAPI {
 - Lista de plugins activos.
 - Flag `onboardingComplete`.
 - Persistencia a/desde SQLite.
+- Soporte de configuración centralizada para módulos vía tabla `settings` (ej. `pluginSettings:fitness`, `pluginSettings:work`, `corePlannerTasksV1`).
 
 #### `gamificationStore`
 - Puntos totales, nivel calculado (puntos / 100 + 1), racha de días.
@@ -161,6 +162,19 @@ El dashboard principal combina componentes del core y widgets de plugins:
 - `SystemStatusHero` y `SystemSuggestions` consumen una lógica compartida (`systemGuidance.ts`) para derivar estado, próximo paso y situación `todo activo y OK`.
 - `RecentActivityFeed` consulta `events_log` y se refresca con eventos persistidos del sistema.
 - Los widgets principales del dashboard pueden reordenarse condicionalmente para optimizar distribución visual, como ocurre con `KPIs Fitness` + `Resumen Trabajo` junto al feed de actividad.
+- El colapso de widgets de plugins se resuelve en el layout core, no en los plugins: el dashboard decide cuándo usar filas fijas o altura dinámica.
+
+### 9. Planner core (no plugin)
+
+`src/core/ui/pages/PlannerPage.tsx` implementa agenda diaria/calenadario como parte del core:
+
+- To-do por categoría (`domestica`, `recordatorio`, `trabajo`, `personal`).
+- Complejidad por tarea (`baja`, `media`, `alta`) con XP asociado.
+- Vistas mensual y semanal con filtros.
+- Reprogramación de tareas por drag and drop entre días.
+- Persistencia en `settings` bajo `corePlannerTasksV1`.
+
+Cuando se completa una tarea por primera vez, emite `CORE_PLANNER_TASK_COMPLETED` y dispara flujo de gamificación.
 
 ## Flujo de datos típico
 

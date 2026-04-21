@@ -20,7 +20,7 @@ Por ejemplo: 250 puntos → Nivel 3 (con 50/100 hacia el nivel 4).
 
 Días consecutivos con al menos una acción registrada. Se muestra en la barra de gamificación del sidebar.
 
-Desde la versión `1.1.0`, la racha persiste junto con el resto del snapshot de gamificación.
+Desde la versión `1.2.0`, la racha y misiones diarias persisten junto con el resto del snapshot de gamificación.
 
 ### Logros (achievements)
 
@@ -35,6 +35,11 @@ Los logros se desbloquean una sola vez y quedan marcados permanentemente. Cada l
 | **Work** | Tarea completada (movida a "Hecho") | +10 |
 | **Work** | Sesión de foco completada | +5 |
 | **Work** | Sesión de foco interrumpida | −2 |
+| **Core Planner** | Tarea de complejidad baja completada | +5 |
+| **Core Planner** | Tarea de complejidad media completada | +10 |
+| **Core Planner** | Tarea de complejidad alta completada | +16 |
+
+Las tareas del Planner core cuentan además como misión diaria del sistema mediante `CORE_PLANNER_TASK_COMPLETED`.
 
 ## Logros disponibles
 

@@ -258,7 +258,7 @@ export function Sidebar() {
         {!sidebarCollapsed && (
           <div className="space-y-2">
             <img src="/ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
-            <span>v1.0.0</span>
+            <span>v1.2.0</span>
           </div>
         )}
       </div>

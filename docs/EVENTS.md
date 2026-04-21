@@ -15,6 +15,7 @@ Definidos en `src/core/events/events.ts`.
 | `CORE_PLUGIN_DEACTIVATED` | Plugin desactivado | `{ pluginId: string }` |
 | `CORE_ONBOARDING_COMPLETED` | Onboarding completado | `{ profile: UserProfile }` |
 | `CORE_SETTINGS_UPDATED` | Ajustes actualizados | `{ theme: string, sidebarCollapsed: boolean }` |
+| `CORE_PLANNER_TASK_COMPLETED` | Misión del Planner core completada | `{ taskId, title, complexity, xp, date }` |
 
 ### `GAMIFICATION_EVENTS`
 
@@ -85,6 +86,7 @@ Definidos en `src/plugins/work/events.ts`.
 | `WORK_TASK_COMPLETED` | +10 |
 | `WORK_FOCUS_COMPLETED` | +5 |
 | `WORK_FOCUS_INTERRUPTED` | −2 |
+| `CORE_PLANNER_TASK_COMPLETED` | +XP según complejidad (5/10/16) |
 
 ---
 
@@ -150,3 +152,4 @@ useEffect(() => {
   - eventos de Work (`WORK_TASK_CREATED`, `WORK_TASK_COMPLETED`, `WORK_TASK_MOVED`)
   - eventos core de activación/desactivación de plugins
 - Guardar perfil o preferencias desde Control Center emite eventos core para que el dashboard refleje el cambio en tiempo real.
+- Completar tareas en Planner core también emite eventos core para timeline y misión diaria.

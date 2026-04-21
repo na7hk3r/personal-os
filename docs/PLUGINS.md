@@ -168,6 +168,7 @@ const ALLOWED_TABLES: Record<string, Set<string>> = {
 - **Tablas**: `fitness_daily_entries`, `fitness_measurements`
 - **Páginas**: `/fitness`, `/fitness/tracking`, `/fitness/measurements`
 - **Eventos emitidos**: ver [EVENTS.md](EVENTS.md#fitness)
+- **Configuración centralizada en core**: `settings['pluginSettings:fitness']`
 
 ### work
 - **ID**: `work`
@@ -175,3 +176,23 @@ const ALLOWED_TABLES: Record<string, Set<string>> = {
 - **Páginas**: `/work`
 - **Eventos emitidos**: ver [EVENTS.md](EVENTS.md#work)
 - **Motor de foco**: sesión activa global con persistencia de duración y eficiencia
+- **Configuración centralizada en core**: `settings['pluginSettings:work']`
+
+## Configuración por plugin desde el core
+
+Desde `Control Center`, el core permite guardar preferencias por plugin sin modificar código del plugin:
+
+- `pluginSettings:fitness`:
+  - entrenos/semana
+  - sueño objetivo
+  - límite de cigarrillos
+  - objetivo de comidas
+  - recordatorio de mediciones
+
+- `pluginSettings:work`:
+  - duración de foco y break
+  - alerta de vencimiento
+  - límite WIP
+  - vista predeterminada de tablero
+
+Estas preferencias se guardan en `settings` y pueden ser consumidas por componentes/plugins para ajustar su comportamiento.

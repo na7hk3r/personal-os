@@ -1,6 +1,6 @@
 # Personal OS
 
-Versión actual: `1.1.0`
+Versión actual: `1.2.0`
 
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
@@ -10,11 +10,15 @@ Personal OS es una aplicación modular que centraliza el seguimiento de hábitos
 
 ## Novedades recientes
 
-- Dashboard principal reequilibrado: `KPIs Fitness` y `Resumen Trabajo` se apilan mejor junto a `Actividad Reciente`.
-- `Resumen Trabajo` ahora muestra métricas compactas de ejecución: activas, en progreso, hechas, foco hoy, vencidas, notas y links.
-- `Actividad Reciente` se actualiza correctamente con eventos de Fitness, Work y Core, e incluye filtros por fuente y rango temporal.
-- El hero de estado y el bloque de sugerencias comparten lógica: muestran próximo paso real o estado `todo activo y OK`.
-- La gamificación persiste entre recargas: puntos, nivel, racha, historial y logros desbloqueados.
+- Dashboard principal reequilibrado y colapso de módulos corregido para `KPIs Fitness` y `Resumen Trabajo`.
+- Nuevo módulo core `Planner` (`/planner`) con:
+	- to-do diario por categorías,
+	- vista mensual y semanal,
+	- filtros por estado y categoría,
+	- drag and drop de tareas entre días.
+- Las tareas del Planner core se integran con gamificación como misión diaria y otorgan XP por complejidad.
+- `Control Center` incorpora configuración por plugin (Fitness y Work), persistida en `settings`.
+- `Actividad Reciente` y la capa de gamificación consumen eventos de Fitness, Work y Core, incluyendo `CORE_PLANNER_TASK_COMPLETED`.
 
 ## Stack tecnológico
 
@@ -93,6 +97,10 @@ personal-os/
 │   │       ├── GlobalProgress.tsx
 │   │       ├── RecentActivityFeed.tsx
 │   │       ├── SystemSuggestions.tsx
+│   │       ├── pages/
+│   │       │   ├── PlannerPage.tsx
+│   │       │   ├── NotesPage.tsx
+│   │       │   └── LinksPage.tsx
 │   │       └── onboarding/      # Wizard de configuración inicial
 │   └── plugins/                 # Plugins cargados dinámicamente
 │       ├── fitness/             # Plugin de salud y hábitos
@@ -122,10 +130,13 @@ El sistema asigna XP por acciones:
 | Tarea de trabajo completada | +10 |
 | Sesión de foco completada | +5 |
 | Sesión de foco interrumpida | −2 |
+| Misión Planner core (baja) | +5 |
+| Misión Planner core (media) | +10 |
+| Misión Planner core (alta) | +16 |
 
 Cada 100 puntos sube un nivel. Los logros se desbloquean por hitos acumulados.
 
-Desde la versión `1.1.0`, el estado de gamificación se guarda en SQLite y se restaura al iniciar la app.
+Desde la versión `1.2.0`, el sistema incluye misión diaria core del Planner y persistencia extendida de estado de misión/racha.
 
 ## Dashboard y observabilidad
 
@@ -133,6 +144,25 @@ Desde la versión `1.1.0`, el estado de gamificación se guarda en SQLite y se r
 - `SystemSuggestions`: sugerencias accionables sincronizadas con el estado real del sistema.
 - `RecentActivityFeed`: timeline reciente con eventos persistidos de `fitness`, `work` y `core`, además de filtros por fuente y por últimas 24h.
 - `GlobalProgress`: resumen expandido de gamificación.
+
+## Planner core
+
+El módulo `Planner` forma parte del core (no es plugin) y centraliza tareas diarias domésticas, recordatorios y pendientes personales.
+
+- Ruta: `/planner`
+- Persistencia: clave `corePlannerTasksV1` en `settings`
+- Campos de tarea: título, categoría, complejidad, fecha y nota
+- Integración con gamificación: al completar una tarea por primera vez emite evento core y asigna XP según complejidad
+
+## Configuración por plugin en Control Center
+
+`Control Center` incluye un panel para ajustar configuración de `Fitness` y `Work` desde el core.
+
+- Claves de persistencia:
+	- `pluginSettings:fitness`
+	- `pluginSettings:work`
+
+Esto permite centralizar configuración operativa sin entrar a páginas internas de cada plugin.
 
 ## Seguridad
 
