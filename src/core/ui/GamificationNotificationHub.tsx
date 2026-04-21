@@ -139,6 +139,7 @@ export function GamificationNotificationHub() {
       eventBus.on(WORK_EVENTS.FOCUS_STARTED, () => onAction(WORK_EVENTS.FOCUS_STARTED)),
       eventBus.on(WORK_EVENTS.FOCUS_COMPLETED, () => onAction(WORK_EVENTS.FOCUS_COMPLETED)),
       eventBus.on(WORK_EVENTS.NOTE_CREATED, () => onAction(WORK_EVENTS.NOTE_CREATED)),
+      eventBus.on(CORE_EVENTS.PLANNER_TASK_COMPLETED, () => onAction(CORE_EVENTS.PLANNER_TASK_COMPLETED)),
     ]
 
     return () => {

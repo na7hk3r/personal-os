@@ -4,6 +4,7 @@ import { useFitnessStore } from '@plugins/fitness/store'
 import { useWorkStore } from '@plugins/work/store'
 import { FITNESS_EVENTS } from '@plugins/fitness/events'
 import { WORK_EVENTS } from '@plugins/work/events'
+import { CORE_EVENTS } from '@core/events/events'
 
 const ACTION_EVENTS: Set<string> = new Set([
   FITNESS_EVENTS.DAILY_ENTRY_SAVED,
@@ -13,6 +14,7 @@ const ACTION_EVENTS: Set<string> = new Set([
   WORK_EVENTS.FOCUS_STARTED,
   WORK_EVENTS.FOCUS_COMPLETED,
   WORK_EVENTS.NOTE_CREATED,
+  CORE_EVENTS.PLANNER_TASK_COMPLETED,
 ])
 
 export interface AchievementProgress {

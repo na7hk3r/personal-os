@@ -5,6 +5,7 @@ import { FITNESS_EVENTS } from '@plugins/fitness/events'
 import { WORK_EVENTS } from '@plugins/work/events'
 import { getIsoDateKey, getXpMultiplierForStreak } from './gamificationUtils'
 import { useCoreStore } from '@core/state/coreStore'
+import { CORE_EVENTS } from '@core/events/events'
 
 export interface Achievement {
   id: string
@@ -188,6 +189,14 @@ const DAILY_MISSION_TEMPLATES: DailyMissionTemplate[] = [
     xp: 5,
     triggerEvents: [WORK_EVENTS.FOCUS_STARTED],
     requiredPlugins: ['work'],
+  },
+  {
+    id: 'core-planner-task',
+    title: 'Completa una mision del planner',
+    description: 'Cierra al menos una tarea del planner core',
+    xp: 8,
+    triggerEvents: [CORE_EVENTS.PLANNER_TASK_COMPLETED],
+    requiredPlugins: [],
   },
 ]
 

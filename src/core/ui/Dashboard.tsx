@@ -61,6 +61,9 @@ export function Dashboard() {
   const hasFitnessKpi = widgets.some((w) => w.id === 'fitness-kpi')
   const hasWorkSummary = widgets.some((w) => w.id === 'work-summary')
   const useStackedPrimaryLayout = widgets.length === 2 && hasFitnessKpi && hasWorkSummary
+  const hasCollapsedStackedModule =
+    Boolean(collapsedModules['fitness-kpi']) || Boolean(collapsedModules['work-summary'])
+  const useFixedStackedRows = useStackedPrimaryLayout && !hasCollapsedStackedModule
 
   const baseWidgets = useStackedPrimaryLayout
     ? [...widgets].sort((a, b) => {
@@ -187,11 +190,11 @@ export function Dashboard() {
 
       {/* 4. Modules + Activity feed */}
       {widgets.length > 0 ? (
-        <div className={`grid grid-cols-1 gap-4 xl:grid-cols-3 ${useStackedPrimaryLayout ? 'xl:min-h-[430px]' : ''}`}>
+        <div className={`grid grid-cols-1 gap-4 xl:grid-cols-3 ${useFixedStackedRows ? 'xl:min-h-[430px]' : ''}`}>
           {/* Modules: takes 2/3 width on xl */}
           <div
             className={`grid grid-cols-1 gap-4 xl:col-span-2 ${
-              useStackedPrimaryLayout ? 'xl:grid-rows-[0.82fr_1.18fr]' : 'md:grid-cols-2'
+              useFixedStackedRows ? 'xl:grid-rows-[0.82fr_1.18fr]' : 'md:grid-cols-2'
             }`}
           >
             {orderedWidgets.map((widget) => {
@@ -199,7 +202,7 @@ export function Dashboard() {
               const path = pluginPath[widget.pluginId]
               const isCollapsed = Boolean(collapsedModules[widget.id])
               const isExpanded = expandedModuleId === widget.id && !isCollapsed
-              const stackedSizeClass = useStackedPrimaryLayout
+              const stackedSizeClass = useFixedStackedRows && !isCollapsed
                 ? widget.id === 'fitness-kpi'
                   ? 'xl:min-h-[150px]'
                   : widget.id === 'work-summary'
@@ -210,14 +213,16 @@ export function Dashboard() {
               const moduleSizeClass = isExpanded
                 ? 'md:col-span-2 min-h-[360px] xl:min-h-[440px]'
                 : isCollapsed
-                  ? ''
+                  ? 'min-h-0'
                   : 'min-h-[220px]'
 
               return (
                 <div
                   key={widget.id}
-                  className={`group rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg transition-all duration-150 hover:border-accent/40 hover:shadow-xl ${
-                    useStackedPrimaryLayout && !isCollapsed ? 'h-full flex flex-col' : ''
+                  className={`group rounded-xl border border-border bg-surface-light/85 shadow-lg transition-all duration-150 hover:border-accent/40 hover:shadow-xl ${
+                    isCollapsed ? 'p-3' : 'p-4'
+                  } ${
+                    useFixedStackedRows && !isCollapsed ? 'h-full flex flex-col' : ''
                   } ${stackedSizeClass} ${moduleSizeClass}`}
                 >
                   <div className={`flex w-full items-center justify-between gap-2 text-left ${isCollapsed ? '' : 'mb-3'}`}>

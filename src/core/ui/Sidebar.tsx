@@ -10,6 +10,7 @@ import {
   BriefcaseBusiness,
   NotebookPen,
   Link2,
+  CalendarDays,
   Flame,
   type LucideIcon,
 } from 'lucide-react'
@@ -148,6 +149,12 @@ export function Sidebar() {
         <NavLink to="/links" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
           <Link2 size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Enlaces</span>}
+        </NavLink>
+
+        {/* Core: Planner */}
+        <NavLink to="/planner" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <CalendarDays size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Planner</span>}
         </NavLink>
 
         {/* Plugin nav items */}

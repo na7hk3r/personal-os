@@ -5,6 +5,7 @@ import { Dashboard } from './core/ui/Dashboard'
 import { ControlCenter } from './core/ui/ControlCenter'
 import { CoreNotesPage } from './core/ui/pages/NotesPage'
 import { CoreLinksPage } from './core/ui/pages/LinksPage'
+import { CorePlannerPage } from './core/ui/pages/PlannerPage'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
@@ -76,6 +77,7 @@ export function App() {
           <Route path="/control" element={<ControlCenter />} />
           <Route path="/notes" element={<CoreNotesPage />} />
           <Route path="/links" element={<CoreLinksPage />} />
+          <Route path="/planner" element={<CorePlannerPage />} />
           {pluginPages.map((page) => (
             <Route
               key={page.id}

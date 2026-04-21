@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
@@ -11,6 +11,41 @@ const THEMES = [
   { value: 'bosque', label: 'Bosque', description: 'Verdes oscuros, natural' },
   { value: 'light', label: 'Light', description: 'Tonos claros, alto contraste' },
 ] as const
+
+interface FitnessPluginSettings {
+  workoutTargetPerWeek: number
+  sleepTargetHours: number
+  maxCigarettesPerDay: number
+  mealComplianceTarget: number
+  remindMeasurements: boolean
+}
+
+interface WorkPluginSettings {
+  focusSessionMinutes: number
+  breakMinutes: number
+  overdueAlertHours: number
+  wipLimit: number
+  defaultBoardView: 'kanban' | 'list'
+}
+
+const FITNESS_SETTINGS_KEY = 'pluginSettings:fitness'
+const WORK_SETTINGS_KEY = 'pluginSettings:work'
+
+const DEFAULT_FITNESS_SETTINGS: FitnessPluginSettings = {
+  workoutTargetPerWeek: 4,
+  sleepTargetHours: 8,
+  maxCigarettesPerDay: 6,
+  mealComplianceTarget: 80,
+  remindMeasurements: true,
+}
+
+const DEFAULT_WORK_SETTINGS: WorkPluginSettings = {
+  focusSessionMinutes: 25,
+  breakMinutes: 5,
+  overdueAlertHours: 24,
+  wipLimit: 6,
+  defaultBoardView: 'kanban',
+}
 
 export function ControlCenter() {
   const navigate = useNavigate()
@@ -29,6 +64,10 @@ export function ControlCenter() {
   const [profileMessage, setProfileMessage] = useState('')
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsMessage, setSettingsMessage] = useState('')
+  const [fitnessSettings, setFitnessSettings] = useState<FitnessPluginSettings>(DEFAULT_FITNESS_SETTINGS)
+  const [workSettings, setWorkSettings] = useState<WorkPluginSettings>(DEFAULT_WORK_SETTINGS)
+  const [savingPluginSettings, setSavingPluginSettings] = useState(false)
+  const [pluginSettingsMessage, setPluginSettingsMessage] = useState('')
 
   const plugins = pluginManager.getAllPlugins()
 
@@ -91,6 +130,65 @@ export function ControlCenter() {
       setSavingSettings(false)
     }
   }
+
+  const savePluginSettings = async () => {
+    if (!window.storage) return
+    setPluginSettingsMessage('')
+    setSavingPluginSettings(true)
+    try {
+      await window.storage.execute(
+        `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+        [FITNESS_SETTINGS_KEY, JSON.stringify(fitnessSettings)],
+      )
+      await window.storage.execute(
+        `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+        [WORK_SETTINGS_KEY, JSON.stringify(workSettings)],
+      )
+      setPluginSettingsMessage('Configuración de plugins guardada correctamente.')
+    } catch {
+      setPluginSettingsMessage('No se pudo guardar la configuración de plugins.')
+    } finally {
+      setSavingPluginSettings(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!window.storage) return
+    void window.storage
+      .query(
+        `SELECT key, value FROM settings WHERE key IN (?, ?)` ,
+        [FITNESS_SETTINGS_KEY, WORK_SETTINGS_KEY],
+      )
+      .then((rows) => {
+        const list = rows as { key: string; value: string }[]
+        const map = Object.fromEntries(list.map((entry) => [entry.key, entry.value]))
+
+        if (map[FITNESS_SETTINGS_KEY]) {
+          try {
+            const parsed = JSON.parse(map[FITNESS_SETTINGS_KEY]) as Partial<FitnessPluginSettings>
+            setFitnessSettings((prev) => ({
+              ...prev,
+              ...parsed,
+            }))
+          } catch {
+            // ignore malformed value
+          }
+        }
+
+        if (map[WORK_SETTINGS_KEY]) {
+          try {
+            const parsed = JSON.parse(map[WORK_SETTINGS_KEY]) as Partial<WorkPluginSettings>
+            setWorkSettings((prev) => ({
+              ...prev,
+              ...parsed,
+            }))
+          } catch {
+            // ignore malformed value
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const activePlugins = useMemo(
     () => plugins.filter((plugin) => plugin.status === 'active').length,
@@ -268,6 +366,188 @@ export function ControlCenter() {
             {settingsMessage && <span className="text-xs text-muted">{settingsMessage}</span>}
           </div>
         </article>
+      </section>
+
+      {/* Configuración por plugin */}
+      <section className="rounded-2xl border border-border bg-surface-light/85 p-6">
+        <h2 className="text-lg font-semibold">Configuración por plugin</h2>
+        <p className="mt-1 text-sm text-muted">Ajustes operativos para módulos Fitness y Work.</p>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <article className="rounded-xl border border-border bg-surface p-4">
+            <h3 className="text-sm font-semibold text-white">Fitness</h3>
+            <p className="mt-1 text-xs text-muted">Objetivos y límites para seguimiento diario.</p>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Entrenos por semana</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={14}
+                  value={fitnessSettings.workoutTargetPerWeek}
+                  onChange={(e) => setFitnessSettings((prev) => ({
+                    ...prev,
+                    workoutTargetPerWeek: Number(e.target.value) || 1,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Sueño objetivo (h)</span>
+                <input
+                  type="number"
+                  min={4}
+                  max={12}
+                  value={fitnessSettings.sleepTargetHours}
+                  onChange={(e) => setFitnessSettings((prev) => ({
+                    ...prev,
+                    sleepTargetHours: Number(e.target.value) || 8,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Máx cigarrillos/día</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  value={fitnessSettings.maxCigarettesPerDay}
+                  onChange={(e) => setFitnessSettings((prev) => ({
+                    ...prev,
+                    maxCigarettesPerDay: Number(e.target.value) || 0,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Cumplimiento comidas (%)</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={fitnessSettings.mealComplianceTarget}
+                  onChange={(e) => setFitnessSettings((prev) => ({
+                    ...prev,
+                    mealComplianceTarget: Number(e.target.value) || 0,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <label className="mt-3 flex items-center justify-between rounded-lg border border-border bg-surface-light px-3 py-2">
+              <span className="text-xs text-muted">Recordatorio de mediciones</span>
+              <input
+                type="checkbox"
+                checked={fitnessSettings.remindMeasurements}
+                onChange={(e) => setFitnessSettings((prev) => ({
+                  ...prev,
+                  remindMeasurements: e.target.checked,
+                }))}
+                className="h-4 w-4"
+              />
+            </label>
+          </article>
+
+          <article className="rounded-xl border border-border bg-surface p-4">
+            <h3 className="text-sm font-semibold text-white">Work</h3>
+            <p className="mt-1 text-xs text-muted">Preferencias de foco, tablero y carga de trabajo.</p>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Sesión foco (min)</span>
+                <input
+                  type="number"
+                  min={10}
+                  max={120}
+                  value={workSettings.focusSessionMinutes}
+                  onChange={(e) => setWorkSettings((prev) => ({
+                    ...prev,
+                    focusSessionMinutes: Number(e.target.value) || 25,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Break (min)</span>
+                <input
+                  type="number"
+                  min={3}
+                  max={30}
+                  value={workSettings.breakMinutes}
+                  onChange={(e) => setWorkSettings((prev) => ({
+                    ...prev,
+                    breakMinutes: Number(e.target.value) || 5,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Alerta vencimiento (h)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={168}
+                  value={workSettings.overdueAlertHours}
+                  onChange={(e) => setWorkSettings((prev) => ({
+                    ...prev,
+                    overdueAlertHours: Number(e.target.value) || 24,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Límite WIP</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={30}
+                  value={workSettings.wipLimit}
+                  onChange={(e) => setWorkSettings((prev) => ({
+                    ...prev,
+                    wipLimit: Number(e.target.value) || 1,
+                  }))}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+              </label>
+            </div>
+
+            <label className="mt-3 block space-y-1">
+              <span className="text-xs text-muted">Vista predeterminada</span>
+              <select
+                value={workSettings.defaultBoardView}
+                onChange={(e) => setWorkSettings((prev) => ({
+                  ...prev,
+                  defaultBoardView: e.target.value as 'kanban' | 'list',
+                }))}
+                className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+              >
+                <option value="kanban">Kanban</option>
+                <option value="list">Lista</option>
+              </select>
+            </label>
+          </article>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => void savePluginSettings()}
+            disabled={savingPluginSettings}
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-60"
+          >
+            <Save size={13} />
+            {savingPluginSettings ? 'Guardando...' : 'Guardar configuración de plugins'}
+          </button>
+          {pluginSettingsMessage && <span className="text-xs text-muted">{pluginSettingsMessage}</span>}
+        </div>
       </section>
 
       {/* Gestor de plugins */}
