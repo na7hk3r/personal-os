@@ -136,14 +136,18 @@ export function ControlCenter() {
     setPluginSettingsMessage('')
     setSavingPluginSettings(true)
     try {
-      await window.storage.execute(
-        `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-        [FITNESS_SETTINGS_KEY, JSON.stringify(fitnessSettings)],
-      )
-      await window.storage.execute(
-        `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-        [WORK_SETTINGS_KEY, JSON.stringify(workSettings)],
-      )
+      if (activePluginIds.includes('fitness')) {
+        await window.storage.execute(
+          `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+          [FITNESS_SETTINGS_KEY, JSON.stringify(fitnessSettings)],
+        )
+      }
+      if (activePluginIds.includes('work')) {
+        await window.storage.execute(
+          `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+          [WORK_SETTINGS_KEY, JSON.stringify(workSettings)],
+        )
+      }
       setPluginSettingsMessage('Configuración de plugins guardada correctamente.')
     } catch {
       setPluginSettingsMessage('No se pudo guardar la configuración de plugins.')
@@ -200,6 +204,9 @@ export function ControlCenter() {
     pages: pluginManager.getActivePages().length,
     navItems: pluginManager.getActiveNavItems().length,
   }
+  const isFitnessActive = activePluginIds.includes('fitness')
+  const isWorkActive = activePluginIds.includes('work')
+  const hasActivePluginSettings = isFitnessActive || isWorkActive
 
   return (
     <div className="space-y-6">
@@ -369,12 +376,14 @@ export function ControlCenter() {
       </section>
 
       {/* Configuración por plugin */}
-      <section className="rounded-2xl border border-border bg-surface-light/85 p-6">
-        <h2 className="text-lg font-semibold">Configuración por plugin</h2>
-        <p className="mt-1 text-sm text-muted">Ajustes operativos para módulos Fitness y Work.</p>
+      {hasActivePluginSettings && (
+        <section className="rounded-2xl border border-border bg-surface-light/85 p-6">
+          <h2 className="text-lg font-semibold">Configuración por plugin</h2>
+          <p className="mt-1 text-sm text-muted">Ajustes operativos para módulos activos.</p>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <article className="rounded-xl border border-border bg-surface p-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {isFitnessActive && (
+              <article className="rounded-xl border border-border bg-surface p-4">
             <h3 className="text-sm font-semibold text-white">Fitness</h3>
             <p className="mt-1 text-xs text-muted">Objetivos y límites para seguimiento diario.</p>
 
@@ -452,9 +461,11 @@ export function ControlCenter() {
                 className="h-4 w-4"
               />
             </label>
-          </article>
+              </article>
+            )}
 
-          <article className="rounded-xl border border-border bg-surface p-4">
+            {isWorkActive && (
+              <article className="rounded-xl border border-border bg-surface p-4">
             <h3 className="text-sm font-semibold text-white">Work</h3>
             <p className="mt-1 text-xs text-muted">Preferencias de foco, tablero y carga de trabajo.</p>
 
@@ -534,21 +545,23 @@ export function ControlCenter() {
                 <option value="list">Lista</option>
               </select>
             </label>
-          </article>
-        </div>
+              </article>
+            )}
+          </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => void savePluginSettings()}
-            disabled={savingPluginSettings}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-60"
-          >
-            <Save size={13} />
-            {savingPluginSettings ? 'Guardando...' : 'Guardar configuración de plugins'}
-          </button>
-          {pluginSettingsMessage && <span className="text-xs text-muted">{pluginSettingsMessage}</span>}
-        </div>
-      </section>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => void savePluginSettings()}
+              disabled={savingPluginSettings}
+              className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-60"
+            >
+              <Save size={13} />
+              {savingPluginSettings ? 'Guardando...' : 'Guardar configuración de plugins'}
+            </button>
+            {pluginSettingsMessage && <span className="text-xs text-muted">{pluginSettingsMessage}</span>}
+          </div>
+        </section>
+      )}
 
       {/* Gestor de plugins */}
       <section className="rounded-2xl border border-border bg-surface-light/85 p-6">

@@ -132,8 +132,8 @@ export function WorkDashboard() {
   const currentDuration = currentFocusSession ? now - currentFocusSession.startTime : 0
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-lg shadow-black/20">
+    <div className="plugin-shell plugin-shell-work space-y-6">
+      <section className="plugin-panel rounded-2xl p-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.24em] text-muted">Now Panel</p>
@@ -184,28 +184,28 @@ export function WorkDashboard() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="bg-surface-light rounded-xl border border-border p-4">
+        <div className="plugin-panel p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <ClipboardList size={14} />
             Tableros
           </p>
           <p className="text-2xl font-bold">{boards.length}</p>
         </div>
-        <div className="bg-surface-light rounded-xl border border-border p-4">
+        <div className="plugin-panel p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <ListChecks size={14} />
             Tareas
           </p>
           <p className="text-2xl font-bold">{totalCards}</p>
         </div>
-        <div className="bg-surface-light rounded-xl border border-border p-4">
+        <div className="plugin-panel p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <NotebookPen size={14} />
             Notas
           </p>
           <p className="text-2xl font-bold">{totalNotes}</p>
         </div>
-        <div className="bg-surface-light rounded-xl border border-border p-4">
+        <div className="plugin-panel p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <TimerReset size={14} />
             Foco hoy
@@ -216,7 +216,7 @@ export function WorkDashboard() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="rounded-2xl border border-border bg-surface-light/80 p-5">
+        <section className="plugin-panel rounded-2xl p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-muted">Active Tasks</p>
@@ -254,7 +254,7 @@ export function WorkDashboard() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-surface-light/80 p-5">
+        <section className="plugin-panel rounded-2xl p-5">
           <p className="text-xs uppercase tracking-[0.2em] text-muted">Recent Work Activity</p>
           <h3 className="mt-1 text-lg font-semibold text-white">Actividad reciente</h3>
 
