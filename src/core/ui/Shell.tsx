@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 import { GamificationNotificationHub } from './GamificationNotificationHub'
+import { SystemSuggestions } from './SystemSuggestions'
 
 export function Shell() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
@@ -25,6 +26,9 @@ export function Shell() {
         }`}
       >
         <div className="mx-auto max-w-7xl p-6">
+          <div className="mb-2 flex justify-end">
+            <SystemSuggestions />
+          </div>
           <Outlet />
         </div>
       </main>

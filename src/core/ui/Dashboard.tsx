@@ -8,7 +8,6 @@ import { GlobalProgress } from './GlobalProgress'
 import { DailyMissions } from './DailyMissions'
 import { MainDayTasks } from './MainDayTasks'
 import { RecentActivityFeed } from './RecentActivityFeed'
-import { SystemSuggestions } from './SystemSuggestions'
 import { DashboardFooter } from './DashboardFooter'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 
@@ -341,10 +340,7 @@ export function Dashboard() {
         </div>
       )}
 
-      {/* 5. Suggestions */}
-      <SystemSuggestions />
-
-      {/* 6. Footer */}
+      {/* 5. Footer */}
       <DashboardFooter />
     </div>
   )

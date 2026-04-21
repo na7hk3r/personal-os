@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
-import { Lightbulb, TriangleAlert, CheckCircle2 } from 'lucide-react'
+import { Bell, CheckCircle2, Lightbulb, TriangleAlert, X } from 'lucide-react'
 import { buildSystemSuggestions, subscribeGuidanceRefresh, type GuidanceSuggestion } from './systemGuidance'
 
 const TYPE_STYLES: Record<
@@ -18,6 +18,7 @@ export function SystemSuggestions() {
   const navigate = useNavigate()
   const activePluginIds = useCoreStore((s) => s.activePlugins)
   const [suggestions, setSuggestions] = useState<GuidanceSuggestion[]>([])
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     const load = () => {
@@ -32,34 +33,75 @@ export function SystemSuggestions() {
     return () => unsubs.forEach((u) => u())
   }, [activePluginIds])
 
+  const relevantSuggestions = suggestions.filter((s) => s.type !== 'positive')
+  const hasRelevant = relevantSuggestions.length > 0
+  const displaySuggestions = hasRelevant ? relevantSuggestions : suggestions
+
   if (suggestions.length === 0) return null
 
   return (
-    <div className="space-y-2">
-      <p className="text-xs uppercase tracking-widest text-muted">Sugerencias del Sistema</p>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        {suggestions.map((s) => {
-          const style = TYPE_STYLES[s.type]
-          const Icon = style.icon
-          return (
-            <div
-              key={s.id}
-              className={`rounded-xl border ${style.border} p-4 flex flex-col gap-3 animate-fade-in`}
-            >
-              <div className="flex items-start gap-2">
-                <Icon size={15} className="mt-0.5" />
-                <p className="text-xs text-muted leading-relaxed">{s.message}</p>
-              </div>
-              <button
-                onClick={() => navigate(s.ctaPath)}
-                className={`self-start text-xs font-medium ${style.text} hover:underline transition-all`}
-              >
-                {s.ctaLabel} →
-              </button>
+    <div className="relative flex justify-end">
+      <button
+        onClick={() => setExpanded((prev) => !prev)}
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-surface-light/90 text-muted shadow transition-colors hover:border-accent/40 hover:text-accent-light"
+        title={hasRelevant ? 'Abrir centro de notificaciones' : 'Abrir historial de notificaciones'}
+      >
+        <Bell size={15} />
+        {hasRelevant && (
+          <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-warning px-1 text-[10px] font-semibold text-slate-900">
+            {relevantSuggestions.length}
+          </span>
+        )}
+      </button>
+
+      {expanded && (
+        <section className="absolute right-0 top-11 z-30 w-[min(92vw,420px)] rounded-xl border border-border bg-surface-light/95 p-3 shadow-2xl backdrop-blur">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate text-[11px] uppercase tracking-[0.14em] text-muted">Centro de notificaciones</p>
+              <p className="text-xs text-muted">
+                {hasRelevant
+                  ? `${relevantSuggestions.length} alerta${relevantSuggestions.length === 1 ? '' : 's'} pendiente${relevantSuggestions.length === 1 ? '' : 's'}`
+                  : 'No hay alertas pendientes, mostrando historial reciente'}
+              </p>
             </div>
-          )
-        })}
-      </div>
+            <button
+              onClick={() => setExpanded(false)}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+              title="Cerrar notificaciones"
+            >
+              <X size={13} />
+            </button>
+          </div>
+
+          <div className="space-y-2">
+            {displaySuggestions.map((s) => {
+              const style = TYPE_STYLES[s.type]
+              const Icon = style.icon
+              return (
+                <div
+                  key={s.id}
+                  className={`flex items-start justify-between gap-3 rounded-lg border ${style.border} p-3 animate-fade-in`}
+                >
+                  <div className="flex min-w-0 items-start gap-2">
+                    <Icon size={14} className="mt-0.5 shrink-0" />
+                    <p className="text-xs leading-relaxed text-muted">{s.message}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigate(s.ctaPath)
+                      setExpanded(false)
+                    }}
+                    className={`shrink-0 self-center text-xs font-medium ${style.text} transition-all hover:underline`}
+                  >
+                    {s.ctaLabel} →
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

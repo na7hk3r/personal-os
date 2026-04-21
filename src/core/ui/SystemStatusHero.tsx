@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
@@ -61,7 +60,6 @@ const STATE_CONFIG: Record<DayState, { label: string; dot: string; border: strin
 }
 
 export function SystemStatusHero() {
-  const navigate = useNavigate()
   const profileName = useCoreStore((s) => s.profile.name)
   const activePluginIds = useCoreStore((s) => s.activePlugins)
   const streak = useGamificationStore((s) => s.streak)
@@ -101,8 +99,8 @@ export function SystemStatusHero() {
         <img src="/GRUPO.png" alt="" className="h-full w-full object-cover" />
       </div>
 
-      <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {/* Left: status + insight */}
+      <div className="relative flex flex-col gap-4">
+        {/* Status + insight */}
         <div className="min-w-0 space-y-2">
           <p className="text-xs uppercase tracking-[0.2em] text-muted">Estado del Sistema</p>
 
@@ -120,16 +118,6 @@ export function SystemStatusHero() {
 
           <h1 className="text-2xl font-semibold leading-tight">{getGreeting(profileName)}</h1>
           <p className="max-w-xl text-sm text-muted">{heroState.insight}</p>
-        </div>
-
-        {/* Right: CTA */}
-        <div className="shrink-0">
-          <button
-            onClick={() => navigate(heroState.ctaPath)}
-            className="rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-lg transition-colors hover:bg-accent/80"
-          >
-            {heroState.ctaLabel} →
-          </button>
         </div>
       </div>
     </section>
