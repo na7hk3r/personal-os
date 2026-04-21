@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
+import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { buildSystemSuggestions, computeHeroState, subscribeGuidanceRefresh } from './systemGuidance'
 
 type DayState = 'on-track' | 'unstable' | 'disconnected'
@@ -63,6 +64,7 @@ export function SystemStatusHero() {
   const navigate = useNavigate()
   const profileName = useCoreStore((s) => s.profile.name)
   const activePluginIds = useCoreStore((s) => s.activePlugins)
+  const streak = useGamificationStore((s) => s.streak)
   const [heroState, setHeroState] = useState<HeroState>({
     dayState: 'on-track',
     insight: 'Cargando estado del sistema…',
@@ -109,6 +111,11 @@ export function SystemStatusHero() {
               <span className={`h-2 w-2 rounded-full ${cfg.dot} animate-pulse`} />
               {cfg.label}
             </span>
+            {streak >= 3 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-warning/35 bg-warning/10 px-3 py-1 text-xs font-semibold text-warning">
+                🔥 {streak} dias en racha - no la rompas
+              </span>
+            )}
           </div>
 
           <h1 className="text-2xl font-semibold leading-tight">{getGreeting(profileName)}</h1>

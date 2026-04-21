@@ -8,7 +8,7 @@ import { WORK_EVENTS } from '../events'
 import { KanbanBoard } from '../components/KanbanBoard'
 import { ClipboardList, ListChecks, NotebookPen, TimerReset, Play, Pause, Square } from 'lucide-react'
 
-const WORK_ACTIVITY_EVENTS = new Set([
+const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
   WORK_EVENTS.TASK_CREATED,
   WORK_EVENTS.TASK_UPDATED,
   WORK_EVENTS.TASK_COMPLETED,

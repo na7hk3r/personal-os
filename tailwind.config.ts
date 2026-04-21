@@ -32,6 +32,10 @@ export default {
           light: '#f87171',
           dark: '#dc2626',
         },
+        'xp-bronze': '#cd7f32',
+        'xp-silver': '#c0c0c0',
+        'xp-gold': '#f5c542',
+        'xp-platinum': '#5ed4ff',
         chart: {
           grid: '#334155',
           axis: '#94a3b8',

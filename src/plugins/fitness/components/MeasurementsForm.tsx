@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useFitnessStore } from '../store'
 import type { Measurement } from '../types'
 import { Ruler } from 'lucide-react'
+import { eventBus } from '@core/events/EventBus'
+import { FITNESS_EVENTS } from '../events'
 
 export function MeasurementsForm() {
   const { addMeasurement } = useFitnessStore()
@@ -37,6 +39,11 @@ export function MeasurementsForm() {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [m.date, m.weight, m.armRelaxed, m.armFlexed, m.chest, m.waist, m.leg],
     )
+
+    eventBus.emit(FITNESS_EVENTS.MEASUREMENT_SAVED, {
+      date: m.date,
+      weight: m.weight,
+    })
 
     setFields({ weight: '', armRelaxed: '', armFlexed: '', chest: '', waist: '', leg: '' })
   }

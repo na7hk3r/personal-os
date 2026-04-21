@@ -1,5 +1,22 @@
 import { useGamificationStore } from '@core/gamification/gamificationStore'
-import { CheckCircle2, Flame, Gem, PersonStanding, Star, Target } from 'lucide-react'
+import {
+  buildGamificationStats,
+  getAchievementProgress,
+  getLevelTitle,
+  getLevelTier,
+  getNextAchievement,
+  getXpHistoryByDay,
+} from '@core/gamification/gamificationUtils'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { CheckCircle2, Flame, Gem, NotebookPen, PersonStanding, Star, Sunrise, Target, TimerReset } from 'lucide-react'
 
 const PLUGIN_LABELS: Record<string, string> = {
   fitness: 'Fitness',
@@ -21,6 +38,9 @@ const ACH_ICON_MAP: Record<string, React.ComponentType<{ size?: number; classNam
   Target,
   PersonStanding,
   CheckCircle2,
+  TimerReset,
+  NotebookPen,
+  Sunrise,
 }
 
 function categorizeReason(reason: string): string {
@@ -35,6 +55,11 @@ export function GlobalProgress() {
   const { points, level, streak, history, unlockedIds, achievements } = useGamificationStore()
   const pointsInLevel = points % 100
   const progressPct = pointsInLevel
+  const levelTitle = getLevelTitle(level)
+  const tier = getLevelTier(level)
+  const stats = buildGamificationStats(points, streak, history)
+  const xpByDay = getXpHistoryByDay(history, 7)
+  const nextAchievement = getNextAchievement(achievements, unlockedIds, stats)
 
   // XP breakdown by source
   const breakdown = history.reduce<Record<string, number>>((acc, entry) => {
@@ -50,11 +75,19 @@ export function GlobalProgress() {
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="relative text-accent-light">
-            <Star size={22} />
+          <div className={`relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br text-base font-black shadow-lg ${
+            tier === 'bronze'
+              ? 'from-xp-bronze to-amber-300 text-[#2a1808]'
+              : tier === 'silver'
+                ? 'from-xp-silver to-slate-200 text-[#1f2937]'
+                : tier === 'gold'
+                  ? 'from-xp-gold to-yellow-200 text-[#3a2a00]'
+                  : 'from-xp-platinum to-cyan-200 text-[#08212f]'
+          }`}>
+            {level}
           </div>
           <div>
-            <p className="text-sm font-semibold">Nivel {level}</p>
+            <p className="text-sm font-semibold">Nivel {level} · {levelTitle}</p>
             <p className="text-xs text-muted">{points} puntos totales</p>
           </div>
         </div>
@@ -71,9 +104,11 @@ export function GlobalProgress() {
       <div className="space-y-1">
         <div className="relative w-full bg-surface rounded-full h-2.5 overflow-hidden">
           <div
-            className="bg-gradient-to-r from-accent to-accent-light h-2.5 rounded-full transition-all duration-500"
+            className="bg-gradient-to-r from-accent to-accent-light h-2.5 rounded-full transition-all duration-500 relative"
             style={{ width: `${progressPct}%` }}
-          />
+          >
+            <span className="absolute inset-0 progress-shimmer" />
+          </div>
           {/* Milestone markers */}
           {[25, 50, 75].map((pct) => (
             <div
@@ -84,6 +119,27 @@ export function GlobalProgress() {
           ))}
         </div>
         <p className="text-xs text-muted text-right">{pointsInLevel}/100 para nivel {level + 1}</p>
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface/50 p-3">
+        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted">XP Ultimos 7 dias</p>
+        <div className="h-40">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={xpByDay}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="date" stroke="var(--chart-axis)" fontSize={11} />
+              <YAxis stroke="var(--chart-axis)" fontSize={11} width={28} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: 'var(--chart-tooltip-bg)',
+                  border: '1px solid var(--chart-tooltip-border)',
+                }}
+                labelStyle={{ color: 'var(--chart-axis)' }}
+              />
+              <Bar dataKey="xp" fill="var(--chart-weight)" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* XP Breakdown */}
@@ -101,23 +157,63 @@ export function GlobalProgress() {
       )}
 
       {/* Achievements */}
-      <div className="flex flex-wrap gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
         {achievements.map((ach) => {
           const unlocked = unlockedIds.includes(ach.id)
           const Icon = ACH_ICON_MAP[ach.icon] ?? Star
+          const progress = getAchievementProgress(ach.id, stats)
           return (
             <div
               key={ach.id}
               title={`${ach.title}: ${ach.description}`}
-              className={`cursor-default transition-all duration-200 ${
-                unlocked ? 'opacity-100 scale-100' : 'opacity-25 grayscale scale-90'
+              className={`cursor-default rounded-xl border p-2.5 transition-all duration-200 ${
+                unlocked
+                  ? 'border-xp-gold/55 bg-xp-gold/10'
+                  : 'border-border bg-surface/60'
               }`}
             >
-              <Icon size={18} />
+              <div className="flex items-center gap-2">
+                <div className={`rounded-lg p-1.5 ${unlocked ? 'bg-xp-gold/20 text-xp-gold' : 'bg-surface text-muted'}`}>
+                  <Icon size={18} />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold">{ach.title}</p>
+                  <p className="truncate text-[11px] text-muted">{ach.description}</p>
+                </div>
+              </div>
+              {!unlocked && (
+                <div className="mt-2 space-y-1">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
+                    <div
+                      className="h-1.5 rounded-full bg-gradient-to-r from-warning to-xp-gold transition-all duration-500"
+                      style={{ width: `${progress.percent}%` }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted">
+                    {progress.current}/{progress.target} {progress.label}
+                  </p>
+                </div>
+              )}
             </div>
           )
         })}
       </div>
+
+      {nextAchievement && (
+        <div className="rounded-xl border border-accent/30 bg-accent/10 p-3">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted">Proximo objetivo</p>
+          <p className="mt-1 text-sm font-semibold">{nextAchievement.title}</p>
+          <p className="text-xs text-muted">
+            {nextAchievement.progress.current}/{nextAchievement.progress.target} {nextAchievement.progress.label}
+          </p>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
+            <div
+              className="h-1.5 rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
+              style={{ width: `${nextAchievement.progress.percent}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

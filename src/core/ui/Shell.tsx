@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
+import { GamificationNotificationHub } from './GamificationNotificationHub'
 
 export function Shell() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
@@ -16,6 +17,7 @@ export function Shell() {
       className="flex h-screen overflow-hidden text-white"
       style={{ background: 'var(--bg-gradient)' }}
     >
+      <GamificationNotificationHub />
       <Sidebar />
       <main
         className={`flex-1 overflow-y-auto transition-all duration-200 ${

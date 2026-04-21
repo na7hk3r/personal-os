@@ -145,6 +145,10 @@ const fitnessPlugin: PluginManifest = {
     api.events.on(FITNESS_EVENTS.WORKOUT_COMPLETED, () => {
       api.gamification.addPoints(25, 'Entrenamiento completado')
     })
+
+    api.events.on(FITNESS_EVENTS.MEASUREMENT_SAVED, () => {
+      api.gamification.addPoints(5, 'Medicion corporal registrada')
+    })
   },
 }
 

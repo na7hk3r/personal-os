@@ -171,6 +171,9 @@ const workPlugin: PluginManifest = {
     api.events.on(WORK_EVENTS.FOCUS_INTERRUPTED, () => {
       api.gamification.addPoints(-2, 'Sesión de foco interrumpida')
     })
+    api.events.on(WORK_EVENTS.NOTE_CREATED, () => {
+      api.gamification.addPoints(3, 'Nota creada')
+    })
   },
 }
 
