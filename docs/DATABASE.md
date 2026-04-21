@@ -36,6 +36,7 @@ Pares clave-valor para configuración persistida.
 | `sidebarCollapsed` | `"true"` / `"false"` | Estado del sidebar |
 | `onboardingComplete` | `"true"` / `"false"` | Si completó el onboarding |
 | `activePlugins` | JSON array | IDs de plugins activos |
+| `gamificationState` | JSON object | Snapshot persistido de gamificación (`points`, `level`, `streak`, `history`, `unlockedIds`) |
 
 ### `events_log`
 

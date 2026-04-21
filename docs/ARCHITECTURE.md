@@ -40,18 +40,19 @@ Personal OS sigue una arquitectura de **kernel + plugins** donde un núcleo (`co
 ```
 App.tsx
   1. loadFromStorage()         → carga perfil, ajustes, plugins activos desde SQLite
-  2. import fitness plugin     → registra manifest en PluginRegistry
-  3. import work plugin        → registra manifest en PluginRegistry
-  4. pluginManager.initPlugin('fitness')
+  2. gamificationStore.loadFromStorage() → restaura puntos, nivel, racha, historial y logros
+  3. import fitness plugin     → registra manifest en PluginRegistry
+  4. import work plugin        → registra manifest en PluginRegistry
+  5. pluginManager.initPlugin('fitness')
        → runMigrations (v1)
        → builds CoreAPI
        → plugin.init(api)
            → api.storage.query('SELECT * FROM fitness_daily_entries …')
            → store.setEntries(…)
            → api.events.on(FITNESS_EVENTS.DAILY_ENTRY_SAVED, …)
-  5. pluginManager.initPlugin('work')    [mismo patrón]
-  6. coreStore.setActivePlugins([…])
-  7. setReady(true)  → renderiza Shell + rutas
+  6. pluginManager.initPlugin('work')    [mismo patrón]
+  7. coreStore.setActivePlugins([…])
+  8. setReady(true)  → renderiza Shell + rutas
 ```
 
 ## Capas del sistema
@@ -70,6 +71,7 @@ App.tsx
 - Registro de handlers por nombre de evento.
 - Historial en memoria de los últimos 100 eventos.
 - Callback de persistencia configurable: cuando PluginManager conecta el EventBus al `events_log` de SQLite, cada `emit()` se persiste automáticamente.
+- Inferencia de `source` por prefijo (`FITNESS_`, `WORK_`, `CORE_`, `GAMIFICATION_`) cuando el emisor no lo especifica manualmente.
 - Devuelve función de cleanup (`UnsubscribeFn`) en cada `on()`.
 
 ```typescript
@@ -130,7 +132,8 @@ interface CoreAPI {
 - Puntos totales, nivel calculado (puntos / 100 + 1), racha de días.
 - Historial de transacciones de puntos.
 - Logros desbloqueados.
-- `addPoints(amount, reason)` persiste la transacción y verifica logros.
+- Persistencia del snapshot en `settings.gamificationState`.
+- `addPoints(amount, reason)` actualiza nivel, emite eventos y guarda el snapshot persistido.
 
 ### 6. Storage API
 
@@ -150,6 +153,14 @@ Cada plugin es un módulo TypeScript que exporta un `PluginManifest`. Internamen
 - `events.ts` — Constantes de eventos con prefijo del plugin.
 - `components/` — Componentes React de UI.
 - `pages/` — Páginas completas montadas por el router.
+
+### 8. Capa de dashboard
+
+El dashboard principal combina componentes del core y widgets de plugins:
+
+- `SystemStatusHero` y `SystemSuggestions` consumen una lógica compartida (`systemGuidance.ts`) para derivar estado, próximo paso y situación `todo activo y OK`.
+- `RecentActivityFeed` consulta `events_log` y se refresca con eventos persistidos del sistema.
+- Los widgets principales del dashboard pueden reordenarse condicionalmente para optimizar distribución visual, como ocurre con `KPIs Fitness` + `Resumen Trabajo` junto al feed de actividad.
 
 ## Flujo de datos típico
 

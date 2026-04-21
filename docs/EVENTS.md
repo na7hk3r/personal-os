@@ -1,6 +1,6 @@
 # Catálogo de eventos
 
-Los eventos se emiten a través del `EventBus` singleton. Cada evento se persiste en la tabla `events_log` automáticamente.
+Los eventos se emiten a través del `EventBus` singleton. Cada evento se persiste en la tabla `events_log` automáticamente cuando tiene `source` explícito o cuando el `EventBus` puede inferirlo por prefijo (`FITNESS_`, `WORK_`, `CORE_`, `GAMIFICATION_`).
 
 ## Eventos del sistema core
 
@@ -14,15 +14,15 @@ Definidos en `src/core/events/events.ts`.
 | `CORE_PLUGIN_ACTIVATED` | Plugin activado | `{ pluginId: string }` |
 | `CORE_PLUGIN_DEACTIVATED` | Plugin desactivado | `{ pluginId: string }` |
 | `CORE_ONBOARDING_COMPLETED` | Onboarding completado | `{ profile: UserProfile }` |
-| `CORE_SETTINGS_UPDATED` | Ajustes actualizados | `{ key: string, value: unknown }` |
+| `CORE_SETTINGS_UPDATED` | Ajustes actualizados | `{ theme: string, sidebarCollapsed: boolean }` |
 
 ### `GAMIFICATION_EVENTS`
 
 | Evento | Descripción | Payload |
 |--------|-------------|---------|
 | `GAMIFICATION_POINTS_ADDED` | XP sumado o restado | `{ amount: number, reason: string, total: number }` |
-| `GAMIFICATION_ACHIEVEMENT_UNLOCKED` | Logro desbloqueado | `{ achievementId: string, title: string }` |
-| `GAMIFICATION_LEVEL_UP` | Subió de nivel | `{ level: number, points: number }` |
+| `GAMIFICATION_ACHIEVEMENT_UNLOCKED` | Logro desbloqueado | `{ id: string, title: string }` |
+| `GAMIFICATION_LEVEL_UP` | Subió de nivel | `{ level: number }` |
 
 ---
 
@@ -76,7 +76,7 @@ Definidos en `src/plugins/work/events.ts`.
 
 | Constante | Valor | Descripción | Payload |
 |-----------|-------|-------------|---------|
-| `WORK_EVENTS.NOTE_CREATED` | `WORK_NOTE_CREATED` | Nueva nota creada | `{ noteId, title }` |
+| `WORK_EVENTS.NOTE_CREATED` | `WORK_NOTE_CREATED` | Nueva nota creada | `{ id }` |
 
 ### Efecto en gamificación
 
@@ -141,3 +141,12 @@ useEffect(() => {
   return unsub  // cleanup automático al desmontar
 }, [])
 ```
+
+## Eventos consumidos por la UI del dashboard
+
+- `RecentActivityFeed` muestra actividad reciente de `fitness`, `work` y `core` persistida en `events_log`.
+- `SystemStatusHero` y `SystemSuggestions` reaccionan a:
+  - eventos de Fitness (`FITNESS_WEIGHT_RECORDED`, `FITNESS_DAILY_ENTRY_SAVED`)
+  - eventos de Work (`WORK_TASK_CREATED`, `WORK_TASK_COMPLETED`, `WORK_TASK_MOVED`)
+  - eventos core de activación/desactivación de plugins
+- Guardar perfil o preferencias desde Control Center emite eventos core para que el dashboard refleje el cambio en tiempo real.

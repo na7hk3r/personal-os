@@ -1,10 +1,20 @@
 # Personal OS
 
+Versión actual: `1.1.0`
+
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
 ## ¿Qué es?
 
 Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
+
+## Novedades recientes
+
+- Dashboard principal reequilibrado: `KPIs Fitness` y `Resumen Trabajo` se apilan mejor junto a `Actividad Reciente`.
+- `Resumen Trabajo` ahora muestra métricas compactas de ejecución: activas, en progreso, hechas, foco hoy, vencidas, notas y links.
+- `Actividad Reciente` se actualiza correctamente con eventos de Fitness, Work y Core, e incluye filtros por fuente y rango temporal.
+- El hero de estado y el bloque de sugerencias comparten lógica: muestran próximo paso real o estado `todo activo y OK`.
+- La gamificación persiste entre recargas: puntos, nivel, racha, historial y logros desbloqueados.
 
 ## Stack tecnológico
 
@@ -99,7 +109,7 @@ personal-os/
 Seguimiento diario de peso, comidas, ejercicios, sueño y cigarrillos. Incluye gráficos históricos, tabla de medidas corporales y resumen mensual.
 
 ### Work (Execution Engine)
-Kanban board, notas y enlaces, con un motor de sesiones de foco. Permite activar una sesión activa por tarea, registrar duración y eficiencia, y ver actividad reciente en tiempo real.
+Kanban board, notas y enlaces, con un motor de sesiones de foco. Permite activar una sesión activa por tarea, registrar duración y eficiencia, y ver actividad reciente en tiempo real. El widget `Resumen Trabajo` sintetiza estado del tablero, foco del día y señales operativas clave.
 
 ## Gamificación
 
@@ -114,6 +124,15 @@ El sistema asigna XP por acciones:
 | Sesión de foco interrumpida | −2 |
 
 Cada 100 puntos sube un nivel. Los logros se desbloquean por hitos acumulados.
+
+Desde la versión `1.1.0`, el estado de gamificación se guarda en SQLite y se restaura al iniciar la app.
+
+## Dashboard y observabilidad
+
+- `SystemStatusHero`: estado contextual del sistema con CTA dinámico según el siguiente paso pendiente.
+- `SystemSuggestions`: sugerencias accionables sincronizadas con el estado real del sistema.
+- `RecentActivityFeed`: timeline reciente con eventos persistidos de `fitness`, `work` y `core`, además de filtros por fuente y por últimas 24h.
+- `GlobalProgress`: resumen expandido de gamificación.
 
 ## Seguridad
 

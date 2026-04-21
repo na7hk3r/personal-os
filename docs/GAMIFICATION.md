@@ -18,7 +18,9 @@ Por ejemplo: 250 puntos → Nivel 3 (con 50/100 hacia el nivel 4).
 
 ### Racha (streak)
 
-Días consecutivos con al menos una acción registrada. Se muestra en la barra de gamificación del sidebar. La racha se guarda en el store en memoria (actualmente no persiste entre reinicios — oportunidad de mejora).
+Días consecutivos con al menos una acción registrada. Se muestra en la barra de gamificación del sidebar.
+
+Desde la versión `1.1.0`, la racha persiste junto con el resto del snapshot de gamificación.
 
 ### Logros (achievements)
 
@@ -69,6 +71,9 @@ useGamificationStore.getState().checkAchievements({
   totalWorkouts: 2,
   tasksCompleted: 1,
 })
+
+// Cargar snapshot persistido desde SQLite
+await useGamificationStore.getState().loadFromStorage()
 ```
 
 ## API desde plugins
@@ -98,6 +103,18 @@ interface XPEntry {
 
 El componente `GlobalProgress` muestra el historial agrupado por categoría (Fitness / Work / General) calculado a partir del campo `reason`.
 
+El snapshot persistido de gamificación se guarda en `settings` bajo la clave `gamificationState` con esta forma:
+
+```typescript
+interface PersistedGamificationState {
+  points: number
+  level: number
+  streak: number
+  history: XPEntry[]
+  unlockedIds: string[]
+}
+```
+
 ## Componentes de UI
 
 ### `GamificationBar`
@@ -112,6 +129,8 @@ Panel expandido en el Dashboard que incluye:
 - Barra de progreso con marcadores en 25/50/75%
 - Desglose de XP por categoría (chips)
 - Grid de todos los logros (grises si no desbloqueados)
+
+La UI consume directamente el snapshot persistido restaurado al bootstrap, por lo que el progreso no se pierde al reiniciar la app.
 
 ## Extensión del sistema
 
