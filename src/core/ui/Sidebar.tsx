@@ -10,11 +10,14 @@ import {
   BriefcaseBusiness,
   NotebookPen,
   Link2,
+  Flame,
   type LucideIcon,
 } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
 import { eventBus } from '../events/EventBus'
+import { useGamificationStore } from '@core/gamification/gamificationStore'
+import { getLevelTier, getLevelTitle } from '@core/gamification/gamificationUtils'
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -76,6 +79,17 @@ const NAV_LINK_CLASS = (isActive: boolean) =>
 export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const updateSettings = useCoreStore((s) => s.updateSettings)
+  const { points, level, streak } = useGamificationStore()
+  const tier = getLevelTier(level)
+  const levelTitle = getLevelTitle(level)
+  const pointsInLevel = points % 100
+
+  const TIER_STYLE: Record<string, string> = {
+    bronze: 'from-xp-bronze to-amber-300 text-[#2a1808]',
+    silver: 'from-xp-silver to-slate-200 text-[#1f2937]',
+    gold: 'from-xp-gold to-yellow-200 text-[#3a2a00]',
+    platinum: 'from-xp-platinum to-cyan-200 text-[#08212f]',
+  }
 
   const navItems = pluginManager
     .getActiveNavItems()
@@ -200,6 +214,37 @@ export function Sidebar() {
           </>
         )}
       </nav>
+
+      {/* Gamification mini widget */}
+      {!sidebarCollapsed && (
+        <div className="mx-2 mb-2 rounded-xl border border-border bg-surface/60 p-3 space-y-2">
+          <div className="flex items-center gap-2.5">
+            <span
+              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br text-xs font-black shadow ${TIER_STYLE[tier]}`}
+              title={`${levelTitle} (${tier})`}
+            >
+              {level}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-white">Nivel {level} · {levelTitle}</p>
+              <p className="text-[10px] text-muted">{points} puntos</p>
+            </div>
+            {streak > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-warning">
+                <Flame size={12} />
+                {streak}
+              </span>
+            )}
+          </div>
+          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
+            <div
+              className="h-1.5 rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
+              style={{ width: `${pointsInLevel}%` }}
+            />
+          </div>
+          <p className="text-right text-[10px] text-muted">{pointsInLevel}/100 para nivel {level + 1}</p>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="border-t border-border p-3 text-center text-xs text-muted">

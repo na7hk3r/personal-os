@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import {
   buildGamificationStats,
@@ -53,6 +54,7 @@ function categorizeReason(reason: string): string {
 
 export function GlobalProgress() {
   const { points, level, streak, history, unlockedIds, achievements } = useGamificationStore()
+  const [achievementsExpanded, setAchievementsExpanded] = useState(false)
   const pointsInLevel = points % 100
   const progressPct = pointsInLevel
   const levelTitle = getLevelTitle(level)
@@ -91,12 +93,17 @@ export function GlobalProgress() {
             <p className="text-xs text-muted">{points} puntos totales</p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="flex flex-col items-end gap-1">
           <p className="text-sm font-semibold inline-flex items-center gap-1.5">
             <Flame size={14} className="text-warning" />
             {streak} días
           </p>
           <p className="text-xs text-muted">racha activa</p>
+          {nextAchievement && (
+            <p className="text-[10px] text-muted" title={`${nextAchievement.title}: ${nextAchievement.progress.current}/${nextAchievement.progress.target}`}>
+              🎯 {nextAchievement.title} {nextAchievement.progress.current}/{nextAchievement.progress.target}
+            </p>
+          )}
         </div>
       </div>
 
@@ -157,63 +164,64 @@ export function GlobalProgress() {
       )}
 
       {/* Achievements */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">
-        {achievements.map((ach) => {
-          const unlocked = unlockedIds.includes(ach.id)
-          const Icon = ACH_ICON_MAP[ach.icon] ?? Star
-          const progress = getAchievementProgress(ach.id, stats)
-          return (
-            <div
-              key={ach.id}
-              title={`${ach.title}: ${ach.description}`}
-              className={`cursor-default rounded-xl border p-2.5 transition-all duration-200 ${
-                unlocked
-                  ? 'border-xp-gold/55 bg-xp-gold/10'
-                  : 'border-border bg-surface/60'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <div className={`rounded-lg p-1.5 ${unlocked ? 'bg-xp-gold/20 text-xp-gold' : 'bg-surface text-muted'}`}>
-                  <Icon size={18} />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-xs font-semibold">{ach.title}</p>
-                  <p className="truncate text-[11px] text-muted">{ach.description}</p>
-                </div>
-              </div>
-              {!unlocked && (
-                <div className="mt-2 space-y-1">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
-                    <div
-                      className="h-1.5 rounded-full bg-gradient-to-r from-warning to-xp-gold transition-all duration-500"
-                      style={{ width: `${progress.percent}%` }}
-                    />
+      {(() => {
+        const VISIBLE_COUNT = 6
+        const visible = achievementsExpanded ? achievements : achievements.slice(0, VISIBLE_COUNT)
+        const hiddenCount = achievements.length - VISIBLE_COUNT
+        return (
+          <>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {visible.map((ach) => {
+                const unlocked = unlockedIds.includes(ach.id)
+                const Icon = ACH_ICON_MAP[ach.icon] ?? Star
+                const progress = getAchievementProgress(ach.id, stats)
+                return (
+                  <div
+                    key={ach.id}
+                    title={`${ach.title}: ${ach.description}`}
+                    className={`cursor-default rounded-xl border p-2.5 transition-all duration-200 ${
+                      unlocked
+                        ? 'border-xp-gold/55 bg-xp-gold/10'
+                        : 'border-border bg-surface/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`rounded-lg p-1.5 ${unlocked ? 'bg-xp-gold/20 text-xp-gold' : 'bg-surface text-muted'}`}>
+                        <Icon size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold">{ach.title}</p>
+                        <p className="truncate text-[11px] text-muted">{ach.description}</p>
+                      </div>
+                    </div>
+                    {!unlocked && (
+                      <div className="mt-2 space-y-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
+                          <div
+                            className="h-1.5 rounded-full bg-gradient-to-r from-warning to-xp-gold transition-all duration-500"
+                            style={{ width: `${progress.percent}%` }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted">
+                          {progress.current}/{progress.target} {progress.label}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <p className="text-[11px] text-muted">
-                    {progress.current}/{progress.target} {progress.label}
-                  </p>
-                </div>
-              )}
+                )
+              })}
             </div>
-          )
-        })}
-      </div>
-
-      {nextAchievement && (
-        <div className="rounded-xl border border-accent/30 bg-accent/10 p-3">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted">Proximo objetivo</p>
-          <p className="mt-1 text-sm font-semibold">{nextAchievement.title}</p>
-          <p className="text-xs text-muted">
-            {nextAchievement.progress.current}/{nextAchievement.progress.target} {nextAchievement.progress.label}
-          </p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
-            <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
-              style={{ width: `${nextAchievement.progress.percent}%` }}
-            />
-          </div>
-        </div>
-      )}
+            {hiddenCount > 0 && (
+              <button
+                onClick={() => setAchievementsExpanded((prev) => !prev)}
+                className="w-full rounded-lg border border-border bg-surface/40 py-1.5 text-xs text-muted transition-colors hover:bg-surface-lighter hover:text-white"
+              >
+                {achievementsExpanded ? 'Ver menos' : `Ver ${hiddenCount} logro${hiddenCount !== 1 ? 's' : ''} más`}
+              </button>
+            )}
+          </>
+        )
+      })()}
     </div>
   )
 }
