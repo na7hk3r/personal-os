@@ -11,11 +11,11 @@ export function KpiCards() {
   const avgSleep = averageField(entries, 'sleep', 7)
 
   const cards = [
-    { label: 'Peso Actual', value: currentWeight ? `${currentWeight} kg` : '—', icon: Target, color: 'text-purple-400' },
+    { label: 'Peso Actual', value: currentWeight ? `${currentWeight} kg` : '—', icon: Target, color: 'text-accent' },
     { label: 'Comidas (30d)', value: `${mealPct}%`, icon: Utensils, color: 'text-green-400' },
-    { label: 'Entrenos (mes)', value: String(workouts), icon: Dumbbell, color: 'text-blue-400' },
-    { label: 'Cigarrillos/día', value: String(avgCigs), icon: Ban, color: 'text-red-400' },
-    { label: 'Sueño promedio', value: `${avgSleep}h`, icon: Moon, color: 'text-indigo-400' },
+    { label: 'Entrenos (mes)', value: String(workouts), icon: Dumbbell, color: 'text-warning' },
+    { label: 'Cigarrillos/día', value: String(avgCigs), icon: Ban, color: 'text-danger' },
+    { label: 'Sueño promedio', value: `${avgSleep}h`, icon: Moon, color: 'text-success' },
   ]
 
   return (

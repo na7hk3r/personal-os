@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Shell } from './core/ui/Shell'
 import { Dashboard } from './core/ui/Dashboard'
 import { ControlCenter } from './core/ui/ControlCenter'
@@ -92,6 +92,7 @@ export function App() {
               element={<page.component />}
             />
           ))}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </HashRouter>

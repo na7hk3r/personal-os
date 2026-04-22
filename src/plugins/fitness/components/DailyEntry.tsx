@@ -91,7 +91,7 @@ export function DailyEntry() {
               key={meal}
               onClick={() => toggleMeal(meal)}
               className={`px-3 py-1.5 rounded text-sm ${
-                form[meal] ? 'bg-green-600 text-white' : 'bg-surface text-muted'
+                form[meal] ? 'bg-success text-white' : 'bg-surface text-muted'
               }`}
             >
               {meal === 'breakfast' ? 'Desayuno' : meal === 'lunch' ? 'Almuerzo' : meal === 'snack' ? 'Merienda' : 'Cena'}
@@ -109,7 +109,7 @@ export function DailyEntry() {
               key={opt}
               onClick={() => setForm((p) => ({ ...p, workout: opt }))}
               className={`px-3 py-1.5 rounded text-sm ${
-                form.workout === opt ? 'bg-blue-600 text-white' : 'bg-surface text-muted'
+                form.workout === opt ? 'bg-accent text-white' : 'bg-surface text-muted'
               }`}
             >
               {opt === 'R' ? 'Descanso' : `Día ${opt}`}

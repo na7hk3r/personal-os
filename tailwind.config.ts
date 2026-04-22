@@ -41,7 +41,7 @@ export default {
           axis: '#94a3b8',
           tooltipBg: '#1e1e2e',
           tooltipBorder: '#334155',
-          weight: '#7c3aed',
+          weight: '#f97316',
           mealGood: '#22c55e',
           mealWarn: '#eab308',
           mealBad: '#ef4444',
@@ -62,8 +62,8 @@ export default {
           to: { transform: 'translateX(0)', opacity: '1' },
         },
         pulseGlow: {
-          '0%, 100%': { boxShadow: '0 0 4px 0 rgba(124,58,237,0.4)' },
-          '50%': { boxShadow: '0 0 12px 2px rgba(124,58,237,0.7)' },
+          '0%, 100%': { boxShadow: '0 0 4px 0 rgba(249,115,22,0.35)' },
+          '50%': { boxShadow: '0 0 12px 2px rgba(249,115,22,0.55)' },
         },
         shimmer: {
           from: { backgroundPosition: '-200% center' },

@@ -215,7 +215,7 @@ export function KanbanBoard() {
                 {/* Column header (also drop target) */}
                 <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <span className="h-2 w-2 rounded-full bg-accent/70 shadow-[0_0_6px_1px_rgba(124,58,237,0.5)]" />
+                    <span className="h-2 w-2 rounded-full bg-accent/70 shadow-[0_0_6px_1px_rgba(249,115,22,0.42)]" />
                     <h4 className="text-sm font-semibold">{col.name}</h4>
                   </div>
                   <span className="rounded-full bg-surface px-2 py-0.5 text-xs text-muted tabular-nums">
