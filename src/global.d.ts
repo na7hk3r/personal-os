@@ -1,8 +1,9 @@
-import type { StorageBridge } from '@core/types'
+import type { StorageBridge, AuthBridge } from '@core/types'
 
 declare global {
   interface Window {
     storage: StorageBridge
+    auth: AuthBridge
   }
 }
 

@@ -32,6 +32,35 @@ export interface StorageBridge {
   migrate: (pluginId: string, migrations: Migration[]) => Promise<void>
 }
 
+export interface AuthUser {
+  id: string
+  username: string
+  createdAt: string
+  lastLoginAt: string | null
+}
+
+export interface RegisterPayload {
+  username: string
+  password: string
+  recoveryQuestion: string
+  recoveryAnswer: string
+}
+
+export interface ResetPasswordWithRecoveryPayload {
+  username: string
+  recoveryAnswer: string
+  newPassword: string
+}
+
+export interface AuthBridge {
+  register: (payload: RegisterPayload) => Promise<AuthUser>
+  login: (username: string, password: string) => Promise<AuthUser>
+  logout: () => Promise<void>
+  me: () => Promise<AuthUser | null>
+  getRecoveryQuestion: (username: string) => Promise<string | null>
+  resetPasswordWithRecovery: (payload: ResetPasswordWithRecoveryPayload) => Promise<void>
+}
+
 // ─── UI Registration ───
 
 export interface WidgetDefinition {

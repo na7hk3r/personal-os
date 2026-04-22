@@ -1,6 +1,6 @@
 # Personal OS
 
-Versión actual: `1.2.0`
+Versión actual: `1.3.0`
 
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
@@ -8,7 +8,14 @@ Sistema operativo personal — aplicación de escritorio para productividad y sa
 
 Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
 
-## Novedades recientes
+## Novedades recientes (v1.3.0)
+
+- **🔐 Sistema de autenticación multiusuario**: Registro, login y recuperación de acceso completamente local con SQLite.
+  - Cada usuario tiene aislamiento total de datos, configuración y plugins.
+  - Auto-login con sesiones persistentes y logout seguro.
+  - Recuperación por pregunta secreta sin comprometer seguridad.
+  - Mensajes de error mejorados y UX-friendly.
+  - Ver [Documentación de AUTH](docs/AUTH.md) para detalles técnicos.
 
 - Dashboard principal reequilibrado y colapso de módulos corregido para `KPIs Fitness` y `Resumen Trabajo`.
 - Nuevo módulo core `Planner` (`/planner`) con:
@@ -151,6 +158,25 @@ Cada 100 puntos sube un nivel. Los logros se desbloquean por hitos acumulados.
 
 Desde la versión `1.2.0`, el sistema incluye misión diaria core del Planner y persistencia extendida de estado de misión/racha.
 
+## Autenticación y multiusuario
+
+Desde v1.3.0, Personal OS incluye un **sistema de autenticación completamente local** con soporte multiusuario:
+
+- **Registro seguro**: username, contraseña (8+ chars), pregunta secreta personalizada
+- **Aislamiento total**: cada usuario tiene su propia BD de datos, configuración y plugins
+- **Auto-login**: sesiones persistentes que se restauran automáticamente
+- **Recuperación**: reseteo de contraseña mediante pregunta secreta
+- **Sin backend**: 100% local, funciona offline
+- **UX-friendly**: mensajes de error claros en español, validación progresiva
+
+### Datos técnicos
+- **Hasheado**: scrypt + salt aleatorio (16 bytes), digest 64 bytes
+- **Sesiones**: persistidas en `auth.db` con revocación explícita
+- **Bases de datos**: `auth.db` (global) + `personal-os-user-{userId}.db` (por usuario)
+- **Seguridad**: timing-safe comparison, context isolation, preload script
+
+Ver [docs/AUTH.md](docs/AUTH.md) para documentación completa.
+
 ## Dashboard y observabilidad
 
 - `SystemStatusHero`: estado contextual del sistema con CTA dinámico según el siguiente paso pendiente.
@@ -203,6 +229,7 @@ Ver [docs/DATABASE.md](docs/DATABASE.md) para el esquema completo.
 ## Documentación técnica
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitectura general del sistema
+- [docs/AUTH.md](docs/AUTH.md) — Sistema de autenticación multiusuario y seguridad
 - [docs/PLUGINS.md](docs/PLUGINS.md) — Sistema de plugins y cómo crear uno
 - [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md) — Estructura base estándar e integración de plugins
 - [docs/DATABASE.md](docs/DATABASE.md) — Esquema SQL completo

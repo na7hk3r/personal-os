@@ -2,6 +2,8 @@ import { app, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { registerStorageIpc } from './services/storage-ipc'
 import { DatabaseService } from './services/database'
+import { AuthService } from './services/auth'
+import { registerAuthIpc } from './services/auth-ipc'
 
 let mainWindow: BrowserWindow | null = null
 const rendererUrl = process.env.ELECTRON_RENDERER_URL
@@ -43,7 +45,9 @@ function createWindow(): void {
 app.whenReady().then(() => {
   const db = DatabaseService.getInstance()
   db.initialize()
+  const authService = new AuthService(db)
   registerStorageIpc(db)
+  registerAuthIpc(authService)
 
   createWindow()
 

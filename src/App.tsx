@@ -11,6 +11,8 @@ import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
 import { useCoreStore } from './core/state/coreStore'
 import { useGamificationStore } from './core/gamification/gamificationStore'
+import { useAuthStore } from './core/state/authStore'
+import { AuthScreen } from './core/ui/auth/AuthScreen'
 
 // Import and register plugins
 import './plugins/fitness'
@@ -18,8 +20,10 @@ import './plugins/work'
 
 export function App() {
   const [ready, setReady] = useState(false)
+  const authStatus = useAuthStore((s) => s.status)
+  const initializeSession = useAuthStore((s) => s.initializeSession)
+  const currentUser = useAuthStore((s) => s.currentUser)
   const activePluginIds = useCoreStore((s) => s.activePlugins)
-  const setActivePlugins = useCoreStore((s) => s.setActivePlugins)
   const onboardingComplete = useCoreStore((s) => s.onboardingComplete)
   const loadFromStorage = useCoreStore((s) => s.loadFromStorage)
   const loadGamificationFromStorage = useGamificationStore((s) => s.loadFromStorage)
@@ -27,6 +31,15 @@ export function App() {
   const pluginPages = useMemo(() => pluginManager.getActivePages(), [activePluginIds, ready])
 
   useEffect(() => {
+    void initializeSession()
+  }, [initializeSession])
+
+  useEffect(() => {
+    if (authStatus !== 'authenticated' || !currentUser) {
+      setReady(false)
+      return
+    }
+
     async function bootstrap() {
       try {
         // Load persisted state first (onboarding flag, profile, activePlugins)
@@ -57,8 +70,22 @@ export function App() {
         setReady(true)
       }
     }
-    bootstrap()
-  }, [setActivePlugins, loadFromStorage, loadGamificationFromStorage])
+    void bootstrap()
+  }, [authStatus, currentUser, loadFromStorage, loadGamificationFromStorage])
+
+  if (authStatus === 'checking') {
+    return (
+      <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#16324f_0%,_#101923_45%,_#070d14_100%)] text-white">
+        <div className="relative rounded-2xl border border-white/10 bg-surface-light/70 px-10 py-8 text-center shadow-2xl backdrop-blur">
+          <p className="text-base font-medium">Verificando sesion...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (authStatus !== 'authenticated') {
+    return <AuthScreen />
+  }
 
   if (!ready) {
     return (

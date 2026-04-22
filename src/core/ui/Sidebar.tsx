@@ -12,6 +12,7 @@ import {
   Link2,
   CalendarDays,
   Flame,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
@@ -19,6 +20,7 @@ import { pluginManager } from '../plugins/PluginManager'
 import { eventBus } from '../events/EventBus'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { getLevelTier, getLevelTitle } from '@core/gamification/gamificationUtils'
+import { useAuthStore } from '@core/state/authStore'
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -81,6 +83,7 @@ export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const updateSettings = useCoreStore((s) => s.updateSettings)
   const { points, level, streak } = useGamificationStore()
+  const logout = useAuthStore((s) => s.logout)
   const tier = getLevelTier(level)
   const levelTitle = getLevelTitle(level)
   const pointsInLevel = points % 100
@@ -257,6 +260,13 @@ export function Sidebar() {
       <div className="border-t border-border p-3 text-center text-xs text-muted">
         {!sidebarCollapsed && (
           <div className="space-y-2">
+            <button
+              onClick={() => void logout()}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-muted transition-colors hover:border-accent/40 hover:text-white"
+            >
+              <LogOut size={14} />
+              Cerrar sesion
+            </button>
             <img src="/ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
             <span>v1.2.0</span>
           </div>
