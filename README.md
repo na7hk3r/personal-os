@@ -4,29 +4,27 @@ Versión actual: `1.3.0`
 
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
+> [!NOTE]
+> Convención del README: cada feature nueva debe marcarse con **NEW** en la sección de novedades para que sea fácil identificar cambios recientes.
+
 ## ¿Qué es?
 
 Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
 
 ## Novedades recientes (v1.3.0)
 
-- **🔐 Sistema de autenticación multiusuario**: Registro, login y recuperación de acceso completamente local con SQLite.
-  - Cada usuario tiene aislamiento total de datos, configuración y plugins.
-  - Auto-login con sesiones persistentes y logout seguro.
-  - Recuperación por pregunta secreta sin comprometer seguridad.
-  - Mensajes de error mejorados y UX-friendly.
-  - Ver [Documentación de AUTH](docs/AUTH.md) para detalles técnicos.
+- **NEW · Sistema de autenticación multiusuario**: registro, login y recuperación de acceso completamente local con SQLite.
+- **NEW · Aislamiento total por usuario**: cada usuario tiene sus propios datos, configuración, plugins y sesión persistente.
+- **NEW · Recuperación de acceso**: reset de contraseña mediante pregunta secreta, sin backend y sin comprometer seguridad.
+- **NEW · Mensajes UX-friendly**: validaciones y errores en español con feedback más claro para login, registro y recuperación.
+- **NEW · Módulo core Planner**: vista diaria, semanal y mensual, filtros por estado y categoría, y drag and drop entre días.
+- **NEW · Integración Planner + gamificación**: las tareas del planner cuentan como misión diaria y otorgan XP por complejidad.
+- **NEW · Control Center por plugin**: configuración de Fitness y Work persistida en `settings`, visible solo cuando el plugin está activo.
+- **NEW · Capa visual premium por plugin**: fondos diferenciados, animaciones de entrada y paneles con transiciones por dominio.
+- **NEW · Actividad reciente expandida**: eventos de Fitness, Work y Core, incluyendo `CORE_PLANNER_TASK_COMPLETED`.
+- **NEW · Dashboard principal reequilibrado**: mejoras en layout y corrección del colapso de `KPIs Fitness` y `Resumen Trabajo`.
 
-- Dashboard principal reequilibrado y colapso de módulos corregido para `KPIs Fitness` y `Resumen Trabajo`.
-- Nuevo módulo core `Planner` (`/planner`) con:
-	- to-do diario por categorías,
-	- vista mensual y semanal,
-	- filtros por estado y categoría,
-	- drag and drop de tareas entre días.
-- Las tareas del Planner core se integran con gamificación como misión diaria y otorgan XP por complejidad.
-- `Control Center` incorpora configuración por plugin (Fitness y Work), persistida en `settings`, y solo muestra bloques de plugins activos.
-- Las pantallas de plugins ahora tienen una capa visual premium por dominio (Fitness/Work) con fondos diferenciados, animaciones de entrada y paneles con transiciones.
-- `Actividad Reciente` y la capa de gamificación consumen eventos de Fitness, Work y Core, incluyendo `CORE_PLANNER_TASK_COMPLETED`.
+Ver [docs/AUTH.md](docs/AUTH.md) para detalles técnicos de autenticación.
 
 ## Stack tecnológico
 
@@ -73,7 +71,7 @@ npm start
 npm run typecheck
 ```
 
-### ℹ️ Notas sobre reproducibilidad
+### Notas sobre reproducibilidad
 
 - **`npm ci` vs `npm install`**: En clon nuevo, usa siempre `npm ci` para instalar exactamente las versiones del `package-lock.json`. Esto garantiza que todos trabajen con las mismas dependencias.
 - **Rebuild de módulos nativos**: El script `postinstall` ejecuta automáticamente `electron-rebuild` para `better-sqlite3`, compilando los binarios nativos para tu Electron y SO. No necesitas hacer nada extra; sucede al correr `npm ci`.
@@ -86,9 +84,11 @@ npm run typecheck
 personal-os/
 ├── electron/                    # Proceso principal Electron
 │   ├── main.ts                  # Inicialización de ventana y servicios
-│   ├── preload.ts               # Context Bridge (window.storage)
+│   ├── preload.ts               # Context Bridge (window.storage, window.auth)
 │   └── services/
 │       ├── database.ts          # Singleton DatabaseService (SQLite)
+│       ├── auth.ts              # Servicio de autenticación y sesiones
+│       ├── auth-ipc.ts          # Handlers IPC de autenticación
 │       └── storage-ipc.ts       # Handlers IPC con validación SQL
 ├── src/
 │   ├── App.tsx                  # Bootstrap, rutas, registro de plugins
@@ -104,10 +104,12 @@ personal-os/
 │   │   │   ├── PluginRegistry.ts # Registro estático build-time
 │   │   │   └── PluginContext.tsx # React Context + hook usePluginAPI
 │   │   ├── state/
+│   │   │   ├── authStore.ts     # Estado global de autenticación
 │   │   │   └── coreStore.ts     # Perfil, ajustes, plugins activos
 │   │   ├── storage/
 │   │   │   └── StorageAPI.ts    # Helpers seguros sobre window.storage
 │   │   └── ui/                  # Componentes de shell
+│   │       ├── auth/            # Pantallas de autenticación
 │   │       ├── Shell.tsx        # Layout principal
 │   │       ├── Sidebar.tsx      # Navegación colapsable
 │   │       ├── Dashboard.tsx    # Panel principal con widgets
@@ -162,18 +164,19 @@ Desde la versión `1.2.0`, el sistema incluye misión diaria core del Planner y 
 
 Desde v1.3.0, Personal OS incluye un **sistema de autenticación completamente local** con soporte multiusuario:
 
-- **Registro seguro**: username, contraseña (8+ chars), pregunta secreta personalizada
-- **Aislamiento total**: cada usuario tiene su propia BD de datos, configuración y plugins
-- **Auto-login**: sesiones persistentes que se restauran automáticamente
-- **Recuperación**: reseteo de contraseña mediante pregunta secreta
-- **Sin backend**: 100% local, funciona offline
-- **UX-friendly**: mensajes de error claros en español, validación progresiva
+- **NEW · Registro seguro**: username, contraseña (8+ chars) y pregunta secreta personalizada.
+- **NEW · Aislamiento total**: cada usuario tiene su propia base de datos, configuración y plugins.
+- **NEW · Auto-login**: las sesiones persistentes se restauran automáticamente al abrir la app.
+- **NEW · Recuperación**: reset de contraseña mediante pregunta secreta.
+- **NEW · Sin backend**: funcionamiento 100% local y offline.
+- **NEW · UX-friendly**: mensajes de error claros en español y validación progresiva.
 
 ### Datos técnicos
-- **Hasheado**: scrypt + salt aleatorio (16 bytes), digest 64 bytes
-- **Sesiones**: persistidas en `auth.db` con revocación explícita
-- **Bases de datos**: `auth.db` (global) + `personal-os-user-{userId}.db` (por usuario)
-- **Seguridad**: timing-safe comparison, context isolation, preload script
+
+- **Hasheado**: `scrypt` + salt aleatorio (16 bytes), digest de 64 bytes.
+- **Sesiones**: persistidas en `auth.db` con revocación explícita.
+- **Bases de datos**: `auth.db` (global) + `personal-os-user-{userId}.db` (por usuario).
+- **Seguridad**: `timingSafeEqual`, context isolation y preload script.
 
 Ver [docs/AUTH.md](docs/AUTH.md) para documentación completa.
 
@@ -198,8 +201,8 @@ El módulo `Planner` forma parte del core (no es plugin) y centraliza tareas dia
 `Control Center` incluye un panel para ajustar configuración de `Fitness` y `Work` desde el core.
 
 - Claves de persistencia:
-	- `pluginSettings:fitness`
-	- `pluginSettings:work`
+  - `pluginSettings:fitness`
+  - `pluginSettings:work`
 
 Esto permite centralizar configuración operativa sin entrar a páginas internas de cada plugin.
 
@@ -222,7 +225,12 @@ A medida que crece la documentación técnica, el proyecto incluye un plan para 
 
 ## Base de datos
 
-SQLite con WAL mode. El archivo se guarda en `userData/data/personal-os.db`. Las migraciones son versionadas por plugin y se aplican automáticamente en el arranque.
+SQLite con WAL mode.
+
+- `auth.db`: usuarios y sesiones globales.
+- `personal-os-user-{userId}.db`: datos aislados por usuario.
+- Migraciones versionadas por plugin y aplicadas automáticamente al arranque.
+- Si existe una base legacy `personal-os.db`, el primer usuario registrado la reclama automáticamente.
 
 Ver [docs/DATABASE.md](docs/DATABASE.md) para el esquema completo.
 
