@@ -48,7 +48,11 @@ class PluginManager {
   async initPlugin(pluginId: string): Promise<void> {
     const entry = this.plugins.get(pluginId)
     if (!entry) throw new Error(`Plugin "${pluginId}" not registered`)
-    if (entry.status !== 'registered' && entry.status !== 'inactive') return
+    // Allow retry from 'error' state so users can re-enable after a transient failure
+    // (e.g., DB locked during a migration). 'active' and 'initializing' are no-ops.
+    if (entry.status === 'active' || entry.status === 'initializing') return
+    // Clear any previous error message before retrying
+    entry.error = undefined
 
     this.setStatus(pluginId, 'initializing')
 

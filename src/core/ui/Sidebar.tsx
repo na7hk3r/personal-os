@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useMemo } from 'react'
 import {
   LayoutDashboard,
   SlidersHorizontal,
@@ -82,6 +83,9 @@ const NAV_LINK_CLASS = (isActive: boolean) =>
 export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const updateSettings = useCoreStore((s) => s.updateSettings)
+  // Subscribed to force re-render when plugins are activated/deactivated; the
+  // resulting `getActiveNavItems()` call below reads fresh data from PluginManager.
+  const activePlugins = useCoreStore((s) => s.activePlugins)
   const { points, level, streak } = useGamificationStore()
   const logout = useAuthStore((s) => s.logout)
   const tier = getLevelTier(level)
@@ -95,9 +99,15 @@ export function Sidebar() {
     platinum: 'from-xp-platinum to-cyan-200 text-[#08212f]',
   }
 
-  const navItems = pluginManager
-    .getActiveNavItems()
-    .filter((item, index, arr) => arr.findIndex((candidate) => candidate.path === item.path) === index)
+  // Re-derive nav items whenever activePlugins changes; PluginManager registers/unregisters
+  // navItems inside initPlugin/deactivatePlugin, so we use activePlugins as the trigger.
+  const navItems = useMemo(
+    () =>
+      pluginManager
+        .getActiveNavItems()
+        .filter((item, index, arr) => arr.findIndex((candidate) => candidate.path === item.path) === index),
+    [activePlugins],
+  )
 
   const toggleCollapse = () => {
     updateSettings({ sidebarCollapsed: !sidebarCollapsed })
