@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { UserProfile } from '../types'
 import { eventBus } from '@core/events/EventBus'
 import { CORE_EVENTS } from '@core/events/events'
+import { pluginManager } from '@core/plugins/PluginManager'
 
 interface CoreState {
   // Profile
@@ -21,6 +22,12 @@ interface CoreState {
   activePlugins: string[]
   togglePlugin: (pluginId: string) => void
   setActivePlugins: (ids: string[]) => void
+  /**
+   * Unified enable/disable flow: orchestrates PluginManager lifecycle and
+   * persists the resulting set of active plugin ids. Returns the final status
+   * for the toggled plugin so the UI can surface errors.
+   */
+  setPluginEnabled: (pluginId: string, enabled: boolean) => Promise<'active' | 'inactive' | 'error'>
 
   // Onboarding
   onboardingComplete: boolean
@@ -115,6 +122,37 @@ export const useCoreStore = create<CoreState>((set, get) => ({
       )
     }
     set({ activePlugins: ids })
+  },
+
+  setPluginEnabled: async (pluginId, enabled) => {
+    const plugin = pluginManager.getPlugin(pluginId)
+    if (!plugin) return 'error'
+
+    if (enabled) {
+      if (plugin.status !== 'active') {
+        await pluginManager.initPlugin(pluginId)
+      }
+    } else if (plugin.status === 'active') {
+      pluginManager.deactivatePlugin(pluginId)
+    }
+
+    const nextIds = pluginManager
+      .getAllPlugins()
+      .filter((entry) => entry.status === 'active')
+      .map((entry) => entry.manifest.id)
+
+    if (window.storage) {
+      void window.storage.execute(
+        `INSERT OR REPLACE INTO settings (key, value) VALUES ('activePlugins', ?)`,
+        [JSON.stringify(nextIds)],
+      )
+    }
+    set({ activePlugins: nextIds })
+
+    const updated = pluginManager.getPlugin(pluginId)
+    if (updated?.status === 'active') return 'active'
+    if (updated?.status === 'error') return 'error'
+    return 'inactive'
   },
 
   onboardingComplete: false,

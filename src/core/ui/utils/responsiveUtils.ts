@@ -162,13 +162,14 @@ export function isMobileScreen(): boolean {
 }
 
 /**
- * Debounced resize handler for responsive behavior
+ * Debounced resize handler for responsive behavior.
+ * Returns an unsubscribe function; returns a noop when window is unavailable.
  */
 export function useResponsiveCheck(
   callback: (isMobile: boolean) => void,
   breakpoint = 640,
-): void {
-  if (typeof window === 'undefined') return
+): () => void {
+  if (typeof window === 'undefined') return () => {}
 
   let timeout: ReturnType<typeof setTimeout>
   const handleResize = () => {

@@ -94,6 +94,7 @@ export class DatabaseService {
     this.authDb = new Database(authDbPath)
     this.authDb.pragma('journal_mode = WAL')
     this.authDb.pragma('foreign_keys = ON')
+    this.authDb.pragma('busy_timeout = 5000')
     this.authDb.exec(AUTH_SCHEMA)
     this.dataDir = dbDir
   }
@@ -131,6 +132,7 @@ export class DatabaseService {
     this.userDb = new Database(this.getUserDbPath(userId))
     this.userDb.pragma('journal_mode = WAL')
     this.userDb.pragma('foreign_keys = ON')
+    this.userDb.pragma('busy_timeout = 5000')
     this.userDb.exec(CORE_SCHEMA)
     this.activeUserId = userId
   }

@@ -109,33 +109,39 @@ const fitnessPlugin: PluginManifest = {
 
     // Map snake_case → camelCase with proper typing
     const mappedEntries: DailyEntry[] = Array.isArray(rawEntries)
-      ? rawEntries.map((row) => ({
-        id: (row as Record<string, unknown>).id,
-        date: (row as Record<string, unknown>).date,
-        dayName: (row as Record<string, unknown>).day_name,
-        weight: (row as Record<string, unknown>).weight,
-        breakfast: (row as Record<string, unknown>).breakfast,
-        lunch: (row as Record<string, unknown>).lunch,
-        snack: (row as Record<string, unknown>).snack,
-        dinner: (row as Record<string, unknown>).dinner,
-        workout: (row as Record<string, unknown>).workout,
-        cigarettes: (row as Record<string, unknown>).cigarettes,
-        sleep: (row as Record<string, unknown>).sleep,
-        notes: (row as Record<string, unknown>).notes,
-      }))
+      ? rawEntries.map((raw) => {
+        const row = raw as Record<string, unknown>
+        return {
+          id: row.id as number | undefined,
+          date: row.date as string,
+          dayName: row.day_name as string,
+          weight: row.weight as number | null,
+          breakfast: row.breakfast as 0 | 1,
+          lunch: row.lunch as 0 | 1,
+          snack: row.snack as 0 | 1,
+          dinner: row.dinner as 0 | 1,
+          workout: row.workout as DailyEntry['workout'],
+          cigarettes: row.cigarettes as number,
+          sleep: row.sleep as number,
+          notes: (row.notes ?? '') as string,
+        }
+      })
       : []
 
     const mappedMeasurements: Measurement[] = Array.isArray(rawMeasurements)
-      ? rawMeasurements.map((row) => ({
-        id: (row as Record<string, unknown>).id,
-        date: (row as Record<string, unknown>).date,
-        weight: (row as Record<string, unknown>).weight,
-        armRelaxed: (row as Record<string, unknown>).arm_relaxed,
-        armFlexed: (row as Record<string, unknown>).arm_flexed,
-        chest: (row as Record<string, unknown>).chest,
-        waist: (row as Record<string, unknown>).waist,
-        leg: (row as Record<string, unknown>).leg,
-      }))
+      ? rawMeasurements.map((raw) => {
+        const row = raw as Record<string, unknown>
+        return {
+          id: row.id as number | undefined,
+          date: row.date as string,
+          weight: row.weight as number | null,
+          armRelaxed: row.arm_relaxed as number | null,
+          armFlexed: row.arm_flexed as number | null,
+          chest: row.chest as number | null,
+          waist: row.waist as number | null,
+          leg: row.leg as number | null,
+        }
+      })
       : []
 
     useFitnessStore.getState().setEntries(mappedEntries)

@@ -126,46 +126,55 @@ const workPlugin: PluginManifest = {
     const focusSessionsRaw = await api.storage.query('SELECT * FROM work_focus_sessions ORDER BY start_time DESC')
 
     const cards: Card[] = Array.isArray(cardsRaw)
-      ? cardsRaw.map((row) => ({
-        id: (row as Record<string, unknown>).id,
-        columnId: (row as Record<string, unknown>).column_id,
-        title: (row as Record<string, unknown>).title,
-        description: (row as Record<string, unknown>).description,
-        content: ((row as Record<string, unknown>).content ?? '') as string,
-        labels: JSON.parse(((row as Record<string, unknown>).labels || '[]') as string),
-        dueDate: (row as Record<string, unknown>).due_date,
-        position: (row as Record<string, unknown>).position,
-      }))
+      ? cardsRaw.map((raw) => {
+        const row = raw as Record<string, unknown>
+        return {
+          id: row.id as string,
+          columnId: row.column_id as string,
+          title: row.title as string,
+          description: (row.description ?? '') as string,
+          content: (row.content ?? '') as string,
+          labels: JSON.parse((row.labels || '[]') as string) as string[],
+          dueDate: (row.due_date ?? null) as string | null,
+          position: row.position as number,
+        }
+      })
       : []
 
     const notes: Note[] = Array.isArray(notesRaw)
-      ? notesRaw.map((row) => ({
-        id: (row as Record<string, unknown>).id,
-        title: (row as Record<string, unknown>).title,
-        content: (row as Record<string, unknown>).content,
-        tags: JSON.parse(((row as Record<string, unknown>).tags || '[]') as string),
-        createdAt: (row as Record<string, unknown>).created_at,
-        updatedAt: (row as Record<string, unknown>).updated_at,
-      }))
+      ? notesRaw.map((raw) => {
+        const row = raw as Record<string, unknown>
+        return {
+          id: row.id as string,
+          title: row.title as string,
+          content: (row.content ?? '') as string,
+          tags: JSON.parse((row.tags || '[]') as string) as string[],
+          createdAt: row.created_at as string,
+          updatedAt: row.updated_at as string,
+        }
+      })
       : []
 
     const focusSessions: FocusSession[] = Array.isArray(focusSessionsRaw)
-      ? focusSessionsRaw.map((row) => ({
-        id: (row as Record<string, unknown>).id,
-        taskId: ((row as Record<string, unknown>).task_id ?? null) as string | null,
-        startTime: Number((row as Record<string, unknown>).start_time),
-        endTime: (row as Record<string, unknown>).end_time == null ? undefined : Number((row as Record<string, unknown>).end_time),
-        duration: (row as Record<string, unknown>).duration == null ? undefined : Number((row as Record<string, unknown>).duration),
-        interrupted: Boolean((row as Record<string, unknown>).interrupted),
-      }))
+      ? focusSessionsRaw.map((raw) => {
+        const row = raw as Record<string, unknown>
+        return {
+          id: row.id as string,
+          taskId: (row.task_id ?? null) as string | null,
+          startTime: Number(row.start_time),
+          endTime: row.end_time == null ? undefined : Number(row.end_time),
+          duration: row.duration == null ? undefined : Number(row.duration),
+          interrupted: Boolean(row.interrupted),
+        }
+      })
       : []
 
     const store = useWorkStore.getState()
-    store.setBoards(boards)
-    store.setColumns(columns)
+    store.setBoards(boards as Board[])
+    store.setColumns(columns as Column[])
     store.setCards(cards)
     store.setNotes(notes)
-    store.setLinks(links)
+    store.setLinks(links as Link[])
     store.setFocusSessions(focusSessions)
 
     api.events.on(WORK_EVENTS.TASK_COMPLETED, () => {

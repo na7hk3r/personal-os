@@ -18,8 +18,13 @@ function assertString(value: unknown, name: string): asserts value is string {
 
 function withAuthErrorHandling<T>(fn: () => Promise<T>): Promise<T> {
   return fn().catch((error) => {
-    const message = error instanceof Error ? error.message : 'unknown auth error'
-    throw new Error(`Auth IPC failed: ${message}`)
+    // Re-lanzar Errors reales sin prefijo: el mensaje del AuthService ya es
+    // legible para el usuario (ej. "El nombre de usuario o contraseña es
+    // incorrecto."). Solo envolvemos valores no-Error para no perder señal.
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error(typeof error === 'string' ? error : 'Error de autenticación')
   })
 }
 

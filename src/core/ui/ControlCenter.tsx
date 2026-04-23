@@ -49,7 +49,7 @@ export function ControlCenter() {
   const persistProfile = useCoreStore((s) => s.persistProfile)
   const updateSettings = useCoreStore((s) => s.updateSettings)
   const persistSettings = useCoreStore((s) => s.persistSettings)
-  const setActivePlugins = useCoreStore((s) => s.setActivePlugins)
+  const setPluginEnabled = useCoreStore((s) => s.setPluginEnabled)
 
   const [busyPluginId, setBusyPluginId] = useState<string | null>(null)
   const [pluginMessage, setPluginMessage] = useState('')
@@ -64,14 +64,6 @@ export function ControlCenter() {
 
   const plugins = pluginManager.getAllPlugins()
 
-  const syncActivePluginsState = () => {
-    const ids = pluginManager
-      .getAllPlugins()
-      .filter((plugin) => plugin.status === 'active')
-      .map((plugin) => plugin.manifest.id)
-    setActivePlugins(ids)
-  }
-
   const togglePlugin = async (pluginId: string) => {
     setPluginMessage('')
     setBusyPluginId(pluginId)
@@ -79,19 +71,15 @@ export function ControlCenter() {
       const plugin = pluginManager.getPlugin(pluginId)
       if (!plugin) return
       const isActive = plugin.status === 'active'
-      if (isActive) {
-        pluginManager.deactivatePlugin(pluginId)
-      } else {
-        await pluginManager.initPlugin(pluginId)
-      }
-      syncActivePluginsState()
+      const result = await setPluginEnabled(pluginId, !isActive)
       const updated = pluginManager.getPlugin(pluginId)
-      if (updated?.status === 'active') {
-        setPluginMessage(`Plugin ${updated.manifest.name} activado correctamente.`)
-      } else if (updated?.status === 'inactive') {
-        setPluginMessage(`Plugin ${updated.manifest.name} desactivado.`)
-      } else if (updated?.status === 'error') {
-        setPluginMessage(`No se pudo activar ${updated.manifest.name}: ${updated.error ?? 'error desconocido'}`)
+      const name = updated?.manifest.name ?? pluginId
+      if (result === 'active') {
+        setPluginMessage(`Plugin ${name} activado correctamente.`)
+      } else if (result === 'inactive') {
+        setPluginMessage(`Plugin ${name} desactivado.`)
+      } else {
+        setPluginMessage(`No se pudo activar ${name}: ${updated?.error ?? 'error desconocido'}`)
       }
     } finally {
       setBusyPluginId(null)

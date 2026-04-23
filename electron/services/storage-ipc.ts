@@ -53,13 +53,57 @@ function assertAllowedOperation(sql: string, allowed: Set<string>, channel: stri
 }
 
 function assertPluginId(pluginId: unknown): asserts pluginId is string {
-  if (typeof pluginId !== 'string' || !/^[a-z0-9_-]+$/i.test(pluginId)) {
+  if (typeof pluginId !== 'string' || !/^[a-z][a-z0-9_-]*$/.test(pluginId)) {
     throw new Error('pluginId is invalid')
+  }
+}
+
+/**
+ * Extract table names referenced in a single SQL statement. Best-effort parser
+ * that covers the DDL/DML shapes allowed by MIGRATION_OPERATIONS.
+ * Returns lowercased table names without quotes.
+ */
+function extractTableNames(statement: string): string[] {
+  const normalized = statement.replace(/\s+/g, ' ').trim()
+  const patterns: RegExp[] = [
+    /\bCREATE\s+(?:UNIQUE\s+)?INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?\s+ON\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bCREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bALTER\s+TABLE\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bDROP\s+(?:TABLE|INDEX)(?:\s+IF\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bINSERT\s+(?:OR\s+\w+\s+)?INTO\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bUPDATE\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bDELETE\s+FROM\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+  ]
+
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern)
+    if (match) {
+      // CREATE INDEX captures (index_name, table_name); use the table.
+      const table = match[2] ?? match[1]
+      return table ? [table.toLowerCase()] : []
+    }
+  }
+  return []
+}
+
+function assertTablesBelongToPlugin(statement: string, pluginId: string, version: number): void {
+  const tables = extractTableNames(statement)
+  if (tables.length === 0) {
+    throw new Error(`migration ${version} could not resolve target table for statement`)
+  }
+  const prefix = `${pluginId.toLowerCase()}_`
+  for (const table of tables) {
+    if (!table.startsWith(prefix)) {
+      throw new Error(
+        `migration ${version} touches table '${table}' outside plugin namespace '${prefix}'`,
+      )
+    }
   }
 }
 
 function assertMigrations(
   migrations: unknown,
+  pluginId: string,
 ): asserts migrations is { version: number; up: string }[] {
   if (!Array.isArray(migrations) || migrations.length === 0) {
     throw new Error('migrations must be a non-empty array')
@@ -98,6 +142,7 @@ function assertMigrations(
       if (!MIGRATION_OPERATIONS.has(operation)) {
         throw new Error(`migration ${version} contains disallowed '${operation || 'UNKNOWN'}' operation`)
       }
+      assertTablesBelongToPlugin(statement, pluginId, version)
     }
   }
 }
@@ -135,7 +180,7 @@ export function registerStorageIpc(db: DatabaseService): void {
   ipcMain.handle(CHANNELS.migrate, (_event, pluginId: unknown, migrations: unknown) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId)
-      assertMigrations(migrations)
+      assertMigrations(migrations, pluginId)
       db.runMigrations(pluginId, migrations)
     })
   })

@@ -13,13 +13,25 @@ import { useCoreStore } from './core/state/coreStore'
 import { useGamificationStore } from './core/gamification/gamificationStore'
 import { useAuthStore } from './core/state/authStore'
 import { AuthScreen } from './core/ui/auth/AuthScreen'
+import { ErrorBoundary } from './core/ui/components/ErrorBoundary'
 
 // Import and register plugins
 import './plugins/fitness'
 import './plugins/work'
 
+/**
+ * Safe mode skips plugin initialization so the shell can boot even if a plugin
+ * throws during init. Triggered via `#safe` in the hash of the URL (e.g. the
+ * user can launch with `personal-os#safe`).
+ */
+function isSafeModeRequested(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.location.hash.includes('safe')
+}
+
 export function App() {
   const [ready, setReady] = useState(false)
+  const [safeMode] = useState(isSafeModeRequested)
   const authStatus = useAuthStore((s) => s.status)
   const initializeSession = useAuthStore((s) => s.initializeSession)
   const currentUser = useAuthStore((s) => s.currentUser)
@@ -52,16 +64,25 @@ export function App() {
           pluginManager.register(manifest)
         }
 
-        // Get active plugin IDs from store (loaded from storage)
-        const activeIds = useCoreStore.getState().activePlugins
-
-        // Initialize only the active plugins; deactivate others
-        for (const manifest of allPlugins) {
-          if (activeIds.includes(manifest.id)) {
-            await pluginManager.initPlugin(manifest.id)
-          } else {
-            // Ensure inactive plugins are in 'inactive' state (not 'registered')
+        if (safeMode) {
+          // Keep every plugin inactive; user can re-enable from ControlCenter.
+          for (const manifest of allPlugins) {
             pluginManager.setPluginStatus(manifest.id, 'inactive')
+          }
+          console.warn('[App] Safe mode enabled: plugins will not be initialized.')
+        } else {
+          // Get active plugin IDs from store (loaded from storage)
+          const activeIds = useCoreStore.getState().activePlugins
+
+          // Initialize only the active plugins; deactivate others. Individual
+          // plugin failures are captured by PluginManager and surfaced via
+          // plugin.status === 'error', so one bad plugin cannot halt boot.
+          for (const manifest of allPlugins) {
+            if (activeIds.includes(manifest.id)) {
+              await pluginManager.initPlugin(manifest.id)
+            } else {
+              pluginManager.setPluginStatus(manifest.id, 'inactive')
+            }
           }
         }
       } catch (err) {
@@ -71,7 +92,7 @@ export function App() {
       }
     }
     void bootstrap()
-  }, [authStatus, currentUser, loadFromStorage, loadGamificationFromStorage])
+  }, [authStatus, currentUser, loadFromStorage, loadGamificationFromStorage, safeMode])
 
   if (authStatus === 'checking') {
     return (
@@ -103,25 +124,42 @@ export function App() {
   }
 
   return (
-    <HashRouter>
-      {ready && !onboardingComplete && <OnboardingWizard />}
-      <Routes>
-        <Route element={<Shell />}>
-          <Route index element={<Dashboard />} />
-          <Route path="/control" element={<ControlCenter />} />
-          <Route path="/notes" element={<CoreNotesPage />} />
-          <Route path="/links" element={<CoreLinksPage />} />
-          <Route path="/planner" element={<CorePlannerPage />} />
-          {pluginPages.map((page) => (
-            <Route
-              key={page.id}
-              path={page.path}
-              element={<page.component />}
-            />
-          ))}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <ErrorBoundary label="app-root">
+      <HashRouter>
+        {ready && !onboardingComplete && <OnboardingWizard />}
+        {safeMode && (
+          <div
+            role="status"
+            className="fixed left-1/2 top-3 z-50 -translate-x-1/2 rounded-full border border-amber-400/40 bg-amber-500/15 px-4 py-1.5 text-xs font-medium text-amber-100 shadow-lg backdrop-blur"
+          >
+            Modo seguro activo — plugins desactivados
+          </div>
+        )}
+        <Routes>
+          <Route element={<Shell />}>
+            <Route index element={<Dashboard />} />
+            <Route path="/control" element={<ControlCenter />} />
+            <Route path="/notes" element={<CoreNotesPage />} />
+            <Route path="/links" element={<CoreLinksPage />} />
+            <Route path="/planner" element={<CorePlannerPage />} />
+            {pluginPages.map((page) => {
+              const PageComponent = page.component
+              return (
+                <Route
+                  key={page.id}
+                  path={page.path}
+                  element={
+                    <ErrorBoundary label={`plugin:${page.pluginId}`}>
+                      <PageComponent />
+                    </ErrorBoundary>
+                  }
+                />
+              )
+            })}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </ErrorBoundary>
   )
 }

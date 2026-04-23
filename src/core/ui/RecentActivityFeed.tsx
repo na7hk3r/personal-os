@@ -144,53 +144,51 @@ export function RecentActivityFeed() {
     return () => unsubs.forEach((unsub) => unsub())
   }, [activePlugins])
 
-  const filteredEvents = events.filter((entry) => {
-    if (sourceFilter !== 'all' && entry.source !== sourceFilter) return false
+  const filteredEvents = events
+    .filter((entry) => {
+      if (sourceFilter !== 'all' && entry.source !== sourceFilter) return false
 
-    if (timeFilter === '24h') {
-      const elapsedMs = Date.now() - new Date(entry.created_at).getTime()
-      if (elapsedMs > 86_400_000) return false
-    }
+      if (timeFilter === '24h') {
+        const elapsedMs = Date.now() - new Date(entry.created_at).getTime()
+        if (elapsedMs > 86_400_000) return false
+      }
 
-    return true
-  })
+      return true
+    })
+    .slice(0, 5)
 
   return (
-    <div className="rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg h-full flex flex-col">
-      <div className="mb-3 space-y-2">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-muted">Actividad Reciente</h3>
-
-        <div className="flex flex-wrap items-center gap-1.5">
-          {[
-            { id: 'all', label: 'Todos' },
-            { id: 'fitness', label: 'Fitness' },
-            { id: 'work', label: 'Work' },
-            { id: 'core', label: 'Core' },
-          ].map((opt) => (
-            <button
-              key={opt.id}
-              onClick={() => setSourceFilter(opt.id as ActivitySourceFilter)}
-              className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
-                sourceFilter === opt.id
-                  ? 'border-accent/60 bg-accent/20 text-accent-light'
-                  : 'border-border bg-surface text-muted hover:text-white'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-
+    <div className="flex flex-col">
+      <div className="mb-3 flex flex-wrap items-center gap-1.5">
+        {[
+          { id: 'all', label: 'Todos' },
+          { id: 'fitness', label: 'Fitness' },
+          { id: 'work', label: 'Work' },
+          { id: 'core', label: 'Core' },
+        ].map((opt) => (
           <button
-            onClick={() => setTimeFilter((prev) => (prev === 'all' ? '24h' : 'all'))}
-            className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
-              timeFilter === '24h'
+            key={opt.id}
+            onClick={() => setSourceFilter(opt.id as ActivitySourceFilter)}
+            className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+              sourceFilter === opt.id
                 ? 'border-accent/60 bg-accent/20 text-accent-light'
                 : 'border-border bg-surface text-muted hover:text-white'
             }`}
           >
-            {timeFilter === '24h' ? 'Ultimas 24h' : 'Todo el historial'}
+            {opt.label}
           </button>
-        </div>
+        ))}
+
+        <button
+          onClick={() => setTimeFilter((prev) => (prev === 'all' ? '24h' : 'all'))}
+          className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+            timeFilter === '24h'
+              ? 'border-accent/60 bg-accent/20 text-accent-light'
+              : 'border-border bg-surface text-muted hover:text-white'
+          }`}
+        >
+          {timeFilter === '24h' ? 'Ultimas 24h' : 'Todo el historial'}
+        </button>
       </div>
 
       {loading ? (
@@ -203,7 +201,7 @@ export function RecentActivityFeed() {
           <p className="text-xs text-muted">Sin actividad para los filtros actuales</p>
         </div>
       ) : (
-        <ul className="flex-1 overflow-y-auto space-y-2 pr-1">
+        <ul className="flex-1 space-y-2 pr-1">
           {filteredEvents.map((entry) => (
             <li key={entry.id} className="flex items-start gap-2.5 animate-fade-in">
               <span className="text-base leading-none mt-0.5 text-muted/80">

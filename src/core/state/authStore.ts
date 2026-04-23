@@ -18,10 +18,26 @@ interface AuthState {
 }
 
 function toReadableError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message.replace(/^Auth IPC failed:\s*/i, '').trim()
+  if (!(error instanceof Error)) {
+    return 'Ocurrio un error inesperado.'
   }
-  return 'Ocurrio un error inesperado.'
+
+  // Electron envuelve los errores cruzando IPC con prefijos técnicos como:
+  //   "Error invoking remote method 'auth:login': Error: Auth IPC failed: <msg>"
+  // Al usuario solo le interesa <msg>. Pelamos prefijos conocidos en orden.
+  let message = error.message
+  const strippers: RegExp[] = [
+    /^Error invoking remote method '[^']+':\s*/i,
+    /^Error:\s*/i,
+    /^Auth IPC failed:\s*/i,
+    /^Error:\s*/i, // puede quedar un segundo "Error:" tras el unwrap
+  ]
+
+  for (const rx of strippers) {
+    message = message.replace(rx, '')
+  }
+
+  return message.trim() || 'Ocurrio un error inesperado.'
 }
 
 export const useAuthStore = create<AuthState>((set) => ({

@@ -1,7 +1,6 @@
 import { CORE_EVENTS } from '@core/events/events'
 import { eventBus } from '@core/events/EventBus'
 import {
-  getElapsedMs,
   findMostRecentEvent,
   hasEventType,
   COMMON_EVENT_SETS,

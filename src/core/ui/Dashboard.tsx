@@ -193,7 +193,11 @@ export function Dashboard() {
           {/* Modules: takes 2/3 width on xl */}
           <div
             className={`grid grid-cols-1 gap-4 xl:col-span-2 ${
-              useFixedStackedRows ? 'xl:grid-rows-[0.82fr_1.18fr]' : 'md:grid-cols-2'
+              useFixedStackedRows
+                ? 'xl:grid-rows-[0.82fr_1.18fr]'
+                : widgets.length > 1
+                  ? 'md:grid-cols-2'
+                  : ''
             }`}
           >
             {orderedWidgets.map((widget) => {
@@ -334,8 +338,13 @@ export function Dashboard() {
             </p>
           </div>
 
-          <div className="min-h-[200px] xl:col-span-1">
-            <RecentActivityFeed />
+          <div className="xl:col-span-1">
+            <div className="rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <h3 className="text-sm font-medium text-muted">Actividad reciente</h3>
+              </div>
+              <RecentActivityFeed />
+            </div>
           </div>
         </div>
       )}

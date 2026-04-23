@@ -1,6 +1,7 @@
 "use strict";
 const electron = require("electron");
 const path = require("path");
+const url = require("url");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const crypto = require("crypto");
@@ -44,11 +45,45 @@ function assertAllowedOperation(sql, allowed, channel) {
   }
 }
 function assertPluginId(pluginId) {
-  if (typeof pluginId !== "string" || !/^[a-z0-9_-]+$/i.test(pluginId)) {
+  if (typeof pluginId !== "string" || !/^[a-z][a-z0-9_-]*$/.test(pluginId)) {
     throw new Error("pluginId is invalid");
   }
 }
-function assertMigrations(migrations) {
+function extractTableNames(statement) {
+  const normalized = statement.replace(/\s+/g, " ").trim();
+  const patterns = [
+    /\bCREATE\s+(?:UNIQUE\s+)?INDEX(?:\s+IF\s+NOT\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?\s+ON\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bCREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bALTER\s+TABLE\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bDROP\s+(?:TABLE|INDEX)(?:\s+IF\s+EXISTS)?\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bINSERT\s+(?:OR\s+\w+\s+)?INTO\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bUPDATE\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i,
+    /\bDELETE\s+FROM\s+[`"']?([A-Za-z_][A-Za-z0-9_]*)[`"']?/i
+  ];
+  for (const pattern of patterns) {
+    const match = normalized.match(pattern);
+    if (match) {
+      const table = match[2] ?? match[1];
+      return table ? [table.toLowerCase()] : [];
+    }
+  }
+  return [];
+}
+function assertTablesBelongToPlugin(statement, pluginId, version) {
+  const tables = extractTableNames(statement);
+  if (tables.length === 0) {
+    throw new Error(`migration ${version} could not resolve target table for statement`);
+  }
+  const prefix = `${pluginId.toLowerCase()}_`;
+  for (const table of tables) {
+    if (!table.startsWith(prefix)) {
+      throw new Error(
+        `migration ${version} touches table '${table}' outside plugin namespace '${prefix}'`
+      );
+    }
+  }
+}
+function assertMigrations(migrations, pluginId) {
   if (!Array.isArray(migrations) || migrations.length === 0) {
     throw new Error("migrations must be a non-empty array");
   }
@@ -75,6 +110,7 @@ function assertMigrations(migrations) {
       if (!MIGRATION_OPERATIONS.has(operation)) {
         throw new Error(`migration ${version} contains disallowed '${operation || "UNKNOWN"}' operation`);
       }
+      assertTablesBelongToPlugin(statement, pluginId, version);
     }
   }
 }
@@ -108,7 +144,7 @@ function registerStorageIpc(db) {
   electron.ipcMain.handle(CHANNELS$1.migrate, (_event, pluginId, migrations) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId);
-      assertMigrations(migrations);
+      assertMigrations(migrations, pluginId);
       db.runMigrations(pluginId, migrations);
     });
   });
@@ -198,6 +234,7 @@ class DatabaseService {
     this.authDb = new Database(authDbPath);
     this.authDb.pragma("journal_mode = WAL");
     this.authDb.pragma("foreign_keys = ON");
+    this.authDb.pragma("busy_timeout = 5000");
     this.authDb.exec(AUTH_SCHEMA);
     this.dataDir = dbDir;
   }
@@ -228,6 +265,7 @@ class DatabaseService {
     this.userDb = new Database(this.getUserDbPath(userId));
     this.userDb.pragma("journal_mode = WAL");
     this.userDb.pragma("foreign_keys = ON");
+    this.userDb.pragma("busy_timeout = 5000");
     this.userDb.exec(CORE_SCHEMA);
     this.activeUserId = userId;
   }
@@ -564,8 +602,10 @@ function assertString(value, name) {
 }
 function withAuthErrorHandling(fn) {
   return fn().catch((error) => {
-    const message = error instanceof Error ? error.message : "unknown auth error";
-    throw new Error(`Auth IPC failed: ${message}`);
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(typeof error === "string" ? error : "Error de autenticación");
   });
 }
 function registerAuthIpc(authService) {
@@ -631,6 +671,28 @@ function registerAuthIpc(authService) {
 let mainWindow = null;
 const rendererUrl = process.env.ELECTRON_RENDERER_URL;
 const isDebugDevtoolsEnabled = process.env.ELECTRON_DEBUG_DEVTOOLS === "true";
+const ALLOWED_EXTERNAL_PROTOCOLS = /* @__PURE__ */ new Set(["https:", "http:", "mailto:"]);
+function isSafeExternalUrl(rawUrl) {
+  try {
+    const parsed = new url.URL(rawUrl);
+    return ALLOWED_EXTERNAL_PROTOCOLS.has(parsed.protocol);
+  } catch {
+    return false;
+  }
+}
+function isAllowedNavigationTarget(rawUrl) {
+  try {
+    const parsed = new url.URL(rawUrl);
+    if (parsed.protocol === "file:") return true;
+    if (rendererUrl) {
+      const dev = new url.URL(rendererUrl);
+      return parsed.origin === dev.origin;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
 function createWindow() {
   mainWindow = new electron.BrowserWindow({
     width: 1280,
@@ -658,6 +720,25 @@ function createWindow() {
     mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
 }
+electron.app.on("web-contents-created", (_event, contents) => {
+  contents.setWindowOpenHandler(({ url: url2 }) => {
+    if (isSafeExternalUrl(url2)) {
+      void electron.shell.openExternal(url2);
+    }
+    return { action: "deny" };
+  });
+  contents.on("will-navigate", (event, url2) => {
+    if (!isAllowedNavigationTarget(url2)) {
+      event.preventDefault();
+      if (isSafeExternalUrl(url2)) {
+        void electron.shell.openExternal(url2);
+      }
+    }
+  });
+  contents.on("will-attach-webview", (event) => {
+    event.preventDefault();
+  });
+});
 electron.app.whenReady().then(() => {
   const db = DatabaseService.getInstance();
   db.initialize();

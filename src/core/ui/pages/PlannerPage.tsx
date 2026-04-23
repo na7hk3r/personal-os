@@ -235,27 +235,21 @@ export function CorePlannerPage() {
   }
 
   const toggleTask = (id: string) => {
-    let xpToGrant = 0
-    let completedTask: PlannerTask | null = null
+    const target = tasks.find((task) => task.id === id)
+    if (!target) return
 
-    const next = tasks.map((task) => {
+    const willComplete = !target.completed
+    const shouldReward = willComplete && !target.rewardedAt
+    const xpToGrant = shouldReward ? COMPLEXITY_XP[target.complexity] : 0
+
+    const completedTask: PlannerTask | null = shouldReward
+      ? { ...target, completed: true, rewardedAt: new Date().toISOString() }
+      : null
+
+    const next = tasks.map((task): PlannerTask => {
       if (task.id !== id) return task
-      const nextCompleted = !task.completed
-      const nextTask = {
-        ...task,
-        completed: nextCompleted,
-      }
-
-      if (nextCompleted && !task.rewardedAt) {
-        xpToGrant = COMPLEXITY_XP[task.complexity]
-        completedTask = {
-          ...nextTask,
-          rewardedAt: new Date().toISOString(),
-        }
-        return completedTask
-      }
-
-      return nextTask
+      if (completedTask) return completedTask
+      return { ...task, completed: willComplete }
     })
 
     if (completedTask && xpToGrant > 0) {
