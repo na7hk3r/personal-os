@@ -3,10 +3,17 @@ import { storageAPI } from '@core/storage/StorageAPI'
 import type { EventLogEntry } from '@core/types'
 import { eventBus } from '@core/events/EventBus'
 import { useWorkStore } from '../store'
-import { completeWorkFocusSession, interruptWorkFocusSession, startWorkFocusSession } from '../focus'
+import {
+  completeWorkFocusSession,
+  getEffectiveDuration,
+  interruptWorkFocusSession,
+  pauseWorkFocusSession,
+  resumeWorkFocusSession,
+  startWorkFocusSession,
+} from '../focus'
 import { WORK_EVENTS } from '../events'
 import { KanbanBoard } from '../components/KanbanBoard'
-import { ClipboardList, ListChecks, NotebookPen, TimerReset, Play, Pause, Square } from 'lucide-react'
+import { ClipboardList, ListChecks, NotebookPen, TimerReset, Play, Pause, Square, XCircle } from 'lucide-react'
 
 const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
   WORK_EVENTS.TASK_CREATED,
@@ -17,6 +24,8 @@ const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
   WORK_EVENTS.TASK_STARTED,
   WORK_EVENTS.TASK_SWITCHED,
   WORK_EVENTS.FOCUS_STARTED,
+  WORK_EVENTS.FOCUS_PAUSED,
+  WORK_EVENTS.FOCUS_RESUMED,
   WORK_EVENTS.FOCUS_COMPLETED,
   WORK_EVENTS.FOCUS_INTERRUPTED,
   WORK_EVENTS.NOTE_CREATED,
@@ -31,6 +40,8 @@ const EVENT_LABELS: Record<string, string> = {
   [WORK_EVENTS.TASK_STARTED]: 'Tarea iniciada',
   [WORK_EVENTS.TASK_SWITCHED]: 'Cambio de tarea',
   [WORK_EVENTS.FOCUS_STARTED]: 'Foco iniciado',
+  [WORK_EVENTS.FOCUS_PAUSED]: 'Foco pausado',
+  [WORK_EVENTS.FOCUS_RESUMED]: 'Foco reanudado',
   [WORK_EVENTS.FOCUS_COMPLETED]: 'Foco completado',
   [WORK_EVENTS.FOCUS_INTERRUPTED]: 'Foco interrumpido',
   [WORK_EVENTS.NOTE_CREATED]: 'Nota creada',
@@ -62,11 +73,33 @@ export function WorkDashboard() {
   const { boards, columns, cards, notes, focusSessions, currentFocusSession } = useWorkStore()
   const [now, setNow] = useState(Date.now())
   const [recentEvents, setRecentEvents] = useState<EventLogEntry[]>([])
+  // Objetivo de Pomodoro en minutos (persistido en localStorage).
+  const [pomodoroGoalMin, setPomodoroGoalMin] = useState<number>(() => {
+    if (typeof window === 'undefined') return 25
+    const raw = window.localStorage.getItem('work.pomodoroGoalMin')
+    const n = raw ? Number.parseInt(raw, 10) : NaN
+    return Number.isFinite(n) && n > 0 ? n : 25
+  })
+  // Evita notificar varias veces por la misma sesión.
+  const [notifiedSessionId, setNotifiedSessionId] = useState<string | null>(null)
   const totalCards = cards.length
   const totalNotes = notes.length
 
   useEffect(() => {
-    if (!currentFocusSession) return undefined
+    if (typeof window === 'undefined') return
+    window.localStorage.setItem('work.pomodoroGoalMin', String(pomodoroGoalMin))
+  }, [pomodoroGoalMin])
+
+  // Solicitar permiso de notificación una única vez.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('Notification' in window)) return
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!currentFocusSession || currentFocusSession.pausedAt) return undefined
 
     const intervalId = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(intervalId)
@@ -105,8 +138,7 @@ export function WorkDashboard() {
 
     const sessionsToday = focusSessions.filter((session) => session.startTime >= startOfDay.getTime())
     const totalFocusMs = sessionsToday.reduce((sum, session) => {
-      const duration = session.duration ?? ((session.id === currentFocusSession?.id ? now : session.startTime) - session.startTime)
-      return sum + Math.max(0, duration)
+      return sum + getEffectiveDuration(session, now)
     }, 0)
     const completedSessions = sessionsToday.filter((session) => session.endTime && !session.interrupted).length
     const efficiency = sessionsToday.length === 0 ? 0 : Math.round((completedSessions / sessionsToday.length) * 100)
@@ -116,7 +148,7 @@ export function WorkDashboard() {
       totalFocusMs,
       efficiency,
     }
-  }, [currentFocusSession?.id, focusSessions, now])
+  }, [focusSessions, now])
 
   const activeTasks = useMemo(() => {
     const inProgressColumnIds = new Set(
@@ -129,7 +161,33 @@ export function WorkDashboard() {
       .slice(0, 5)
   }, [cards, columns])
 
-  const currentDuration = currentFocusSession ? now - currentFocusSession.startTime : 0
+  const isPaused = Boolean(currentFocusSession?.pausedAt)
+  const currentDuration = currentFocusSession ? getEffectiveDuration(currentFocusSession, now) : 0
+  const pomodoroGoalMs = pomodoroGoalMin * 60_000
+  const pomodoroProgress = pomodoroGoalMs > 0 ? Math.min(1, currentDuration / pomodoroGoalMs) : 0
+  const remainingMs = Math.max(0, pomodoroGoalMs - currentDuration)
+
+  // Dispara notificación + auto-complete cuando se alcanza el objetivo.
+  useEffect(() => {
+    if (!currentFocusSession || isPaused) return
+    if (pomodoroGoalMs <= 0) return
+    if (currentDuration < pomodoroGoalMs) return
+    if (notifiedSessionId === currentFocusSession.id) return
+
+    setNotifiedSessionId(currentFocusSession.id)
+    try {
+      if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+        const title = currentTask?.title ?? 'Foco libre'
+        new Notification('Pomodoro completado 🎯', {
+          body: `${pomodoroGoalMin} min logrados en "${title}". ¡Buen trabajo!`,
+          silent: false,
+        })
+      }
+    } catch {
+      // Notifications bloqueadas en Electron — ignorar silenciosamente.
+    }
+    void completeWorkFocusSession()
+  }, [currentFocusSession, currentDuration, pomodoroGoalMs, pomodoroGoalMin, isPaused, notifiedSessionId, currentTask])
 
   return (
     <div className="plugin-shell plugin-shell-work space-y-6">
@@ -141,42 +199,100 @@ export function WorkDashboard() {
               {currentTask?.title ?? (currentFocusSession ? 'Foco libre en curso' : 'Sin foco activo')}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-muted">
-              {currentFocusSession
-                ? `Corriendo desde ${new Date(currentFocusSession.startTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`
-                : 'Elegí una tarea desde el tablero o iniciá una sesión libre para activar el motor de ejecución.'}
+              {!currentFocusSession
+                ? 'Elegí una tarea desde el tablero o iniciá una sesión libre para activar el motor de ejecución.'
+                : isPaused
+                  ? 'Sesión pausada. Reanudá para seguir sumando tiempo efectivo.'
+                  : `Corriendo desde ${new Date(currentFocusSession.startTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`}
             </p>
           </div>
 
-          <div className="flex flex-col items-start gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 lg:min-w-[280px]">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted">
-              <TimerReset size={14} />
-              Tiempo activo
+          <div className="flex flex-col items-start gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 lg:min-w-[320px]">
+            <div className="flex items-center justify-between w-full gap-2 text-xs uppercase tracking-[0.2em] text-muted">
+              <span className="flex items-center gap-2">
+                <TimerReset size={14} />
+                Tiempo efectivo {isPaused && <span className="text-warning">(pausado)</span>}
+              </span>
+              <label className="flex items-center gap-1 normal-case tracking-normal text-[11px]">
+                Meta
+                <select
+                  value={pomodoroGoalMin}
+                  onChange={(e) => setPomodoroGoalMin(Number.parseInt(e.target.value, 10))}
+                  className="rounded bg-surface-light border border-border px-1 py-0.5 text-xs text-white focus:border-accent/60 focus:outline-none"
+                >
+                  <option value={15}>15m</option>
+                  <option value={25}>25m</option>
+                  <option value={45}>45m</option>
+                  <option value={60}>60m</option>
+                  <option value={90}>90m</option>
+                </select>
+              </label>
             </div>
-            <p className="text-3xl font-semibold tabular-nums text-white">{formatDuration(currentDuration)}</p>
+            <p className={`text-3xl font-semibold tabular-nums ${isPaused ? 'text-warning' : 'text-white'}`}>
+              {formatDuration(currentDuration)}
+            </p>
+            {currentFocusSession && (
+              <div className="w-full">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-light">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      pomodoroProgress >= 1 ? 'bg-success' : 'bg-accent'
+                    }`}
+                    style={{ width: `${pomodoroProgress * 100}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-[10px] text-muted">
+                  {pomodoroProgress >= 1
+                    ? `✓ Meta alcanzada (${pomodoroGoalMin}m)`
+                    : `Faltan ${formatDuration(remainingMs)} para la meta`}
+                </p>
+              </div>
+            )}
             <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => startWorkFocusSession(null)}
-                disabled={Boolean(currentFocusSession)}
-                className="inline-flex items-center gap-2 rounded-xl border border-accent/30 px-3 py-2 text-sm text-accent-light transition-colors hover:bg-accent/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Play size={14} />
-                Start
-              </button>
-              <button
-                onClick={() => interruptWorkFocusSession()}
-                disabled={!currentFocusSession}
-                className="inline-flex items-center gap-2 rounded-xl border border-warning/30 px-3 py-2 text-sm text-warning transition-colors hover:bg-warning/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Pause size={14} />
-                Pause
-              </button>
+              {!currentFocusSession && (
+                <button
+                  onClick={() => startWorkFocusSession(null)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-accent/30 px-3 py-2 text-sm text-accent-light transition-colors hover:bg-accent/10"
+                >
+                  <Play size={14} />
+                  Start
+                </button>
+              )}
+              {currentFocusSession && isPaused && (
+                <button
+                  onClick={() => resumeWorkFocusSession()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-accent/30 px-3 py-2 text-sm text-accent-light transition-colors hover:bg-accent/10"
+                >
+                  <Play size={14} />
+                  Resume
+                </button>
+              )}
+              {currentFocusSession && !isPaused && (
+                <button
+                  onClick={() => pauseWorkFocusSession()}
+                  className="inline-flex items-center gap-2 rounded-xl border border-warning/30 px-3 py-2 text-sm text-warning transition-colors hover:bg-warning/10"
+                >
+                  <Pause size={14} />
+                  Pause
+                </button>
+              )}
               <button
                 onClick={() => completeWorkFocusSession()}
                 disabled={!currentFocusSession}
+                title="Finalizar y contar como sesión completada"
                 className="inline-flex items-center gap-2 rounded-xl border border-success/30 px-3 py-2 text-sm text-success transition-colors hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Square size={14} />
                 Stop
+              </button>
+              <button
+                onClick={() => interruptWorkFocusSession()}
+                disabled={!currentFocusSession}
+                title="Abandonar sesión (cuenta como interrumpida)"
+                className="inline-flex items-center gap-2 rounded-xl border border-danger/30 px-3 py-2 text-sm text-danger transition-colors hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <XCircle size={14} />
+                Cancel
               </button>
             </div>
           </div>
@@ -213,6 +329,11 @@ export function WorkDashboard() {
           <p className="text-2xl font-bold">{formatDuration(todayMetrics.totalFocusMs)}</p>
           <p className="mt-1 text-xs text-muted">{todayMetrics.sessionsToday.length} sesiones, {todayMetrics.efficiency}% eficiencia</p>
         </div>
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Tablero principal</h3>
+        <KanbanBoard />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
@@ -275,11 +396,6 @@ export function WorkDashboard() {
             ))}
           </div>
         </section>
-      </div>
-
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Tablero principal</h3>
-        <KanbanBoard />
       </div>
     </div>
   )

@@ -8,7 +8,17 @@ export interface Column {
   boardId: string
   name: string
   position: number
+  /** Límite de trabajo en progreso (WIP). null/0 = sin límite. */
+  wipLimit?: number | null
 }
+
+export interface ChecklistItem {
+  id: string
+  text: string
+  done: boolean
+}
+
+export type CardPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export interface Card {
   id: string
@@ -19,6 +29,16 @@ export interface Card {
   labels: string[]
   dueDate: string | null
   position: number
+  /** Prioridad de la tarjeta. */
+  priority?: CardPriority | null
+  /** Estimación en minutos (opcional). */
+  estimateMinutes?: number | null
+  /** Checklist embebida. */
+  checklist?: ChecklistItem[]
+  /** Si la tarjeta está archivada (se oculta del tablero). */
+  archived?: boolean
+  /** Timestamp de cuándo fue archivada. */
+  archivedAt?: number | null
 }
 
 export interface FocusSession {
@@ -28,6 +48,10 @@ export interface FocusSession {
   endTime?: number
   duration?: number
   interrupted: boolean
+  /** Timestamp de cuándo se pausó la sesión actual. null si no está pausada. */
+  pausedAt?: number | null
+  /** Tiempo total acumulado en pausas (ms). */
+  pausedTotal?: number
 }
 
 export interface Note {
@@ -37,6 +61,7 @@ export interface Note {
   tags: string[]
   createdAt: string
   updatedAt: string
+  pinned?: boolean
 }
 
 export interface Link {

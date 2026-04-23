@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card } from '../types'
-import { FileText, Pause, Play } from 'lucide-react'
+import { CalendarClock, CheckSquare, FileText, Flag, Pause, Play, Target, Timer } from 'lucide-react'
 
 interface Props {
   card: Card
+  focusSessionCount?: number
   onDelete: (id: string) => void
   onOpen: (card: Card) => void
   onStartFocus: (card: Card) => void
@@ -12,7 +14,52 @@ interface Props {
   isFocusActive: boolean
 }
 
-export function SortableCard({ card, onDelete, onOpen, onStartFocus, onStopFocus, isFocusActive }: Props) {
+const PRIORITY_STYLES: Record<NonNullable<Card['priority']>, { label: string; className: string }> = {
+  urgent: { label: 'Urgente', className: 'bg-red-500/20 text-red-300 border-red-500/30' },
+  high: { label: 'Alta', className: 'bg-orange-500/20 text-orange-300 border-orange-500/30' },
+  medium: { label: 'Media', className: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/25' },
+  low: { label: 'Baja', className: 'bg-sky-500/15 text-sky-300 border-sky-500/25' },
+}
+
+function formatEstimate(minutes: number): string {
+  if (minutes < 60) return `${minutes}m`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
+}
+
+function formatDueDate(iso: string): { label: string; overdue: boolean } {
+  const dueMs = new Date(iso).getTime()
+  if (Number.isNaN(dueMs)) return { label: iso, overdue: false }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const due = new Date(dueMs)
+  due.setHours(0, 0, 0, 0)
+
+  const diffDays = Math.round((due.getTime() - today.getTime()) / 86_400_000)
+  const overdue = diffDays < 0
+
+  let label: string
+  if (diffDays === 0) label = 'Hoy'
+  else if (diffDays === 1) label = 'Mañana'
+  else if (diffDays === -1) label = 'Ayer'
+  else if (diffDays > 1 && diffDays <= 6) label = `En ${diffDays}d`
+  else if (diffDays < -1 && diffDays >= -6) label = `Hace ${-diffDays}d`
+  else label = due.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })
+
+  return { label, overdue }
+}
+
+export function SortableCard({
+  card,
+  focusSessionCount = 0,
+  onDelete,
+  onOpen,
+  onStartFocus,
+  onStopFocus,
+  isFocusActive,
+}: Props) {
   const {
     attributes,
     listeners,
@@ -22,11 +69,40 @@ export function SortableCard({ card, onDelete, onOpen, onStartFocus, onStopFocus
     isDragging,
   } = useSortable({ id: card.id })
 
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.4 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Cuando esta tarjeta es la que se está arrastrando, NO aplicamos su propio
+  // transform y la ocultamos completamente: la representa el <DragOverlay>.
+  // De este modo el cursor coincide con la tarjeta visual durante el drag.
+  const style: React.CSSProperties = isDragging
+    ? {
+        opacity: 0,
+        // Reservamos su espacio sin transform para que los hermanos animen sólo a su sitio.
+        transform: 'none',
+        transition: 'none',
+      }
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        cursor: 'grab',
+      }
+
+  const due = card.dueDate ? formatDueDate(card.dueDate) : null
+  const visibleLabels = card.labels.slice(0, 3)
+  const extraLabels = Math.max(0, card.labels.length - visibleLabels.length)
+  const priorityStyle = card.priority ? PRIORITY_STYLES[card.priority] : null
+  const checklistTotal = card.checklist?.length ?? 0
+  const checklistDone = card.checklist?.filter((i) => i.done).length ?? 0
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (confirmDelete) {
+      onDelete(card.id)
+      return
+    }
+    setConfirmDelete(true)
+    // Auto-reset tras 3s si no se confirma.
+    window.setTimeout(() => setConfirmDelete(false), 3000)
   }
 
   return (
@@ -46,24 +122,99 @@ export function SortableCard({ card, onDelete, onOpen, onStartFocus, onStopFocus
         <p className="text-sm leading-snug">{card.title}</p>
         <button
           data-delete="true"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(card.id)
-          }}
-          className="mt-0.5 flex-shrink-0 rounded p-0.5 text-xs text-muted opacity-0 transition-all duration-150 group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400"
+          onClick={handleDeleteClick}
+          title={confirmDelete ? 'Confirmar eliminación' : 'Eliminar tarea'}
+          className={`mt-0.5 flex-shrink-0 rounded px-1 text-[10px] font-medium transition-all duration-150 ${
+            confirmDelete
+              ? 'bg-red-500/20 text-red-300 opacity-100'
+              : 'text-muted opacity-0 group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400'
+          }`}
         >
-          ✕
+          {confirmDelete ? '¿Eliminar?' : '✕'}
         </button>
       </div>
+
       {card.description && (
         <p className="mt-1 truncate text-xs text-muted">{card.description}</p>
       )}
+
       {card.content && (
         <div className="mt-2 flex items-center gap-1 text-xs text-muted/60">
           <FileText size={12} />
           <span className="truncate">{card.content.slice(0, 40)}</span>
         </div>
       )}
+
+      {(visibleLabels.length > 0 || due || focusSessionCount > 0 || priorityStyle || card.estimateMinutes || checklistTotal > 0) && (
+        <div className="mt-2 flex flex-wrap items-center gap-1">
+          {priorityStyle && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${priorityStyle.className}`}
+              title={`Prioridad ${priorityStyle.label}`}
+            >
+              <Flag size={10} />
+              {priorityStyle.label}
+            </span>
+          )}
+          {card.estimateMinutes != null && card.estimateMinutes > 0 && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted"
+              title={`Estimación: ${formatEstimate(card.estimateMinutes)}`}
+            >
+              <Timer size={10} />
+              {formatEstimate(card.estimateMinutes)}
+            </span>
+          )}
+          {checklistTotal > 0 && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${
+                checklistDone === checklistTotal
+                  ? 'border-success/30 bg-success/15 text-success'
+                  : 'border-border/70 bg-surface-light/60 text-muted'
+              }`}
+              title={`Checklist: ${checklistDone} de ${checklistTotal}`}
+            >
+              <CheckSquare size={10} />
+              {checklistDone}/{checklistTotal}
+            </span>
+          )}
+          {visibleLabels.map((label) => (
+            <span
+              key={label}
+              className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted"
+            >
+              {label}
+            </span>
+          ))}
+          {extraLabels > 0 && (
+            <span className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted">
+              +{extraLabels}
+            </span>
+          )}
+          {due && (
+            <span
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${
+                due.overdue
+                  ? 'bg-danger/15 text-danger'
+                  : 'bg-surface-light/60 text-muted border border-border/70'
+              }`}
+            >
+              <CalendarClock size={10} />
+              {due.label}
+            </span>
+          )}
+          {focusSessionCount > 0 && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted border border-border/70"
+              title={`${focusSessionCount} sesion${focusSessionCount === 1 ? '' : 'es'} de foco`}
+            >
+              <Target size={10} />
+              {focusSessionCount}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="mt-3 flex items-center justify-between gap-2">
         <span className={`text-[10px] uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
           {isFocusActive ? 'En foco' : 'Listo para foco'}

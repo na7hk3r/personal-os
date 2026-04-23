@@ -1,5 +1,79 @@
 # Changelog - Personal OS
 
+## [1.4.0] - 2026-04-23
+
+Mejoras integrales del plugin **Work**: motor de foco con pause real, capacidades de tarea avanzadas, Pomodoro con notificación nativa y fix completo del drag & drop del kanban.
+
+### ✨ Nuevas características — plugin Work
+
+#### Focus Engine 2.0
+- **Pause / Resume reales**: el tiempo se congela sin penalizar XP. La sesión queda persistida en SQLite (`paused_at`, `paused_total`) y sobrevive a reinicios.
+- **Switch limpio**: cambiar de tarea con menos de 1 minuto de foco descarta la sesión silenciosamente, sin XP penalty ni evento.
+- **Cleanup de sesiones zombie**: si la app se cerró con una sesión abierta hace más de 8 horas, al iniciar se cierra automáticamente como interrumpida (cap de 8h).
+- **Pomodoro con objetivo configurable**: 15 / 25 / 45 / 60 / 90 min, persistido por usuario. Barra de progreso en el Now Panel y **notificación nativa del sistema operativo** al alcanzar la meta + auto-cierre de la sesión como completada.
+- **Quick action "Iniciar foco"** en la barra global del Core (emite `core:focus-request`).
+
+#### Tarjetas (Kanban) enriquecidas
+- **Prioridad** Baja / Media / Alta / Urgente con badges de color.
+- **Estimación en minutos** (formato `30m`, `1h 30m`).
+- **Checklist embebida** con barra de progreso `N/M` que se pone verde al completarse.
+- **Date picker nativo** para vencimientos (`<input type="date">`) con etiquetas relativas (`Hoy`, `Mañana`, `En 3d`, `Hace 2d`, vencidas en rojo).
+- **Contador de sesiones de foco** por tarjeta.
+- **Etiquetas visibles** (máx. 3 + "+N" indicator).
+
+#### Columnas
+- **Edición inline**: renombrar y setear `WIP limit` desde el header de la columna.
+- **Indicador WIP**: contador `N / límite` que se pone rojo al excederse.
+- **Archivado automático**: tarjetas en columnas tipo "Hecho/Done" sin actividad de foco por más de 7 días se archivan al iniciar la app (no se borran, quedan con `archived = 1`).
+
+#### Notas
+- **Búsqueda** por título, contenido o tags.
+- **Orden configurable** (Recientes / A–Z) con preferencia de pinneadas.
+- **Pin / Unpin** por nota.
+- Confirmación doble click en eliminación.
+
+#### Enlaces
+- **Búsqueda** y **edición inline** (título, URL, categoría).
+- **Iconos por dominio** offline-first (code repos, video, docs) — sin favicons remotos.
+- **Agrupación por categoría** ordenada alfabéticamente.
+
+### 🐛 Fixes críticos
+
+- **Drag & Drop**: el `<DragOverlay>` ahora se renderiza vía portal a `document.body`, evitando que ancestros con `transform` (animación `plugin-enter`) lo descoloquen del puntero. La tarjeta original se oculta (`opacity: 0`) sin aplicar transform propio durante el drag, eliminando el offset visual y el flicker.
+- **DnD posiciones inconsistentes**: nueva acción `reorderCards` en el store que aplica todas las mutaciones de columna origen + destino en una sola operación atómica. Eliminado `onDragOver` que mutaba el estado en cada hover y causaba flicker.
+- **Persistencia DnD**: las posiciones de los hermanos se guardan en paralelo (`Promise.all`) y solo se actualizan los registros que realmente cambiaron.
+- **Detección de drop**: cambiado `closestCenter` → `closestCorners` para más precisión en columnas vacías.
+- Mensajes de error de autenticación con prefijo `Error invoking remote method ...` ahora se limpian antes de mostrarse al usuario.
+
+### 🎨 Mejoras de UX
+
+- **Now Panel**: botones separados Start / Pause / Resume / Stop (verde, +XP) / Cancel (rojo, −XP). El timer se pone amarillo y muestra `(pausado)` durante una pausa.
+- **Confirmación doble-click** con auto-reset a 3 s en todos los borrados destructivos (tareas, notas, links).
+- Eliminados wrappers `plugin-panel` redundantes en las páginas de Notas y Enlaces.
+- Dashboard: la grilla de widgets se adapta para 0, 1 o 2 elementos sin huecos visuales.
+- Activity feed limitado a los 5 eventos más recientes.
+
+### 🗄️ Migraciones de base de datos
+
+Las migraciones se aplican automáticamente al iniciar la app:
+
+- **v5** — `work_focus_sessions`: `paused_at INTEGER`, `paused_total INTEGER DEFAULT 0`.
+- **v6** — `work_notes`: `pinned INTEGER DEFAULT 0`.
+- **v7** — `work_cards`: `priority TEXT`, `estimate_minutes INTEGER`, `checklist TEXT DEFAULT '[]'`, `archived INTEGER DEFAULT 0`, `archived_at INTEGER`. `work_columns`: `wip_limit INTEGER`.
+
+### 🔐 Política de XP del Focus Engine
+
+| Acción | XP |
+| --- | --- |
+| Completar sesión (Stop) | +5 |
+| Completar tarea (mover a Done) | +10 |
+| Crear nota | +3 |
+| Pausa | 0 |
+| Switch limpio (<1 min) | 0 |
+| Interrupción (Cancel o switch ≥1 min) | −2 |
+
+---
+
 ## [1.3.0] - 2026-04-22
 
 ### ✨ Nuevas características

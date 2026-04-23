@@ -21,6 +21,7 @@ interface WorkState {
   updateCard: (id: string, updates: Partial<Card>) => void
   deleteCard: (id: string) => void
   moveCard: (cardId: string, toColumnId: string, position: number) => void
+  reorderCards: (updates: Array<{ id: string; columnId: string; position: number }>) => void
 
   addNote: (note: Note) => void
   updateNote: (id: string, updates: Partial<Note>) => void
@@ -45,6 +46,8 @@ export const useWorkStore = create<WorkState>((set) => ({
   setNotes: (notes) => set({ notes }),
   setLinks: (links) => set({ links }),
   setFocusSessions: (focusSessions) => {
+    // Una sesión se considera "activa" mientras no tenga endTime, incluso si
+    // está pausada (pausedAt presente). Al cargar, tomamos la más reciente.
     const activeSessions = focusSessions
       .filter((session) => !session.endTime)
       .sort((a, b) => b.startTime - a.startTime)
@@ -70,6 +73,18 @@ export const useWorkStore = create<WorkState>((set) => ({
         c.id === cardId ? { ...c, columnId: toColumnId, position } : c,
       ),
     })),
+
+  reorderCards: (updates) =>
+    set((s) => {
+      if (!updates.length) return s
+      const map = new Map(updates.map((u) => [u.id, u]))
+      return {
+        cards: s.cards.map((c) => {
+          const patch = map.get(c.id)
+          return patch ? { ...c, columnId: patch.columnId, position: patch.position } : c
+        }),
+      }
+    }),
 
   addNote: (note) => set((s) => ({ notes: [...s.notes, note] })),
 

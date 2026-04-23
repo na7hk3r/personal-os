@@ -1,6 +1,6 @@
 # Personal OS
 
-Versión actual: `1.3.0`
+Versión actual: `1.4.0`
 
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
@@ -11,18 +11,28 @@ Sistema operativo personal — aplicación de escritorio para productividad y sa
 
 Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
 
-## Novedades recientes (v1.3.0)
+## Novedades recientes (v1.4.0)
 
-- **NEW · Sistema de autenticación multiusuario**: registro, login y recuperación de acceso completamente local con SQLite.
-- **NEW · Aislamiento total por usuario**: cada usuario tiene sus propios datos, configuración, plugins y sesión persistente.
-- **NEW · Recuperación de acceso**: reset de contraseña mediante pregunta secreta, sin backend y sin comprometer seguridad.
-- **NEW · Mensajes UX-friendly**: validaciones y errores en español con feedback más claro para login, registro y recuperación.
-- **NEW · Módulo core Planner**: vista diaria, semanal y mensual, filtros por estado y categoría, y drag and drop entre días.
-- **NEW · Integración Planner + gamificación**: las tareas del planner cuentan como misión diaria y otorgan XP por complejidad.
-- **NEW · Control Center por plugin**: configuración de Fitness y Work persistida en `settings`, visible solo cuando el plugin está activo.
-- **NEW · Capa visual premium por plugin**: fondos diferenciados, animaciones de entrada y paneles con transiciones por dominio.
-- **NEW · Actividad reciente expandida**: eventos de Fitness, Work y Core, incluyendo `CORE_PLANNER_TASK_COMPLETED`.
-- **NEW · Dashboard principal reequilibrado**: mejoras en layout y corrección del colapso de `KPIs Fitness` y `Resumen Trabajo`.
+- **NEW · Focus Engine 2.0**: pause / resume reales sin penalización, switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie.
+- **NEW · Pomodoro con notificación nativa**: objetivo configurable (15/25/45/60/90m), barra de progreso y notificación del SO al completar.
+- **NEW · Tarjetas con prioridad, estimación y checklist** embebida con barra de progreso.
+- **NEW · Date picker nativo** para vencimientos con etiquetas relativas (`Hoy`, `Mañana`, `Hace 2d`).
+- **NEW · WIP limit y edición inline de columnas** con indicador visual cuando se excede.
+- **NEW · Archivado automático** de tarjetas en Done con más de 7 días sin actividad.
+- **NEW · Notas con búsqueda, sort y pin**; enlaces con búsqueda, edición inline e iconos por dominio (offline-first).
+- **NEW · Quick action "Iniciar foco"** en la barra global del Core.
+- **NEW · Confirmación doble-click** en todos los borrados destructivos.
+- **FIX · Drag & Drop del Kanban**: la overlay ya no queda lejos del puntero (portalada a `body`), las posiciones se mantienen consistentes via `reorderCards` batch atómico.
+
+Ver [CHANGELOG.md](CHANGELOG.md) para el detalle completo y la política de XP del Focus Engine.
+
+## Novedades anteriores (v1.3.0)
+
+- Sistema de autenticación multiusuario local (registro, login, recuperación) con SQLite.
+- Aislamiento total por usuario: base de datos, configuración y sesión persistente independientes.
+- Módulo core Planner (vista diaria/semanal/mensual + DnD entre días) integrado con gamificación.
+- Control Center por plugin con configuración persistida.
+- Dashboard principal reequilibrado, fondos diferenciados y animaciones por dominio.
 
 Ver [docs/AUTH.md](docs/AUTH.md) para detalles técnicos de autenticación.
 

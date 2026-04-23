@@ -178,8 +178,11 @@ const ALLOWED_TABLES: Record<string, Set<string>> = {
 - **Tablas**: `work_boards`, `work_columns`, `work_cards`, `work_notes`, `work_links`, `work_focus_sessions`
 - **Páginas**: `/work`
 - **Eventos emitidos**: ver [EVENTS.md](EVENTS.md#work)
-- **Motor de foco**: sesión activa global con persistencia de duración y eficiencia
+- **Focus Engine**: sesión activa global con `pause`/`resume` reales (`paused_at`, `paused_total`), switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie (>8h), y Pomodoro con objetivo configurable y notificación nativa del SO.
+- **Tarjetas enriquecidas** (v7): `priority` (low/medium/high/urgent), `estimate_minutes`, `checklist` (JSON), `archived` + `archived_at` (auto-archivado en Done >7 días sin actividad).
+- **Columnas**: edición inline (renombrar) + `wip_limit` con indicador visual.
 - **Configuración centralizada en core**: `settings['pluginSettings:work']`
+- **Quick action**: escucha `core:focus-request` desde la barra global del Core para iniciar foco libre.
 
 ## Configuración por plugin desde el core
 

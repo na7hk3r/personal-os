@@ -135,6 +135,7 @@ Columnas dentro de un tablero.
 | `board_id` | TEXT NOT NULL | FK a `work_boards.id` |
 | `name` | TEXT NOT NULL | Nombre de la columna |
 | `position` | INTEGER DEFAULT 0 | Orden de izquierda a derecha |
+| `wip_limit` | INTEGER | Límite WIP (nullable). Añadido en v7. |
 
 **Columnas semilla (migración v2):**
 
@@ -155,10 +156,15 @@ Tarjetas / tareas.
 | `column_id` | TEXT NOT NULL | FK a `work_columns.id` |
 | `title` | TEXT NOT NULL | Título de la tarea |
 | `description` | TEXT DEFAULT '' | Descripción breve |
-| `content` | TEXT DEFAULT '' | Contenido extendido (Markdown) |
+| `content` | TEXT DEFAULT '' | Contenido extendido (Markdown). Añadido en v3. |
 | `labels` | TEXT DEFAULT '[]' | JSON array de strings |
 | `due_date` | TEXT | Fecha límite ISO 8601 (nullable) |
 | `position` | INTEGER DEFAULT 0 | Orden dentro de la columna |
+| `priority` | TEXT | `low` / `medium` / `high` / `urgent` (nullable). Añadido en v7. |
+| `estimate_minutes` | INTEGER | Estimación en minutos (nullable). Añadido en v7. |
+| `checklist` | TEXT DEFAULT '[]' | JSON array de `{ id, text, done }`. Añadido en v7. |
+| `archived` | INTEGER DEFAULT 0 | 1 si fue archivada (auto-archivado en Done >7d). Añadido en v7. |
+| `archived_at` | INTEGER | Timestamp en ms del archivado. Añadido en v7. |
 
 ### `work_notes`
 
@@ -172,6 +178,7 @@ Notas de trabajo.
 | `tags` | TEXT DEFAULT '[]' | JSON array de strings |
 | `created_at` | TEXT | Timestamp de creación |
 | `updated_at` | TEXT | Timestamp de última edición |
+| `pinned` | INTEGER DEFAULT 0 | 1 si está fijada en la lista. Añadido en v6. |
 
 ### `work_links`
 
@@ -193,15 +200,21 @@ Sesiones de foco del motor de ejecución. Creada en migración v4.
 | `id` | TEXT PK | UUID de la sesión |
 | `task_id` | TEXT | FK a `work_cards.id` (nullable — foco libre) |
 | `start_time` | INTEGER NOT NULL | Timestamp inicio en ms (Unix epoch) |
-| `end_time` | INTEGER | Timestamp fin en ms (nullable si activa) |
-| `duration` | INTEGER | Duración calculada en ms (nullable si activa) |
+| `end_time` | INTEGER | Timestamp fin en ms (nullable si activa o pausada) |
+| `duration` | INTEGER | Duración efectiva en ms (excluye pausas, nullable si activa) |
 | `interrupted` | INTEGER DEFAULT 0 | 1 si fue interrumpida, 0 si completada |
+| `paused_at` | INTEGER | Timestamp en ms del pause actual (nullable). Añadido en v5. |
+| `paused_total` | INTEGER DEFAULT 0 | Tiempo total acumulado en pausas (ms). Añadido en v5. |
 
 **Índices:**
 - `idx_work_focus_sessions_task_id` — búsquedas por tarea
 - `idx_work_focus_sessions_start_time` — ordenamiento cronológico y filtro por día
 
-**Regla de negocio:** Solo puede haber una sesión activa global (sin `end_time`) a la vez. Iniciar una nueva sesión interrumpe automáticamente la anterior.
+**Reglas de negocio:**
+- Solo puede haber una sesión activa global (sin `end_time`) a la vez.
+- `pause` no setea `end_time`; congela el tiempo registrando `paused_at` y acumulando en `paused_total` al hacer `resume`.
+- `start` con sesión previa: si ésta tiene ≥1 min de tiempo efectivo se completa silenciosamente; si no, se descarta (DELETE) sin XP penalty.
+- Al iniciar la app, sesiones sin `end_time` con más de 8h de antigüedad se cierran como interrumpidas con cap de 8h (cleanup zombie).
 
 ---
 

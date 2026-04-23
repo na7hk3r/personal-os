@@ -70,8 +70,18 @@ Definidos en `src/plugins/work/events.ts`.
 | Constante | Valor | Descripción | Payload |
 |-----------|-------|-------------|---------|
 | `WORK_EVENTS.FOCUS_STARTED` | `WORK_FOCUS_STARTED` | Sesión de foco iniciada | `{ sessionId, taskId }` |
+| `WORK_EVENTS.FOCUS_PAUSED` | `WORK_FOCUS_PAUSED` | Sesión pausada (no penaliza XP) | `{ sessionId, taskId }` |
+| `WORK_EVENTS.FOCUS_RESUMED` | `WORK_FOCUS_RESUMED` | Sesión reanudada | `{ sessionId, taskId }` |
 | `WORK_EVENTS.FOCUS_COMPLETED` | `WORK_FOCUS_COMPLETED` | Sesión finalizada correctamente | `{ sessionId, taskId, duration }` |
 | `WORK_EVENTS.FOCUS_INTERRUPTED` | `WORK_FOCUS_INTERRUPTED` | Sesión interrumpida | `{ sessionId, taskId, duration }` |
+
+> Nota: cambiar de tarea con menos de 1 minuto de foco efectivo descarta la sesión silenciosamente (sin emitir evento ni alterar XP).
+
+### Eventos del Core escuchados por Work
+
+| Evento | Origen | Descripción |
+|--------|--------|-------------|
+| `core:focus-request` | `QuickActionsBar` | Solicita iniciar una sesión de foco libre. Work la ignora si ya hay una sesión activa. |
 
 ### Eventos de contenido
 
@@ -85,6 +95,9 @@ Definidos en `src/plugins/work/events.ts`.
 |--------|----|
 | `WORK_TASK_COMPLETED` | +10 |
 | `WORK_FOCUS_COMPLETED` | +5 |
+| `WORK_NOTE_CREATED` | +3 |
+| `WORK_FOCUS_PAUSED` / `WORK_FOCUS_RESUMED` | 0 (pausa neutral) |
+| Switch limpio (<1 min) | 0 (descarte silencioso) |
 | `WORK_FOCUS_INTERRUPTED` | −2 |
 | `CORE_PLANNER_TASK_COMPLETED` | +XP según complejidad (5/10/16) |
 

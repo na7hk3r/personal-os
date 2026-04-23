@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { Scale, CheckSquare, FileText, Utensils } from 'lucide-react'
+import { Scale, CheckSquare, FileText, Utensils, Play } from 'lucide-react'
 import { useCoreStore } from '@core/state/coreStore'
+import { eventBus } from '@core/events/EventBus'
 
 interface QuickAction {
   label: string
@@ -8,9 +9,19 @@ interface QuickAction {
   path: string
   color: string
   requiredPlugin?: string
+  /** Evento opcional a emitir antes de navegar. */
+  emit?: string
 }
 
 const ACTIONS: QuickAction[] = [
+  {
+    label: 'Iniciar foco',
+    icon: <Play size={16} />,
+    path: '/work',
+    color: 'hover:border-accent/60 hover:text-accent-light',
+    requiredPlugin: 'work',
+    emit: 'core:focus-request',
+  },
   {
     label: 'Registrar peso',
     icon: <Scale size={16} />,
@@ -55,7 +66,10 @@ export function QuickActionsBar() {
       {visibleActions.map((action) => (
         <button
           key={action.label}
-          onClick={() => navigate(action.path)}
+          onClick={() => {
+            if (action.emit) eventBus.emit(action.emit, {})
+            navigate(action.path)
+          }}
           className={`flex items-center gap-2 rounded-xl border border-border bg-surface-light/60 px-4 py-2 text-sm text-muted transition-all duration-150 ${action.color} hover:bg-surface-lighter hover:shadow-md`}
         >
           {action.icon}
