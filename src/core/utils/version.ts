@@ -1,10 +1,16 @@
 /**
- * Versión de la app inyectada en build-time desde `package.json`
- * (ver electron.vite.config.ts → `__APP_VERSION__`).
+ * Versión de la app — fuente única de verdad: `package.json`.
  *
- * Se persiste en `localStorage` cada vez que cambia, garantizando integridad
- * entre lo que muestran Sidebar y Footer y la versión real del build.
+ * Se importa directamente vía `resolveJsonModule` (ver tsconfig.json), de modo
+ * que el bundler la inlinea a build-time. Esto garantiza que Sidebar y Footer
+ * SIEMPRE muestran exactamente la versión publicada, sin depender de defines
+ * globales que pueden no propagarse en todos los entry-points de electron-vite.
+ *
+ * Además se persiste en `localStorage` cada vez que cambia, dejando rastro
+ * para auditoría de upgrades entre sesiones.
  */
+
+import pkg from '../../../package.json'
 
 const STORAGE_KEY = 'app.version'
 
@@ -26,18 +32,16 @@ function writeStored(value: string) {
   }
 }
 
-const compileTimeVersion: string =
-  typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
+const buildTimeVersion: string = (pkg as { version?: string }).version ?? '0.0.0'
 
 // Sincronizar storage con la versión actual al cargar el módulo.
 const previous = readStored()
-if (previous !== compileTimeVersion) {
-  writeStored(compileTimeVersion)
-  if (previous && previous !== compileTimeVersion) {
-    // Útil para auditoría de upgrades.
+if (previous !== buildTimeVersion) {
+  writeStored(buildTimeVersion)
+  if (previous) {
      
-    console.info(`[app] version updated: ${previous} → ${compileTimeVersion}`)
+    console.info(`[app] version updated: ${previous} → ${buildTimeVersion}`)
   }
 }
 
-export const APP_VERSION: string = compileTimeVersion
+export const APP_VERSION: string = buildTimeVersion
