@@ -1,262 +1,266 @@
+<div align="center">
+
 # Personal OS
 
-Versión actual: `1.5.0`
+**Tu sistema operativo de vida — productividad, salud y foco en una sola app.**
 
-Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
+100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-> [!NOTE]
-> Convención del README: cada feature nueva debe marcarse con **NEW** en la sección de novedades para que sea fácil identificar cambios recientes.
+`v1.5.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
-## ¿Qué es?
+[Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
-Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
+</div>
 
-## Novedades recientes (v1.5.0)
+---
 
-- **NEW · IA local con Ollama** integrada al core: coach diario, review semanal y nudge de foco basados en tus datos reales (sin telemetría).
-- **NEW · Backup cifrado** con AES-256-GCM + scrypt; export/import de toda la base del usuario activo.
-- **NEW · Calendario unificado** (`/calendar`) con eventos de Planner, Work, Fitness y sesiones de foco.
-- **NEW · Review semanal/mensual** (`/review`) con KPIs reales + análisis IA opcional.
-- **NEW · Command Palette** (`Ctrl/Cmd + K`) para búsqueda global instantánea.
-- **NEW · Automatizaciones no-code** desde Control Center (trigger event → condición → acción).
-- **NEW · Tags globales y plantillas** para reuso entre módulos.
-- **NEW · Notificaciones nativas** con cola programable y horas de silencio.
-- **NEW · `npm run create-plugin`** para scaffolding de plugins; `docs/PLUGIN_API.md` con la superficie completa del CoreAPI.
-- **NEW · Vitest** con jsdom y Testing Library (`npm test`).
-- Roadmap de plugins documentado en [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
+## ¿Qué es Personal OS?
 
-Ver [CHANGELOG.md](CHANGELOG.md) para el detalle completo.
+Personal OS es una aplicación de escritorio modular que centraliza **lo que importa de tu día**: el trabajo que estás ejecutando, tus hábitos de salud, tu agenda y tus objetivos — con gamificación integrada para sostener la consistencia.
 
-## Novedades anteriores (v1.4.0)
+A diferencia de un dashboard de SaaS o una app cloud, **toda tu información vive en tu máquina**: una base de datos SQLite cifrable, sin servidores, sin telemetría, sin tracking. Si querés inteligencia sobre tus datos, conectás un modelo local con [Ollama](https://ollama.com) y listo — el LLM nunca sale de tu equipo.
 
-- **Focus Engine 2.0**: pause / resume reales sin penalización, switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie.
-- **Pomodoro con notificación nativa**: objetivo configurable (15/25/45/60/90m).
-- **Tarjetas con prioridad, estimación y checklist** embebida.
-- **Date picker nativo** para vencimientos con etiquetas relativas.
-- **WIP limit y edición inline de columnas**.
-- **Archivado automático** de tarjetas en Done con >7 días sin actividad.
-- **FIX · Drag & Drop del Kanban** (overlay portalada, posiciones atómicas).
+> Pensado para una sola persona que quiere ordenar su vida con herramientas serias, sin alquilar diez SaaS distintos.
 
-Ver [docs/AUTH.md](docs/AUTH.md) para detalles técnicos de autenticación.
+---
 
-## Stack tecnológico
+## Características
+
+### 🎯 Núcleo de productividad
+
+- **Planner core** — tareas diarias, semanales y mensuales con drag & drop entre días y misión diaria gamificada.
+- **Calendario unificado** — agrega vencimientos de Work, entrenamientos de Fitness, sesiones de foco y tareas del Planner en una vista mensual con filtros por fuente.
+- **Command Palette (`Ctrl/Cmd + K`)** — búsqueda global instantánea sobre notas, tareas, enlaces y rutas (incluye páginas de plugins activos).
+- **Review semanal/mensual** — KPIs reales (fitness, work, gamificación) con análisis IA opcional para cerrar la semana.
+
+### 🤖 IA local con Ollama (privacidad total)
+
+- Integración por canal IPC con `http://127.0.0.1:11434` (sin CORS, sin telemetría).
+- Tareas predefinidas: **coach diario**, **review semanal**, **nudge de foco** — en español rioplatense, sin emojis.
+- El servicio `aiContextService` arma un snapshot real de tu actividad (fitness 7d, work, planner, gamificación, eventos recientes) y lo entrega al LLM como contexto.
+- Configurable desde Control Center: enable, modelo, system prompt, temperatura.
+
+### 🧱 Plugins
+
+Sistema de plugins de primera clase. Hoy vienen incluidos:
+
+| Plugin | Qué resuelve |
+| --- | --- |
+| **Work** | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. |
+| **Fitness** | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
+
+Para la próxima ola de plugins (Hábitos, Finanzas, Journal, OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
+
+Para crear uno nuevo:
+
+```bash
+npm run create-plugin -- mi-plugin
+```
+
+### ⚙️ Automatizaciones (no-code)
+
+Crea reglas IFTTT-like desde Control Center: **trigger event → condición opcional → acción**. Las condiciones se evalúan en sandbox restringido por whitelist de caracteres. Acciones soportadas: `notify`, `add_xp`, `emit_event`, `log`.
+
+### 🔔 Notificaciones nativas
+
+Cola persistente con processor cada 30 s, horas de silencio configurables (con wrap de medianoche) y respeto del SO (Windows, macOS, Linux).
+
+### 🔒 Seguridad y privacidad
+
+- **Multiusuario local** con autenticación scrypt + salt + `timingSafeEqual`.
+- **Aislamiento total**: `auth.db` global + `personal-os-user-{userId}.db` por usuario.
+- **Backup cifrado** AES-256-GCM con derivación scrypt (passphrase ≥ 8 chars).
+- **Context Isolation** + **sandbox** + preload script + allowlist de tablas/columnas en SQL IPC.
+- Sin `eval`, sin `innerHTML`, sin red salvo Ollama (opt-in).
+
+### 🏷 Tags, plantillas y notificaciones
+
+- **Tags globales** con links polimórficos (notas, cards, links, fitness, etc.).
+- **Plantillas** reusables (`templatesService`) para que cualquier plugin guarde y reutilice contenido.
+- **Notificaciones** centralizadas con cola y horas de silencio.
+
+### 🎮 Gamificación
+
+| Acción | XP |
+| --- | --- |
+| Entrada diaria fitness | +5 |
+| Entrenamiento completado | +25 |
+| Tarea de trabajo completada | +10 |
+| Sesión de foco completada | +5 |
+| Sesión de foco interrumpida | −2 |
+| Misión Planner (baja / media / alta) | +5 / +10 / +16 |
+
+Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
+
+---
+
+## Stack técnico
 
 | Capa | Tecnología |
-|------|------------|
-| Desktop | Electron 41 |
-| Frontend | React 19 + TypeScript 5.7 |
-| Routing | React Router DOM v7 |
+| --- | --- |
+| Desktop | **Electron 41** (context isolation + sandbox) |
+| Frontend | **React 19** + TypeScript 5.7 |
+| Routing | React Router DOM v7 (HashRouter) |
 | Estado | Zustand v5 |
 | Build | Electron-Vite 5 + Vite 7 |
 | Estilos | Tailwind CSS 3.4 + CSS Variables |
-| Base de datos | SQLite (better-sqlite3) |
-| Seguridad IPC | Preload script + Context Isolation + Sandbox |
-| Íconos | Lucide React |
-| Gráficos | Recharts |
+| Base de datos | SQLite (`better-sqlite3`) + WAL mode |
+| Crypto | Node `crypto` (scrypt + AES-256-GCM) |
+| LLM (opt-in) | Ollama vía Electron `net` (IPC) |
+| Tests | Vitest 2 + jsdom + Testing Library |
 | Drag & Drop | @dnd-kit |
+| Gráficos | Recharts |
+| Íconos | Lucide React |
 
-## Requisitos
+---
 
-- Node.js 20+ (recomendado: LTS)
-- npm 9+
-- **Windows**: Visual Studio Build Tools 2022 (para compilar módulos nativos como `better-sqlite3`)
-- **macOS**: Command Line Tools (incluye compilador C++)
-- **Linux**: build-essential o equivalente
+## Instalación
 
-## Instalación y desarrollo
+### Requisitos
+
+- **Node.js 20+** (recomendado: LTS — usá `nvm use` si tenés nvm).
+- **npm 9+**.
+- Toolchain nativo para compilar `better-sqlite3`:
+  - **Windows**: Visual Studio Build Tools 2022.
+  - **macOS**: Command Line Tools (`xcode-select --install`).
+  - **Linux**: `build-essential`.
+- Opcional: [Ollama](https://ollama.com) instalado y un modelo (ej. `ollama pull llama3.2:3b`) si querés activar la IA.
+
+### Setup
 
 ```bash
-# Clonar y instalar (incluye rebuild automático de better-sqlite3)
 git clone <repo>
 cd personal-os
-npm ci
-
-# Modo desarrollo (abre ventana Electron con HMR)
-npm run dev
-
-# Build de producción
-npm run build
-
-# Preview del build
-npm start
-
-# Verificación de tipos TypeScript
-npm run typecheck
+npm ci          # postinstall ejecuta electron-rebuild para better-sqlite3
+npm run dev     # abre la ventana Electron con HMR
 ```
 
-### Notas sobre reproducibilidad
+### Comandos disponibles
 
-- **`npm ci` vs `npm install`**: En clon nuevo, usa siempre `npm ci` para instalar exactamente las versiones del `package-lock.json`. Esto garantiza que todos trabajen con las mismas dependencias.
-- **Rebuild de módulos nativos**: El script `postinstall` ejecuta automáticamente `electron-rebuild` para `better-sqlite3`, compilando los binarios nativos para tu Electron y SO. No necesitas hacer nada extra; sucede al correr `npm ci`.
-- **`.nvmrc`**: Si usas `nvm`, corre `nvm use` antes de clonar el proyecto para garantizar Node 20.
-- **Commit de `package-lock.json`**: Siempre commiteá el lockfile; es lo que garantiza reproducibilidad.
+| Comando | Descripción |
+| --- | --- |
+| `npm run dev` | Modo desarrollo con HMR |
+| `npm run build` | Build de producción |
+| `npm start` | Preview del build |
+| `npm test` | Suite de tests (Vitest, no-watch) |
+| `npm run test:watch` | Tests en modo watch |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run lint` / `lint:fix` | ESLint sobre `src` y `electron` |
+| `npm run format` / `format:check` | Prettier |
+| `npm run create-plugin -- <id>` | Scaffolding de plugin nuevo |
+
+### Activar IA (opcional)
+
+1. Instalá Ollama y traé un modelo: `ollama pull llama3.2:3b`.
+2. Abrí la app → **Control Center → Ollama**.
+3. Marcá *Habilitar* y elegí el modelo. Probá la conexión.
+4. El coach diario aparece en el centro de notificaciones; usá `/review` para análisis semanal.
+
+---
+
+## Atajos de teclado
+
+| Atajo | Acción |
+| --- | --- |
+| `Ctrl/Cmd + K` | Abrir Command Palette |
+| `Esc` | Cerrar modales y palette |
+
+Catálogo completo y roadmap de atajos: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
+
+---
 
 ## Estructura del proyecto
 
 ```
 personal-os/
 ├── electron/                    # Proceso principal Electron
-│   ├── main.ts                  # Inicialización de ventana y servicios
-│   ├── preload.ts               # Context Bridge (window.storage, window.auth)
-│   └── services/
-│       ├── database.ts          # Singleton DatabaseService (SQLite)
-│       ├── auth.ts              # Servicio de autenticación y sesiones
-│       ├── auth-ipc.ts          # Handlers IPC de autenticación
-│       └── storage-ipc.ts       # Handlers IPC con validación SQL
+│   ├── main.ts                  # Bootstrap de ventana + servicios
+│   ├── preload.ts               # Context Bridge (storage/auth/backup/ollama/notifications)
+│   └── services/                # IPC: database, auth, backup, ollama, notifications
+├── scripts/
+│   └── create-plugin.mjs        # CLI de scaffolding de plugins
 ├── src/
 │   ├── App.tsx                  # Bootstrap, rutas, registro de plugins
-│   ├── core/                    # Kernel del sistema
-│   │   ├── types.ts             # Interfaces centrales (CoreAPI, PluginManifest…)
-│   │   ├── events/
-│   │   │   ├── EventBus.ts      # Singleton pub/sub con persistencia
-│   │   │   └── events.ts        # Constantes de eventos del sistema
-│   │   ├── gamification/
-│   │   │   └── gamificationStore.ts  # XP, niveles, logros
-│   │   ├── plugins/
-│   │   │   ├── PluginManager.ts # Ciclo de vida, migraciones, CoreAPI
-│   │   │   ├── PluginRegistry.ts # Registro estático build-time
-│   │   │   └── PluginContext.tsx # React Context + hook usePluginAPI
-│   │   ├── state/
-│   │   │   ├── authStore.ts     # Estado global de autenticación
-│   │   │   └── coreStore.ts     # Perfil, ajustes, plugins activos
-│   │   ├── storage/
-│   │   │   └── StorageAPI.ts    # Helpers seguros sobre window.storage
-│   │   └── ui/                  # Componentes de shell
-│   │       ├── auth/            # Pantallas de autenticación
-│   │       ├── Shell.tsx        # Layout principal
-│   │       ├── Sidebar.tsx      # Navegación colapsable
-│   │       ├── Dashboard.tsx    # Panel principal con widgets
-│   │       ├── QuickActionsBar.tsx
-│   │       ├── SystemStatusHero.tsx
-│   │       ├── GamificationBar.tsx
-│   │       ├── GlobalProgress.tsx
-│   │       ├── RecentActivityFeed.tsx
-│   │       ├── SystemSuggestions.tsx
-│   │       ├── pages/
-│   │       │   ├── PlannerPage.tsx
-│   │       │   ├── NotesPage.tsx
-│   │       │   └── LinksPage.tsx
-│   │       └── onboarding/      # Wizard de configuración inicial
-│   └── plugins/                 # Plugins cargados dinámicamente
-│       ├── fitness/             # Plugin de salud y hábitos
-│       └── work/                # Plugin de productividad y foco
-├── electron.vite.config.ts
-├── tailwind.config.ts
-├── tsconfig.json
+│   ├── core/
+│   │   ├── events/              # EventBus singleton + catálogo
+│   │   ├── gamification/        # XP, niveles, logros
+│   │   ├── plugins/             # PluginManager + Registry + Context
+│   │   ├── services/            # tags, templates, automations, notifications,
+│   │   │                        # ollama, aiContext, aiSuggestions, calendarAggregator
+│   │   ├── state/               # Zustand stores (auth, core)
+│   │   ├── storage/             # StorageAPI con allowlist
+│   │   └── ui/                  # Shell, Sidebar, Dashboard, ControlCenter,
+│   │                            # CommandPalette, pages (Calendar, Review, Planner...)
+│   ├── plugins/
+│   │   ├── fitness/
+│   │   └── work/
+│   └── test/                    # setup.ts (stubs de bridges Electron)
+├── docs/                        # Documentación técnica completa
 └── package.json
 ```
 
-## Plugins disponibles
+---
 
-### Fitness
-Seguimiento diario de peso, comidas, ejercicios, sueño y cigarrillos. Incluye gráficos históricos, tabla de medidas corporales y resumen mensual.
+## Arquitectura en 30 segundos
 
-### Work (Execution Engine)
-Kanban board, notas y enlaces, con un motor de sesiones de foco. Permite activar una sesión activa por tarea, registrar duración y eficiencia, y ver actividad reciente en tiempo real. El widget `Resumen Trabajo` sintetiza estado del tablero, foco del día y señales operativas clave.
+1. **Electron main** abre la ventana, inicializa SQLite por usuario y registra los IPC handlers (`storage`, `auth`, `backup`, `ollama`, `notifications`).
+2. **Preload** expone bridges tipados (`window.storage`, `window.auth`, etc.) bajo context isolation.
+3. **PluginManager** lee el registry, aplica migraciones por plugin, expone `CoreAPI` (storage, eventBus, gamification, settings) y monta rutas/nav items.
+4. **EventBus** persistente sirve de columna vertebral: cualquier acción del usuario emite eventos que alimentan automatizaciones, gamificación, dashboard y feed reciente.
+5. **AI opt-in**: `aiContextService` arma un snapshot real → `aiSuggestionsService` lo combina con un prompt → llamada a Ollama vía IPC.
 
-## Gamificación
+Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md](docs/PLUGIN_API.md), [docs/EVENTS.md](docs/EVENTS.md).
 
-El sistema asigna XP por acciones:
+---
 
-| Acción | Puntos |
-|--------|--------|
-| Entrada diaria fitness | +5 |
-| Entrenamiento completado | +25 |
-| Tarea de trabajo completada | +10 |
-| Sesión de foco completada | +5 |
-| Sesión de foco interrumpida | −2 |
-| Misión Planner core (baja) | +5 |
-| Misión Planner core (media) | +10 |
-| Misión Planner core (alta) | +16 |
+## Documentación
 
-Cada 100 puntos sube un nivel. Los logros se desbloquean por hitos acumulados.
+| Doc | Tema |
+| --- | --- |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | Arquitectura general |
+| [AUTH](docs/AUTH.md) | Multiusuario, sesiones, criptografía |
+| [DATABASE](docs/DATABASE.md) | Esquema SQL completo |
+| [EVENTS](docs/EVENTS.md) | Catálogo de eventos del sistema |
+| [GAMIFICATION](docs/GAMIFICATION.md) | XP, niveles, logros |
+| [PLUGINS](docs/PLUGINS.md) | Sistema de plugins |
+| [PLUGIN_API](docs/PLUGIN_API.md) | Superficie completa del CoreAPI |
+| [PLUGIN_BASE_STRUCTURE](docs/PLUGIN_BASE_STRUCTURE.md) | Plantilla base obligatoria |
+| [PLUGIN_IDEAS](docs/PLUGIN_IDEAS.md) | Roadmap de plugins futuros |
+| [SHORTCUTS](docs/SHORTCUTS.md) | Atajos de teclado |
+| [KNOWLEDGE_BASE_PLAN](docs/KNOWLEDGE_BASE_PLAN.md) | Plan para llevar la doc a un sitio web |
+| [CHANGELOG](CHANGELOG.md) | Historial de versiones |
 
-Desde la versión `1.2.0`, el sistema incluye misión diaria core del Planner y persistencia extendida de estado de misión/racha.
+---
 
-## Autenticación y multiusuario
+## Roadmap
 
-Desde v1.3.0, Personal OS incluye un **sistema de autenticación completamente local** con soporte multiusuario:
+### Próximas releases
 
-- **Registro seguro**: username, contraseña (8+ chars) y pregunta secreta personalizada.
-- **Aislamiento total**: cada usuario tiene su propia base de datos, configuración y plugins.
-- **Auto-login**: las sesiones persistentes se restauran automáticamente al abrir la app.
-- **Recuperación**: reset de contraseña mediante pregunta secreta.
-- **Sin backend**: funcionamiento 100% local y offline.
-- **UX-friendly**: mensajes de error claros en español y validación progresiva.
+- **Galería de temas** con preview en vivo y theme builder.
+- **Plugin Hábitos** (rachas, recordatorios, heatmap anual).
+- **Plugin Finanzas** (personal-first, opt-in para empresa más adelante).
+- **Plugin Journal** con búsqueda full-text.
+- **Plugin Knowledge** (notas conectadas estilo Zettelkasten).
+- **Mejoras de accesibilidad** (foco visible, ARIA completo, navegación por teclado en todo).
 
-### Datos técnicos
+### Lejano
 
-- **Hasheado**: `scrypt` + salt aleatorio (16 bytes), digest de 64 bytes.
-- **Sesiones**: persistidas en `auth.db` con revocación explícita.
-- **Bases de datos**: `auth.db` (global) + `personal-os-user-{userId}.db` (por usuario).
-- **Seguridad**: `timingSafeEqual`, context isolation y preload script.
+- **Sincronización entre dispositivos** con E2E encryption.
+- **Versión mobile** (cuando el core esté maduro).
 
-Ver [docs/AUTH.md](docs/AUTH.md) para documentación completa.
+---
 
-## Dashboard y observabilidad
+## Filosofía
 
-- `SystemStatusHero`: estado contextual del sistema con CTA dinámico según el siguiente paso pendiente.
-- `SystemSuggestions`: sugerencias accionables sincronizadas con el estado real del sistema.
-- `RecentActivityFeed`: timeline reciente con eventos persistidos de `fitness`, `work` y `core`, además de filtros por fuente y por últimas 24h.
-- `GlobalProgress`: resumen expandido de gamificación.
+- **Local-first**: tu data es tuya y vive en tu disco.
+- **Sin emojis en prompts de IA**: tono profesional rioplatense.
+- **Solo español** en UI por ahora.
+- **Catálogo curado de plugins**: calidad sobre cantidad.
+- **Confirmación explícita** en operaciones destructivas.
+- **Sin telemetría, sin servidores, sin cuentas en la nube**.
 
-## Planner core
+---
 
-El módulo `Planner` forma parte del core (no es plugin) y centraliza tareas diarias domésticas, recordatorios y pendientes personales.
+## Licencia
 
-- Ruta: `/planner`
-- Persistencia: clave `corePlannerTasksV1` en `settings`
-- Campos de tarea: título, categoría, complejidad, fecha y nota
-- Integración con gamificación: al completar una tarea por primera vez emite evento core y asigna XP según complejidad
-
-## Configuración por plugin en Control Center
-
-`Control Center` incluye un panel para ajustar configuración de `Fitness` y `Work` desde el core.
-
-- Claves de persistencia:
-  - `pluginSettings:fitness`
-  - `pluginSettings:work`
-
-Esto permite centralizar configuración operativa sin entrar a páginas internas de cada plugin.
-
-La sección aparece únicamente para plugins activos y cada bloque se oculta automáticamente cuando su plugin está desactivado.
-
-## Evolución de documentación
-
-A medida que crece la documentación técnica, el proyecto incluye un plan para migrar a una knowledge base web versionada.
-
-- Plan: [docs/KNOWLEDGE_BASE_PLAN.md](docs/KNOWLEDGE_BASE_PLAN.md)
-- Guía de estructura base de plugins: [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md)
-
-## Seguridad
-
-- **Context Isolation**: el renderer no tiene acceso directo a Node.js
-- **Sandbox**: proceso renderer con sandbox habilitado
-- **Validación IPC**: toda SQL enviada al main process se valida (tipo, operación, parámetros)
-- **Allowlist de tablas/columnas**: `StorageAPI` solo permite acceso a columnas explícitamente declaradas
-- **Sin eval ni innerHTML**: UI construida con JSX declarativo
-
-## Base de datos
-
-SQLite con WAL mode.
-
-- `auth.db`: usuarios y sesiones globales.
-- `personal-os-user-{userId}.db`: datos aislados por usuario.
-- Migraciones versionadas por plugin y aplicadas automáticamente al arranque.
-- Si existe una base legacy `personal-os.db`, el primer usuario registrado la reclama automáticamente.
-
-Ver [docs/DATABASE.md](docs/DATABASE.md) para el esquema completo.
-
-## Documentación técnica
-
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitectura general del sistema
-- [docs/AUTH.md](docs/AUTH.md) — Sistema de autenticación multiusuario y seguridad
-- [docs/PLUGINS.md](docs/PLUGINS.md) — Sistema de plugins y cómo crear uno
-- [docs/PLUGIN_API.md](docs/PLUGIN_API.md) — Superficie completa del CoreAPI (v1.5.0)
-- [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md) — Estructura base estándar e integración de plugins
-- [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md) — Roadmap de plugins futuros priorizados
-- [docs/DATABASE.md](docs/DATABASE.md) — Esquema SQL completo
-- [docs/EVENTS.md](docs/EVENTS.md) — Catálogo de eventos del sistema
-- [docs/GAMIFICATION.md](docs/GAMIFICATION.md) — Sistema de gamificación
-- [docs/SHORTCUTS.md](docs/SHORTCUTS.md) — Atajos de teclado
-- [docs/KNOWLEDGE_BASE_PLAN.md](docs/KNOWLEDGE_BASE_PLAN.md) — Roadmap para llevar documentación a sitio web
+ISC. Ver [LICENSE](LICENSE) si aplica, o `package.json`.
