@@ -13,6 +13,27 @@ function getCurrentTimestamp() {
   return Date.now()
 }
 
+/**
+ * Devuelve el título de una tarea por id (snapshot del estado actual del store).
+ * Usado para enriquecer payloads de eventos con datos descriptivos al emitir,
+ * de modo que el feed de actividad reciente sobreviva a renombres/borrados.
+ */
+function getTaskTitle(taskId: string | null): string | null {
+  if (!taskId) return null
+  const card = useWorkStore.getState().cards.find((c) => c.id === taskId)
+  return card?.title ?? null
+}
+
+function getColumnName(columnId: string | null): string | null {
+  if (!columnId) return null
+  const col = useWorkStore.getState().columns.find((c) => c.id === columnId)
+  return col?.name ?? null
+}
+
+function msToMinutes(ms: number): number {
+  return Math.max(0, Math.round(ms / 60_000))
+}
+
 async function persistFocusSession(session: FocusSession) {
   if (!window.storage) return
 
@@ -115,19 +136,27 @@ export async function startWorkFocusSession(taskId: string | null) {
   store.startFocusSession(session)
   await persistFocusSession(session)
 
+  const taskTitle = getTaskTitle(taskId)
+
   if (taskId) {
-    eventBus.emit(WORK_EVENTS.TASK_STARTED, { taskId, sessionId: session.id })
+    eventBus.emit(WORK_EVENTS.TASK_STARTED, { taskId, taskTitle, sessionId: session.id })
   }
 
   if (previousTaskId && taskId && previousTaskId !== taskId) {
     eventBus.emit(WORK_EVENTS.TASK_SWITCHED, {
       fromTaskId: previousTaskId,
+      fromTaskTitle: getTaskTitle(previousTaskId),
       toTaskId: taskId,
+      toTaskTitle: taskTitle,
       sessionId: session.id,
     })
   }
 
-  eventBus.emit(WORK_EVENTS.FOCUS_STARTED, { sessionId: session.id, taskId })
+  eventBus.emit(WORK_EVENTS.FOCUS_STARTED, {
+    sessionId: session.id,
+    taskId,
+    taskTitle,
+  })
 
   return session
 }
@@ -152,6 +181,7 @@ export async function pauseWorkFocusSession() {
   eventBus.emit(WORK_EVENTS.FOCUS_PAUSED, {
     sessionId: updated.id,
     taskId: updated.taskId,
+    taskTitle: getTaskTitle(updated.taskId),
   })
   return updated
 }
@@ -181,6 +211,7 @@ export async function resumeWorkFocusSession() {
   eventBus.emit(WORK_EVENTS.FOCUS_RESUMED, {
     sessionId: updated.id,
     taskId: updated.taskId,
+    taskTitle: getTaskTitle(updated.taskId),
   })
   return updated
 }
@@ -220,7 +251,9 @@ async function finalizeCurrentSession(opts: FinalizeOptions) {
       {
         sessionId: completedSession.id,
         taskId: completedSession.taskId,
+        taskTitle: getTaskTitle(completedSession.taskId),
         duration,
+        durationMin: msToMinutes(duration),
       },
     )
   }
@@ -315,13 +348,17 @@ export async function completeWorkTask(cardId: string): Promise<void> {
 
   eventBus.emit(WORK_EVENTS.TASK_MOVED, {
     cardId,
+    cardTitle: card.title,
     fromColumn: fromColumnId,
+    fromColumnName: getColumnName(fromColumnId),
     toColumn: doneColumnId,
+    toColumnName: getColumnName(doneColumnId),
   })
   eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
     taskId: cardId,
     title: card.title,
     columnId: doneColumnId,
+    columnName: getColumnName(doneColumnId),
   })
 }
 
@@ -378,13 +415,17 @@ export async function stopWorkTask(cardId: string | null): Promise<void> {
 
   eventBus.emit(WORK_EVENTS.TASK_MOVED, {
     cardId,
+    cardTitle: card.title,
     fromColumn: fromColumnId,
+    fromColumnName: getColumnName(fromColumnId),
     toColumn: doneColumnId,
+    toColumnName: getColumnName(doneColumnId),
   })
   eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
     taskId: cardId,
     title: card.title,
     columnId: doneColumnId,
+    columnName: getColumnName(doneColumnId),
   })
 }
 

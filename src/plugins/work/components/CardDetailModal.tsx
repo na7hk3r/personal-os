@@ -111,7 +111,7 @@ export function CardDetailModal({ card, onClose }: Props) {
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [card.id])
     }
-    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: card.id })
+    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: card.id, title: card.title })
     onClose()
   }
 

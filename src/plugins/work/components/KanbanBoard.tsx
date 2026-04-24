@@ -164,10 +164,15 @@ export function KanbanBoard() {
     }
 
     if (sourceColumnId !== targetColumnId) {
+      const sourceColumn = columns.find((c) => c.id === sourceColumnId)
+      const targetColumn = columns.find((c) => c.id === targetColumnId)
       eventBus.emit(WORK_EVENTS.TASK_MOVED, {
         cardId: draggedCard.id,
+        cardTitle: draggedCard.title,
         fromColumn: sourceColumnId,
+        fromColumnName: sourceColumn?.name ?? null,
         toColumn: targetColumnId,
+        toColumnName: targetColumn?.name ?? null,
       })
 
       if (!isDoneColumn(sourceColumnId) && isDoneColumn(targetColumnId)) {
@@ -179,6 +184,7 @@ export function KanbanBoard() {
           taskId: draggedCard.id,
           title: draggedCard.title,
           columnId: targetColumnId,
+          columnName: targetColumn?.name ?? null,
         })
       }
     }
@@ -222,6 +228,7 @@ export function KanbanBoard() {
   }
 
   const handleDeleteCard = async (id: string) => {
+    const target = cards.find((c) => c.id === id)
     if (currentFocusSession?.taskId === id) {
       await interruptWorkFocusSession()
     }
@@ -230,7 +237,7 @@ export function KanbanBoard() {
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [id])
     }
-    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id })
+    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id, title: target?.title ?? null })
   }
 
   const startEditColumn = (col: { id: string; name: string; wipLimit?: number | null }) => {

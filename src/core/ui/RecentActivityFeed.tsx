@@ -14,34 +14,137 @@ const SOURCE_ICON: Record<string, React.ComponentType<{ size?: number; className
   work: BriefcaseBusiness,
 }
 
+/** Trunca una cadena para que no rompa el layout del feed. */
+function trim(s: unknown, max = 40): string {
+  const v = typeof s === 'string' ? s.trim() : ''
+  if (!v) return ''
+  return v.length > max ? `${v.slice(0, max - 1)}…` : v
+}
+
+/** Formatea minutos como "45 min" o "1h 20m". */
+function formatMinutes(min: number): string {
+  if (!Number.isFinite(min) || min <= 0) return '<1 min'
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return m === 0 ? `${h}h` : `${h}h ${m}m`
+}
+
+function readMinutes(p: Record<string, unknown>): number | null {
+  if (typeof p.durationMin === 'number') return p.durationMin
+  if (typeof p.duration === 'number') return Math.round(p.duration / 60_000)
+  return null
+}
+
+const PLUGIN_NAMES: Record<string, string> = {
+  fitness: 'Fitness',
+  work: 'Work',
+}
+
+/**
+ * Construye la descripción visible para una entrada del feed a partir del
+ * payload persistido del evento. Los emisores de cada plugin enriquecen los
+ * payloads con datos descriptivos (título de tarea, nombre de columna,
+ * duración) en el momento de emitir, garantizando integridad histórica:
+ * lo que se muestra aquí es lo que ocurrió, aunque la entidad ya no exista.
+ */
 const EVENT_LABELS: Record<string, (payload: Record<string, unknown>) => string> = {
-  WEIGHT_RECORDED: (p) => `Registraste peso${p.weight ? `: ${p.weight}kg` : ''}`,
-  FITNESS_WEIGHT_RECORDED: (p) => `Registraste peso${p.weight ? `: ${p.weight}kg` : ''}`,
-  DAILY_ENTRY_SAVED: () => 'Guardaste entrada diaria',
-  FITNESS_DAILY_ENTRY_SAVED: () => 'Guardaste entrada diaria',
+  // Fitness
+  WEIGHT_RECORDED: (p) => `Registraste peso${p.weight ? `: ${p.weight} kg` : ''}`,
+  FITNESS_WEIGHT_RECORDED: (p) => `Registraste peso${p.weight ? `: ${p.weight} kg` : ''}`,
+  DAILY_ENTRY_SAVED: (p) => {
+    const meals = ['breakfast', 'lunch', 'snack', 'dinner'].filter((m) => p[m] === 1).length
+    const parts: string[] = []
+    if (p.weight) parts.push(`${p.weight} kg`)
+    if (meals) parts.push(`${meals} comida${meals > 1 ? 's' : ''}`)
+    if (p.workout && p.workout !== 'R') parts.push(`entreno ${p.workout}`)
+    if (typeof p.cigarettes === 'number' && p.cigarettes > 0) parts.push(`${p.cigarettes} cig.`)
+    return parts.length
+      ? `Entrada diaria · ${parts.join(' · ')}`
+      : 'Guardaste entrada diaria'
+  },
+  FITNESS_DAILY_ENTRY_SAVED: (p) => EVENT_LABELS.DAILY_ENTRY_SAVED(p),
   MEAL_LOGGED: (p) => `Registraste comida${p.type ? ` (${p.type})` : ''}`,
   FITNESS_MEAL_LOGGED: (p) => `Registraste comida${p.type ? ` (${p.type})` : ''}`,
-  WORKOUT_COMPLETED: () => 'Completaste un entrenamiento',
-  FITNESS_WORKOUT_COMPLETED: () => 'Completaste un entrenamiento',
-  MEASUREMENT_SAVED: () => 'Guardaste medidas corporales',
-  FITNESS_MEASUREMENT_SAVED: () => 'Guardaste medidas corporales',
-  TASK_CREATED: (p) => `Creaste tarea${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  WORK_TASK_CREATED: (p) => `Creaste tarea${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  TASK_COMPLETED: (p) => `Completaste tarea${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  WORK_TASK_COMPLETED: (p) => `Completaste tarea${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  TASK_MOVED: () => 'Moviste una tarea',
-  WORK_TASK_MOVED: () => 'Moviste una tarea',
-  NOTE_CREATED: (p) => `Creaste nota${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  WORK_NOTE_CREATED: (p) => `Creaste nota${p.title ? `: ${String(p.title).slice(0, 30)}` : ''}`,
-  WORK_TASK_UPDATED: () => 'Actualizaste una tarea',
-  WORK_TASK_DELETED: () => 'Eliminaste una tarea',
-  WORK_FOCUS_STARTED: () => 'Iniciaste una sesión de foco',
-  WORK_FOCUS_COMPLETED: () => 'Completaste una sesión de foco',
-  WORK_FOCUS_INTERRUPTED: () => 'Interrumpiste una sesión de foco',
-  CORE_PROFILE_UPDATED: () => 'Actualizaste tu perfil en Control Center',
-  CORE_SETTINGS_UPDATED: () => 'Guardaste preferencias del sistema',
-  CORE_PLUGIN_ACTIVATED: (p) => `Activaste plugin${p.pluginId ? `: ${String(p.pluginId)}` : ''}`,
-  CORE_PLUGIN_DEACTIVATED: (p) => `Desactivaste plugin${p.pluginId ? `: ${String(p.pluginId)}` : ''}`,
+  WORKOUT_COMPLETED: (p) =>
+    `Completaste entrenamiento${p.type && p.type !== 'R' ? ` ${p.type}` : ''}`,
+  FITNESS_WORKOUT_COMPLETED: (p) =>
+    `Completaste entrenamiento${p.type && p.type !== 'R' ? ` ${p.type}` : ''}`,
+  MEASUREMENT_SAVED: (p) =>
+    `Guardaste medidas corporales${p.weight ? ` · ${p.weight} kg` : ''}`,
+  FITNESS_MEASUREMENT_SAVED: (p) =>
+    `Guardaste medidas corporales${p.weight ? ` · ${p.weight} kg` : ''}`,
+
+  // Work · tareas
+  TASK_CREATED: (p) => `Creaste tarea${p.title ? `: "${trim(p.title)}"` : ''}`,
+  WORK_TASK_CREATED: (p) => `Creaste tarea${p.title ? `: "${trim(p.title)}"` : ''}`,
+  TASK_COMPLETED: (p) => {
+    const title = trim(p.title)
+    const col = trim(p.columnName, 20)
+    return title
+      ? `Completaste "${title}"${col ? ` → ${col}` : ''}`
+      : 'Completaste una tarea'
+  },
+  WORK_TASK_COMPLETED: (p) => EVENT_LABELS.TASK_COMPLETED(p),
+  TASK_MOVED: (p) => {
+    const title = trim(p.cardTitle)
+    const from = trim(p.fromColumnName, 20)
+    const to = trim(p.toColumnName, 20)
+    if (title && from && to) return `Moviste "${title}": ${from} → ${to}`
+    if (title) return `Moviste "${title}"`
+    if (from && to) return `Moviste tarea: ${from} → ${to}`
+    return 'Moviste una tarea'
+  },
+  WORK_TASK_MOVED: (p) => EVENT_LABELS.TASK_MOVED(p),
+  WORK_TASK_UPDATED: (p) =>
+    p.title ? `Editaste tarea: "${trim(p.title)}"` : 'Actualizaste una tarea',
+  WORK_TASK_DELETED: (p) =>
+    p.title ? `Eliminaste tarea: "${trim(p.title)}"` : 'Eliminaste una tarea',
+
+  // Work · foco
+  WORK_FOCUS_STARTED: (p) =>
+    p.taskTitle ? `Iniciaste foco en "${trim(p.taskTitle)}"` : 'Iniciaste sesión de foco',
+  FOCUS_STARTED: (p) => EVENT_LABELS.WORK_FOCUS_STARTED(p),
+  WORK_FOCUS_PAUSED: (p) =>
+    p.taskTitle ? `Pausaste foco en "${trim(p.taskTitle)}"` : 'Pausaste sesión de foco',
+  WORK_FOCUS_RESUMED: (p) =>
+    p.taskTitle ? `Reanudaste foco en "${trim(p.taskTitle)}"` : 'Reanudaste sesión de foco',
+  WORK_FOCUS_COMPLETED: (p) => {
+    const min = readMinutes(p)
+    const title = trim(p.taskTitle)
+    const dur = min !== null ? ` (${formatMinutes(min)})` : ''
+    return title
+      ? `Sesión de foco completada · "${title}"${dur}`
+      : `Sesión de foco completada${dur}`
+  },
+  FOCUS_COMPLETED: (p) => EVENT_LABELS.WORK_FOCUS_COMPLETED(p),
+  WORK_FOCUS_INTERRUPTED: (p) => {
+    const min = readMinutes(p)
+    const title = trim(p.taskTitle)
+    const dur = min !== null ? ` (${formatMinutes(min)})` : ''
+    return title
+      ? `Foco interrumpido · "${title}"${dur}`
+      : `Sesión de foco interrumpida${dur}`
+  },
+  FOCUS_INTERRUPTED: (p) => EVENT_LABELS.WORK_FOCUS_INTERRUPTED(p),
+
+  // Work · notas
+  NOTE_CREATED: (p) => `Creaste nota${p.title ? `: "${trim(p.title)}"` : ''}`,
+  WORK_NOTE_CREATED: (p) => `Creaste nota${p.title ? `: "${trim(p.title)}"` : ''}`,
+
+  // Core
+  CORE_PROFILE_UPDATED: (p) =>
+    p.name ? `Actualizaste perfil: ${trim(p.name, 24)}` : 'Actualizaste tu perfil',
+  CORE_SETTINGS_UPDATED: (p) =>
+    p.theme ? `Guardaste preferencias · tema ${trim(p.theme, 16)}` : 'Guardaste preferencias',
+  CORE_PLUGIN_ACTIVATED: (p) => {
+    const id = String(p.pluginId ?? '')
+    return `Activaste plugin: ${PLUGIN_NAMES[id] || id || '—'}`
+  },
+  CORE_PLUGIN_DEACTIVATED: (p) => {
+    const id = String(p.pluginId ?? '')
+    return `Desactivaste plugin: ${PLUGIN_NAMES[id] || id || '—'}`
+  },
 }
 
 function humanizeEvent(entry: EventLogEntry): string {
@@ -126,6 +229,8 @@ export function RecentActivityFeed() {
         eventBus.on('WORK_TASK_UPDATED', delayedLoad),
         eventBus.on('WORK_TASK_DELETED', delayedLoad),
         eventBus.on('WORK_FOCUS_STARTED', delayedLoad),
+        eventBus.on('WORK_FOCUS_PAUSED', delayedLoad),
+        eventBus.on('WORK_FOCUS_RESUMED', delayedLoad),
         eventBus.on('WORK_FOCUS_COMPLETED', delayedLoad),
         eventBus.on('WORK_FOCUS_INTERRUPTED', delayedLoad),
         // Backward compatibility for old event names
