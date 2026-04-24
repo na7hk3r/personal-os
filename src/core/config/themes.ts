@@ -33,7 +33,7 @@ export const THEMES: ThemeOption[] = [
   {
     value: 'light',
     label: 'Light',
-    description: 'Tonos claros, alto contraste',
+    description: 'Cremas pastel, cálido y plano',
   },
 ] as const
 

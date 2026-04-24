@@ -77,8 +77,8 @@ function hasPluginActivityToday(pluginId: string): boolean {
 const NAV_LINK_CLASS = (isActive: boolean) =>
   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
     isActive
-      ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
-      : 'text-muted hover:bg-surface-lighter hover:text-white'
+      ? 'bg-accent/15 text-accent font-semibold'
+      : 'text-foreground/75 hover:bg-surface-lighter hover:text-foreground'
   }`
 
 export function Sidebar() {
@@ -217,8 +217,8 @@ export function Sidebar() {
                   className={({ isActive }) =>
                     `relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-accent/20 text-accent-light shadow-[inset_0_0_0_1px_rgba(124,58,237,0.25)]'
-                        : 'text-white/80 hover:bg-surface-lighter hover:text-white'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/80 hover:bg-surface-lighter hover:text-foreground'
                     }`
                   }
                 >

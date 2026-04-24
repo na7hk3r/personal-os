@@ -43,27 +43,39 @@
   --scrollbar-track:       transparent;
 }
 
-/* ========== TEMA: LIGHT ========== */
+/* ========== TEMA: LIGHT (Samurai Jack — paleta pastel cálida 60/30/10) ==========
+ *
+ * 60 % — base/superficies cremas y marfil (#fbf7ee, #f3ecdd…)
+ * 30 % — secundarios sage/arena suaves para muted, paneles y separadores
+ * 10 % — acento terracota/coral pastel (#d97757) usado puntualmente
+ *
+ * Diseño plano, sin bordes duros: los "bordes" son tonos de la familia
+ * crema apenas más oscuros que la superficie, casi imperceptibles.
+ */
 [data-theme="light"] {
-  --color-base:             248 250 252;   /* #f8fafc */
-  --color-surface:          255 255 255;   /* #ffffff */
-  --color-surface-light:    241 245 249;   /* #f1f5f9 */
-  --color-surface-lighter:  226 232 240;   /* #e2e8f0 */
-  --color-accent:           109 40 217;    /* #6d28d9 */
-  --color-accent-light:     91 33 182;     /* #5b21b6 */
-  --color-text:             15 23 42;      /* #0f172a */
-  --color-muted:            100 116 139;   /* #64748b */
-  --color-border:           203 213 225;   /* #cbd5e1 */
+  --color-base:             251 247 238;   /* #fbf7ee — marfil cálido */
+  --color-surface:          255 252 245;   /* #fffcf5 — papel arroz */
+  --color-surface-light:    243 236 221;   /* #f3ecdd — arena suave */
+  --color-surface-lighter:  232 222 200;   /* #e8dec8 — beige cálido */
+  --color-accent:           217 119 87;    /* #d97757 — terracota pastel */
+  --color-accent-light:     242 175 145;   /* #f2af91 — coral claro */
+  --color-text:             62 51 40;      /* #3e3328 — marrón cálido (no negro) */
+  --color-muted:            142 128 109;   /* #8e806d — sage-arena */
+  --color-border:           234 224 206;   /* #eae0ce — apenas visible sobre cremas */
 
-  --bg-gradient: radial-gradient(circle at top left, #dbeafe 0%, #f1f5f9 42%, #f8fafc 100%);
+  --bg-gradient: radial-gradient(circle at top left, #f7ecd6 0%, #fbf6ea 45%, #fffcf5 100%);
 
-  --chart-grid:           #cbd5e1;
-  --chart-axis:           #64748b;
-  --chart-tooltip-bg:     #ffffff;
-  --chart-tooltip-border: #cbd5e1;
-  --chart-weight:         #6d28d9;
-  --scrollbar-thumb:       #94a3b8;
-  --scrollbar-thumb-hover: #6d28d9;
+  --chart-grid:           #eae0ce;
+  --chart-axis:           #8e806d;
+  --chart-tooltip-bg:     #fffcf5;
+  --chart-tooltip-border: #eae0ce;
+  --chart-weight:         #d97757;
+  --chart-meal-good:      #8aab7e;   /* sage pastel */
+  --chart-meal-warn:      #e8b974;   /* mostaza pastel */
+  --chart-meal-bad:       #d97757;
+  --chart-smoking:        #b88a6a;
+  --scrollbar-thumb:       #d6c8ae;
+  --scrollbar-thumb-hover: #d97757;
 }
 
 /* Light: overrides para texto blanco Tailwind que se usaría sobre fondos claros */
@@ -73,15 +85,40 @@
 [data-theme="light"] .text-white {
   color: rgb(var(--color-text)) !important;
 }
+/* Variantes con opacidad: `text-white/60..95` no las captura `.text-white`,
+ * así que las matcheamos por atributo de clase para que tampoco queden blancas
+ * sobre cremas. */
+[data-theme="light"] [class~="text-white/60"],
+[data-theme="light"] [class~="text-white/70"],
+[data-theme="light"] [class~="text-white/75"],
+[data-theme="light"] [class~="text-white/80"],
+[data-theme="light"] [class~="text-white/85"],
+[data-theme="light"] [class~="text-white/90"],
+[data-theme="light"] [class~="text-white/95"] {
+  color: rgb(var(--color-text) / 0.85) !important;
+}
+[data-theme="light"] [class~="hover:text-white"]:hover {
+  color: rgb(var(--color-text)) !important;
+}
 
-/* ========== TEMA: CYBERPUNK ========== */
+/* ========== TEMA: CYBERPUNK (60/30/10 — cian dominante) ==========
+ *
+ * 60 % — base/superficies púrpura-negro (#03000c → #1c0c38)
+ * 30 % — borders y muted en púrpura medio (#3c1478, #8c78c8)
+ * 10 % — acento cian neón (#00f5ff) + variante más clara (#7ef9ff)
+ *
+ * Magenta neón se reserva como `--color-accent-glow` para highlights puntuales
+ * (badges de logro, confetti, etc.) y NO se usa en hovers/UI común para no
+ * competir con el cian.
+ */
 [data-theme="cyberpunk"] {
   --color-base:             3 0 12;        /* #03000c */
   --color-surface:          10 5 25;       /* #0a0519 */
   --color-surface-light:    18 8 40;       /* #120828 */
   --color-surface-lighter:  28 12 56;      /* #1c0c38 */
-  --color-accent:           0 245 255;     /* #00f5ff — cian neon */
-  --color-accent-light:     255 0 230;     /* #ff00e6 — magenta neon */
+  --color-accent:           0 245 255;     /* #00f5ff — cian neón */
+  --color-accent-light:     126 249 255;   /* #7ef9ff — cian claro (familia) */
+  --color-accent-glow:      255 0 230;     /* #ff00e6 — magenta neón, highlight puntual */
   --color-text:             224 224 255;   /* #e0e0ff */
   --color-muted:            140 120 200;   /* #8c78c8 */
   --color-border:           60 20 120;     /* #3c1478 */
@@ -481,7 +518,7 @@ textarea {
 /* ========== FOCUS STATES ========== */
 
 [data-theme="light"] *:focus-visible {
-  outline-color: #6d28d9;
+  outline-color: #d97757;
 }
 
 [data-theme="cyberpunk"] *:focus-visible {
@@ -494,4 +531,66 @@ textarea {
 
 [data-theme="bosque"] *:focus-visible {
   outline-color: #22c55e;
+}
+
+/* ========== TEMA LIGHT — overrides de superficies con gradientes oscuros ========== */
+
+/* Sombras suaves cálidas (en lugar de negros profundos) */
+[data-theme="light"] .card-interactive:hover {
+  box-shadow:
+    0 6px 18px rgba(62, 51, 40, 0.06),
+    0 2px 6px rgba(217, 119, 87, 0.08);
+}
+
+[data-theme="light"] .glow-accent {
+  box-shadow: 0 0 10px 1px rgba(217, 119, 87, 0.28);
+}
+
+[data-theme="light"] .progress-bar-fill {
+  box-shadow: 0 0 6px 1px rgba(217, 119, 87, 0.32);
+}
+
+[data-theme="light"] .scrollbar-kanban::-webkit-scrollbar-track {
+  background: #f3ecdd;
+}
+[data-theme="light"] .scrollbar-kanban::-webkit-scrollbar-thumb {
+  background: #d6c8ae;
+}
+[data-theme="light"] .scrollbar-kanban::-webkit-scrollbar-thumb:hover {
+  background: #d97757;
+}
+
+/* Plugin shells: cremas con tints sage (fitness) y arena-azul polvo (work) */
+[data-theme="light"] .plugin-shell {
+  border-color: rgba(142, 128, 109, 0.18);
+}
+
+[data-theme="light"] .plugin-shell-fitness {
+  background:
+    radial-gradient(circle at 12% 12%, rgba(138, 171, 126, 0.22) 0%, transparent 44%),
+    radial-gradient(circle at 88% 10%, rgba(180, 205, 170, 0.18) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(247, 242, 228, 0.92) 0%, rgba(243, 236, 221, 0.88) 100%);
+}
+[data-theme="light"] .plugin-shell-fitness::before {
+  background: linear-gradient(120deg, rgba(138, 171, 126, 0.18), rgba(199, 215, 184, 0.1), rgba(138, 171, 126, 0.04));
+}
+
+[data-theme="light"] .plugin-shell-work {
+  background:
+    radial-gradient(circle at 15% 15%, rgba(184, 196, 215, 0.28) 0%, transparent 42%),
+    radial-gradient(circle at 85% 12%, rgba(213, 197, 175, 0.22) 0%, transparent 38%),
+    linear-gradient(180deg, rgba(250, 245, 234, 0.94) 0%, rgba(243, 236, 221, 0.88) 100%);
+}
+[data-theme="light"] .plugin-shell-work::before {
+  background: linear-gradient(120deg, rgba(184, 196, 215, 0.22), rgba(213, 197, 175, 0.14), rgba(184, 196, 215, 0.05));
+}
+
+[data-theme="light"] .plugin-panel {
+  border-color: rgba(142, 128, 109, 0.18);
+  background: linear-gradient(180deg, rgba(255, 252, 245, 0.85) 0%, rgba(247, 242, 228, 0.78) 100%);
+  box-shadow: 0 8px 22px rgba(62, 51, 40, 0.05);
+}
+[data-theme="light"] .plugin-panel:hover {
+  border-color: rgba(217, 119, 87, 0.32);
+  box-shadow: 0 12px 26px rgba(62, 51, 40, 0.08);
 }

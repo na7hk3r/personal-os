@@ -16,6 +16,8 @@ export default {
         },
         muted: 'rgb(var(--color-muted) / <alpha-value>)',
         border: 'rgb(var(--color-border) / <alpha-value>)',
+        /** Texto principal según tema (claro en dark, marrón cálido en light). */
+        foreground: 'rgb(var(--color-text) / <alpha-value>)',
         /* Colores estáticos (no temáticos) */
         success: {
           DEFAULT: '#22c55e',
