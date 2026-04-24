@@ -5,7 +5,7 @@ const url = require("url");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const crypto = require("crypto");
-const CHANNELS$1 = {
+const CHANNELS$4 = {
   query: "storage:query",
   execute: "storage:execute",
   migrate: "storage:migrate"
@@ -123,25 +123,25 @@ function withStorageErrorHandling(fn) {
   }
 }
 function registerStorageIpc(db) {
-  electron.ipcMain.handle(CHANNELS$1.query, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$4.query, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$1.query);
+      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$4.query);
       return db.query(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$1.execute, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$4.execute, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$1.execute);
+      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$4.execute);
       return db.execute(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$1.migrate, (_event, pluginId, migrations) => {
+  electron.ipcMain.handle(CHANNELS$4.migrate, (_event, pluginId, migrations) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId);
       assertMigrations(migrations, pluginId);
@@ -187,6 +187,64 @@ const CORE_SCHEMA = `
     applied_at TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (plugin_id, version)
   );
+
+  CREATE TABLE IF NOT EXISTS core_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    color TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS core_tag_links (
+    tag_id INTEGER NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (tag_id, entity_type, entity_id),
+    FOREIGN KEY (tag_id) REFERENCES core_tags(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_tag_links_entity ON core_tag_links(entity_type, entity_id);
+
+  CREATE TABLE IF NOT EXISTS core_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plugin_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_templates_plugin ON core_templates(plugin_id, kind);
+
+  CREATE TABLE IF NOT EXISTS core_automations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    trigger_event TEXT NOT NULL,
+    condition TEXT,
+    action_type TEXT NOT NULL,
+    action_payload TEXT,
+    last_run_at TEXT,
+    run_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_automations_event ON core_automations(trigger_event, enabled);
+
+  CREATE TABLE IF NOT EXISTS core_notifications_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT,
+    source TEXT,
+    scheduled_at TEXT NOT NULL,
+    delivered_at TEXT,
+    dismissed_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_notifications_scheduled ON core_notifications_queue(scheduled_at, delivered_at);
 `;
 const AUTH_SCHEMA = `
   CREATE TABLE IF NOT EXISTS users (
@@ -317,6 +375,35 @@ class DatabaseService {
       }
     });
     runInTransaction();
+  }
+  /**
+   * Export the active user DB to a destination path.
+   * Uses SQLite's online backup so it is safe even with active connections.
+   */
+  exportActiveUserDb(destinationPath) {
+    if (!this.userDb) throw new Error("No active user session");
+    const backupPath = destinationPath;
+    try {
+      this.userDb.pragma("wal_checkpoint(TRUNCATE)");
+    } catch {
+    }
+    if (!this.activeUserId) throw new Error("No active user session");
+    const sourcePath = this.getUserDbPath(this.activeUserId);
+    fs.copyFileSync(sourcePath, backupPath);
+  }
+  /**
+   * Replace the active user DB with the contents of the given file. Closes
+   * the current connection, swaps the file, and reopens with CORE_SCHEMA.
+   */
+  importActiveUserDb(sourcePath) {
+    if (!this.activeUserId) throw new Error("No active user session");
+    const userId = this.activeUserId;
+    this.userDb?.close();
+    this.userDb = null;
+    const targetPath = this.getUserDbPath(userId);
+    const data = fs.readFileSync(sourcePath);
+    fs.writeFileSync(targetPath, data);
+    this.setActiveUser(userId);
   }
   close() {
     this.userDb?.close();
@@ -587,7 +674,7 @@ class AuthService {
     }
   }
 }
-const CHANNELS = {
+const CHANNELS$3 = {
   register: "auth:register",
   login: "auth:login",
   logout: "auth:logout",
@@ -609,7 +696,7 @@ function withAuthErrorHandling(fn) {
   });
 }
 function registerAuthIpc(authService) {
-  electron.ipcMain.handle(CHANNELS.register, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$3.register, (_event, payload) => {
     return withAuthErrorHandling(async () => {
       if (typeof payload !== "object" || payload === null) {
         throw new Error("payload is required");
@@ -627,29 +714,29 @@ function registerAuthIpc(authService) {
       });
     });
   });
-  electron.ipcMain.handle(CHANNELS.login, (_event, username, password) => {
+  electron.ipcMain.handle(CHANNELS$3.login, (_event, username, password) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       assertString(password, "password");
       return authService.login(username, password);
     });
   });
-  electron.ipcMain.handle(CHANNELS.logout, () => {
+  electron.ipcMain.handle(CHANNELS$3.logout, () => {
     return withAuthErrorHandling(async () => {
       await authService.logout();
     });
   });
-  electron.ipcMain.handle(CHANNELS.me, () => {
+  electron.ipcMain.handle(CHANNELS$3.me, () => {
     return withAuthErrorHandling(async () => authService.getCurrentUser());
   });
-  electron.ipcMain.handle(CHANNELS.getRecoveryQuestion, (_event, username) => {
+  electron.ipcMain.handle(CHANNELS$3.getRecoveryQuestion, (_event, username) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       return authService.getRecoveryQuestion(username);
     });
   });
   electron.ipcMain.handle(
-    CHANNELS.resetPasswordWithRecovery,
+    CHANNELS$3.resetPasswordWithRecovery,
     (_event, payload) => {
       return withAuthErrorHandling(async () => {
         if (typeof payload !== "object" || payload === null) {
@@ -667,6 +754,275 @@ function registerAuthIpc(authService) {
       });
     }
   );
+}
+const CHANNELS$2 = {
+  exportPlain: "backup:export-plain",
+  exportEncrypted: "backup:export-encrypted",
+  importPlain: "backup:import-plain",
+  importEncrypted: "backup:import-encrypted"
+};
+const MAGIC = Buffer.from("POS-BAK1");
+const ALGO = "aes-256-gcm";
+const KEY_LEN = 32;
+const SALT_LEN = 16;
+const IV_LEN = 12;
+const TAG_LEN = 16;
+function deriveKey(passphrase, salt) {
+  return crypto.scryptSync(passphrase, salt, KEY_LEN, { N: 16384, r: 8, p: 1 });
+}
+function encrypt(payload, passphrase) {
+  const salt = crypto.randomBytes(SALT_LEN);
+  const iv = crypto.randomBytes(IV_LEN);
+  const key = deriveKey(passphrase, salt);
+  const cipher = crypto.createCipheriv(ALGO, key, iv);
+  const encrypted = Buffer.concat([cipher.update(payload), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([MAGIC, salt, iv, tag, encrypted]);
+}
+function decrypt(blob, passphrase) {
+  if (blob.length < MAGIC.length + SALT_LEN + IV_LEN + TAG_LEN) {
+    throw new Error("Backup file is too small or corrupted");
+  }
+  const magic = blob.subarray(0, MAGIC.length);
+  if (!magic.equals(MAGIC)) {
+    throw new Error("Invalid backup format");
+  }
+  let offset = MAGIC.length;
+  const salt = blob.subarray(offset, offset + SALT_LEN);
+  offset += SALT_LEN;
+  const iv = blob.subarray(offset, offset + IV_LEN);
+  offset += IV_LEN;
+  const tag = blob.subarray(offset, offset + TAG_LEN);
+  offset += TAG_LEN;
+  const encrypted = blob.subarray(offset);
+  const key = deriveKey(passphrase, salt);
+  const decipher = crypto.createDecipheriv(ALGO, key, iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+}
+async function pickSavePath(defaultName) {
+  const focused = electron.BrowserWindow.getFocusedWindow();
+  const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+    title: "Guardar backup de Personal OS",
+    defaultPath: defaultName
+  });
+  return result.canceled || !result.filePath ? null : result.filePath;
+}
+async function pickOpenPath() {
+  const focused = electron.BrowserWindow.getFocusedWindow();
+  const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+    title: "Restaurar backup de Personal OS",
+    properties: ["openFile"]
+  });
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+}
+function registerBackupIpc(db) {
+  electron.ipcMain.handle(CHANNELS$2.exportPlain, async () => {
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const dest = await pickSavePath(`personal-os-backup-${stamp}.db`);
+    if (!dest) return { ok: false, canceled: true };
+    db.exportActiveUserDb(dest);
+    return { ok: true, path: dest };
+  });
+  electron.ipcMain.handle(CHANNELS$2.exportEncrypted, async (_event, passphrase) => {
+    if (typeof passphrase !== "string" || passphrase.length < 8) {
+      throw new Error("La passphrase debe tener al menos 8 caracteres");
+    }
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const dest = await pickSavePath(`personal-os-backup-${stamp}.posbak`);
+    if (!dest) return { ok: false, canceled: true };
+    const tmp = `${dest}.tmp.db`;
+    db.exportActiveUserDb(tmp);
+    try {
+      const data = fs.readFileSync(tmp);
+      const blob = encrypt(data, passphrase);
+      fs.writeFileSync(dest, blob);
+    } finally {
+      try {
+        if (fs.existsSync(tmp)) {
+          fs.writeFileSync(tmp, "");
+        }
+      } catch {
+      }
+    }
+    return { ok: true, path: dest };
+  });
+  electron.ipcMain.handle(CHANNELS$2.importPlain, async () => {
+    const src = await pickOpenPath();
+    if (!src) return { ok: false, canceled: true };
+    db.importActiveUserDb(src);
+    return { ok: true };
+  });
+  electron.ipcMain.handle(CHANNELS$2.importEncrypted, async (_event, passphrase) => {
+    if (typeof passphrase !== "string" || passphrase.length < 1) {
+      throw new Error("Ingresá la passphrase usada al exportar");
+    }
+    const src = await pickOpenPath();
+    if (!src) return { ok: false, canceled: true };
+    const blob = fs.readFileSync(src);
+    const data = decrypt(blob, passphrase);
+    const tmp = `${src}.decrypted.tmp.db`;
+    fs.writeFileSync(tmp, data);
+    db.importActiveUserDb(tmp);
+    try {
+      fs.writeFileSync(tmp, "");
+    } catch {
+    }
+    return { ok: true };
+  });
+}
+const CHANNELS$1 = {
+  health: "ollama:health",
+  generate: "ollama:generate",
+  listModels: "ollama:list-models"
+};
+const DEFAULT_BASE = "http://127.0.0.1:11434";
+function getBase() {
+  return process.env.OLLAMA_BASE_URL?.trim() || DEFAULT_BASE;
+}
+function postJson(path2, body, timeoutMs = 6e4) {
+  return new Promise((resolve, reject) => {
+    const req = electron.net.request({
+      method: "POST",
+      url: `${getBase()}${path2}`
+    });
+    req.setHeader("Content-Type", "application/json");
+    const chunks = [];
+    const timer = setTimeout(() => {
+      try {
+        req.abort();
+      } catch {
+      }
+      reject(new Error(`Ollama request timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+    req.on("response", (response) => {
+      response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      response.on("end", () => {
+        clearTimeout(timer);
+        const text = Buffer.concat(chunks).toString("utf-8");
+        if (response.statusCode && response.statusCode >= 400) {
+          reject(new Error(`Ollama HTTP ${response.statusCode}: ${text}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(text));
+        } catch (err) {
+          reject(new Error(`Ollama response is not valid JSON: ${err.message}`));
+        }
+      });
+      response.on("error", (err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+    req.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    req.write(JSON.stringify(body));
+    req.end();
+  });
+}
+function getJson(path2, timeoutMs = 5e3) {
+  return new Promise((resolve, reject) => {
+    const req = electron.net.request({ method: "GET", url: `${getBase()}${path2}` });
+    const chunks = [];
+    const timer = setTimeout(() => {
+      try {
+        req.abort();
+      } catch {
+      }
+      reject(new Error(`Ollama request timeout after ${timeoutMs}ms`));
+    }, timeoutMs);
+    req.on("response", (response) => {
+      response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
+      response.on("end", () => {
+        clearTimeout(timer);
+        const text = Buffer.concat(chunks).toString("utf-8");
+        if (response.statusCode && response.statusCode >= 400) {
+          reject(new Error(`Ollama HTTP ${response.statusCode}: ${text}`));
+          return;
+        }
+        try {
+          resolve(JSON.parse(text));
+        } catch (err) {
+          reject(new Error(`Ollama response is not valid JSON: ${err.message}`));
+        }
+      });
+      response.on("error", (err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+    });
+    req.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    req.end();
+  });
+}
+function registerOllamaIpc() {
+  electron.ipcMain.handle(CHANNELS$1.health, async () => {
+    try {
+      await getJson("/api/tags", 3e3);
+      return { ok: true, baseUrl: getBase() };
+    } catch (err) {
+      return { ok: false, baseUrl: getBase(), error: err.message };
+    }
+  });
+  electron.ipcMain.handle(CHANNELS$1.listModels, async () => {
+    const data = await getJson("/api/tags", 5e3);
+    return data.models?.map((m) => ({ name: m.name, size: m.size, modifiedAt: m.modified_at })) ?? [];
+  });
+  electron.ipcMain.handle(CHANNELS$1.generate, async (_event, payload) => {
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Payload inválido");
+    }
+    const req = payload;
+    if (typeof req.model !== "string" || req.model.length === 0) {
+      throw new Error("model requerido");
+    }
+    if (typeof req.prompt !== "string" || req.prompt.length === 0) {
+      throw new Error("prompt requerido");
+    }
+    const body = {
+      model: req.model,
+      prompt: req.prompt,
+      system: req.system,
+      stream: false,
+      options: req.options ?? {}
+    };
+    const result = await postJson(
+      "/api/generate",
+      body,
+      12e4
+    );
+    return { text: result.response, durationMs: result.total_duration ? Math.round(result.total_duration / 1e6) : void 0 };
+  });
+}
+const CHANNELS = {
+  show: "notifications:show",
+  isSupported: "notifications:supported"
+};
+function registerNotificationsIpc() {
+  electron.ipcMain.handle(CHANNELS.isSupported, () => electron.Notification.isSupported());
+  electron.ipcMain.handle(CHANNELS.show, (_event, payload) => {
+    if (!electron.Notification.isSupported()) return { ok: false, reason: "not-supported" };
+    if (!payload || typeof payload !== "object") {
+      throw new Error("Payload inválido");
+    }
+    const p = payload;
+    if (typeof p.title !== "string" || p.title.length === 0) {
+      throw new Error("title requerido");
+    }
+    const n = new electron.Notification({
+      title: p.title,
+      body: p.body ?? "",
+      silent: p.silent === true
+    });
+    n.show();
+    return { ok: true };
+  });
 }
 let mainWindow = null;
 const rendererUrl = process.env.ELECTRON_RENDERER_URL;
@@ -745,6 +1101,9 @@ electron.app.whenReady().then(() => {
   const authService = new AuthService(db);
   registerStorageIpc(db);
   registerAuthIpc(authService);
+  registerBackupIpc(db);
+  registerOllamaIpc();
+  registerNotificationsIpc();
   createWindow();
   electron.app.on("activate", () => {
     if (electron.BrowserWindow.getAllWindows().length === 0) {

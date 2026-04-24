@@ -6,6 +6,9 @@ import { ControlCenter } from './core/ui/ControlCenter'
 import { CoreNotesPage } from './core/ui/pages/NotesPage'
 import { CoreLinksPage } from './core/ui/pages/LinksPage'
 import { CorePlannerPage } from './core/ui/pages/PlannerPage'
+import { CalendarPage } from './core/ui/pages/CalendarPage'
+import { ReviewPage } from './core/ui/pages/ReviewPage'
+import { CommandPalette } from './core/ui/CommandPalette'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
@@ -14,6 +17,8 @@ import { useGamificationStore } from './core/gamification/gamificationStore'
 import { useAuthStore } from './core/state/authStore'
 import { AuthScreen } from './core/ui/auth/AuthScreen'
 import { ErrorBoundary } from './core/ui/components/ErrorBoundary'
+import { automationsService } from './core/services/automationsService'
+import { notificationsService } from './core/services/notificationsService'
 
 // Import and register plugins
 import './plugins/fitness'
@@ -85,6 +90,10 @@ export function App() {
             }
           }
         }
+
+        // Boot core services that depend on the active user DB
+        await automationsService.init().catch((err) => console.error('[App] automations init failed', err))
+        await notificationsService.init().catch((err) => console.error('[App] notifications init failed', err))
       } catch (err) {
         console.error('[App] Bootstrap failed:', err)
       } finally {
@@ -127,6 +136,7 @@ export function App() {
     <ErrorBoundary label="app-root">
       <HashRouter>
         {ready && !onboardingComplete && <OnboardingWizard />}
+        <CommandPalette />
         {safeMode && (
           <div
             role="status"
@@ -142,6 +152,8 @@ export function App() {
             <Route path="/notes" element={<CoreNotesPage />} />
             <Route path="/links" element={<CoreLinksPage />} />
             <Route path="/planner" element={<CorePlannerPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/review" element={<ReviewPage />} />
             {pluginPages.map((page) => {
               const PageComponent = page.component
               return (

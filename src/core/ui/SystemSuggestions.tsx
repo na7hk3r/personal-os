@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
-import { Bell, CheckCircle2, Lightbulb, TriangleAlert, X } from 'lucide-react'
+import { Bell, CheckCircle2, Lightbulb, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react'
 import { buildSystemSuggestions, subscribeGuidanceRefresh, type GuidanceSuggestion } from './systemGuidance'
+import { aiSuggestionsService } from '@core/services/aiSuggestionsService'
+import { ollamaService } from '@core/services/ollamaService'
 
 const TYPE_STYLES: Record<
   GuidanceSuggestion['type'],
@@ -19,6 +21,31 @@ export function SystemSuggestions() {
   const activePluginIds = useCoreStore((s) => s.activePlugins)
   const [suggestions, setSuggestions] = useState<GuidanceSuggestion[]>([])
   const [expanded, setExpanded] = useState(false)
+  const [aiText, setAiText] = useState<string>('')
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiAvailable, setAiAvailable] = useState(false)
+
+  useEffect(() => {
+    void ollamaService.isReady().then((r) => setAiAvailable(r.enabled && r.healthy)).catch(() => setAiAvailable(false))
+  }, [])
+
+  const fetchAi = async () => {
+    if (aiLoading) return
+    setAiLoading(true)
+    try {
+      const result = await aiSuggestionsService.generate('dailyCoach')
+      setAiText(result.text)
+    } catch (err) {
+      setAiText(`(IA no disponible: ${(err as Error).message})`)
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (expanded && aiAvailable && !aiText && !aiLoading) void fetchAi()
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expanded, aiAvailable])
 
   useEffect(() => {
     const load = () => {
@@ -75,6 +102,24 @@ export function SystemSuggestions() {
           </div>
 
           <div className="space-y-2">
+            {aiAvailable && (
+              <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-accent-light">
+                    <Sparkles size={11} /> Coach IA local
+                  </div>
+                  <button
+                    onClick={() => void fetchAi()}
+                    disabled={aiLoading}
+                    className="rounded p-1 text-muted hover:text-white disabled:opacity-50"
+                    aria-label="Regenerar sugerencia"
+                  ><RefreshCw size={11} className={aiLoading ? 'animate-spin' : ''} /></button>
+                </div>
+                <p className="whitespace-pre-line text-xs leading-relaxed text-foreground/80">
+                  {aiLoading ? 'Pensando...' : aiText || 'Generando sugerencia...'}
+                </p>
+              </div>
+            )}
             {displaySuggestions.map((s) => {
               const style = TYPE_STYLES[s.type]
               const Icon = style.icon

@@ -4,6 +4,11 @@ import { Save } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
 import { THEMES } from '../config/themes'
+import { BackupSection } from './control/BackupSection'
+import { OllamaSection } from './control/OllamaSection'
+import { AutomationsSection } from './control/AutomationsSection'
+import { NotificationsSection } from './control/NotificationsSection'
+import { TagsSection } from './control/TagsSection'
 
 interface FitnessPluginSettings {
   workoutTargetPerWeek: number
@@ -647,6 +652,16 @@ export function ControlCenter() {
           <p className="mt-1">En esta versión, los plugins se incluyen en el build y se activan/desactivan sin fricción desde aquí.</p>
         </div>
       </section>
+
+      {/* Nuevas secciones core */}
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+        <OllamaSection />
+        <BackupSection />
+        <NotificationsSection />
+        <TagsSection />
+      </section>
+
+      <AutomationsSection />
     </div>
   )
 }

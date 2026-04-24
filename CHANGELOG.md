@@ -1,5 +1,57 @@
 # Changelog - Personal OS
 
+## [1.5.0] - 2026-04-30
+
+Salto cualitativo del **core**: IA local con Ollama, backups cifrados, calendario unificado, automatizaciones por evento, Command Palette, review semanal y plantillas.
+
+### ✨ Nuevas características — core
+
+#### IA local con Ollama (privacidad total)
+- Integración con `http://127.0.0.1:11434` por canal IPC (sin CORS, sin telemetría).
+- Configuración en Control Center: enable, modelo (autocomplete con `/api/tags`), system prompt, temperatura.
+- `aiContextService` arma un snapshot real del usuario (fitness 7d, work, planner, gamificación, eventos recientes) y lo entrega al LLM.
+- Tareas predefinidas: **dailyCoach**, **weeklyReview**, **focusNudge** — todas en español rioplatense, sin emojis.
+- El Centro de Notificaciones muestra una sugerencia diaria del coach IA cuando Ollama está activo.
+
+#### Backup cifrado
+- Export/import de la base de datos del usuario activo.
+- Cifrado AES‑256‑GCM con derivación scrypt (passphrase ≥ 8 caracteres).
+- Checkpoint WAL antes de copiar para garantizar integridad.
+
+#### Calendario unificado
+- Nueva ruta `/calendar` con grid mensual y filtros por fuente.
+- Agrega eventos de Planner, Work (vencimientos), Fitness (entrenos) y sesiones de foco.
+
+#### Review semanal/mensual
+- Nueva ruta `/review` con KPIs reales (fitness/work/gamificación) y botón para generar el análisis con IA.
+
+#### Command Palette (Ctrl/Cmd + K)
+- Búsqueda global instantánea en notas, tareas, enlaces y rutas (incluye páginas de plugins activos).
+- Navegación por teclado (↑ ↓ Enter Esc).
+
+#### Automatizaciones (no‑code)
+- CRUD desde Control Center: trigger event + condición opcional + acción (`notify`, `add_xp`, `emit_event`, `log`).
+- Condiciones evaluadas en sandbox restringido por whitelist de caracteres.
+
+#### Tags globales
+- Etiquetas reusables entre módulos con links polimórficos (notas, cards, links, fitness, etc.).
+
+#### Plantillas
+- Tabla `core_templates` + `templatesService` para que cualquier plugin guarde y reutilice contenido (notas, mails, briefs).
+
+#### Notificaciones nativas y horas de silencio
+- Cola persistente (`core_notifications_queue`), processor cada 30s, respeta horas de silencio (con wrap de medianoche).
+
+### 🛠 Plataforma
+
+- Tablas core nuevas: `core_tags`, `core_tag_links`, `core_templates`, `core_automations`, `core_notifications_queue`.
+- Bridges nuevos en preload: `window.backup`, `window.ollama`, `window.notifications`.
+- `docs/PLUGIN_API.md`: documentación completa de la API.
+- `docs/PLUGIN_IDEAS.md`: 11 plugins priorizados como roadmap (Hábitos, Finanzas, Journal, OKRs, Knowledge, Time Tracking, Inventario, CRM, Salud, Travel).
+- `docs/SHORTCUTS.md`: atajos de teclado.
+- Script `npm run create-plugin -- <id>` para scaffolding.
+- Vitest + jsdom + Testing Library configurados (`npm test`).
+
 ## [1.4.0] - 2026-04-23
 
 Mejoras integrales del plugin **Work**: motor de foco con pause real, capacidades de tarea avanzadas, Pomodoro con notificación nativa y fix completo del drag & drop del kanban.

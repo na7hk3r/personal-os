@@ -1,6 +1,6 @@
 # Personal OS
 
-Versión actual: `1.4.0`
+Versión actual: `1.5.0`
 
 Sistema operativo personal — aplicación de escritorio para productividad y salud, construida con Electron + React + SQLite.
 
@@ -11,28 +11,31 @@ Sistema operativo personal — aplicación de escritorio para productividad y sa
 
 Personal OS es una aplicación modular que centraliza el seguimiento de hábitos de salud (fitness) y la gestión del trabajo (kanban, notas, foco) en una interfaz unificada con gamificación integrada.
 
-## Novedades recientes (v1.4.0)
+## Novedades recientes (v1.5.0)
 
-- **NEW · Focus Engine 2.0**: pause / resume reales sin penalización, switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie.
-- **NEW · Pomodoro con notificación nativa**: objetivo configurable (15/25/45/60/90m), barra de progreso y notificación del SO al completar.
-- **NEW · Tarjetas con prioridad, estimación y checklist** embebida con barra de progreso.
-- **NEW · Date picker nativo** para vencimientos con etiquetas relativas (`Hoy`, `Mañana`, `Hace 2d`).
-- **NEW · WIP limit y edición inline de columnas** con indicador visual cuando se excede.
-- **NEW · Archivado automático** de tarjetas en Done con más de 7 días sin actividad.
-- **NEW · Notas con búsqueda, sort y pin**; enlaces con búsqueda, edición inline e iconos por dominio (offline-first).
-- **NEW · Quick action "Iniciar foco"** en la barra global del Core.
-- **NEW · Confirmación doble-click** en todos los borrados destructivos.
-- **FIX · Drag & Drop del Kanban**: la overlay ya no queda lejos del puntero (portalada a `body`), las posiciones se mantienen consistentes via `reorderCards` batch atómico.
+- **NEW · IA local con Ollama** integrada al core: coach diario, review semanal y nudge de foco basados en tus datos reales (sin telemetría).
+- **NEW · Backup cifrado** con AES-256-GCM + scrypt; export/import de toda la base del usuario activo.
+- **NEW · Calendario unificado** (`/calendar`) con eventos de Planner, Work, Fitness y sesiones de foco.
+- **NEW · Review semanal/mensual** (`/review`) con KPIs reales + análisis IA opcional.
+- **NEW · Command Palette** (`Ctrl/Cmd + K`) para búsqueda global instantánea.
+- **NEW · Automatizaciones no-code** desde Control Center (trigger event → condición → acción).
+- **NEW · Tags globales y plantillas** para reuso entre módulos.
+- **NEW · Notificaciones nativas** con cola programable y horas de silencio.
+- **NEW · `npm run create-plugin`** para scaffolding de plugins; `docs/PLUGIN_API.md` con la superficie completa del CoreAPI.
+- **NEW · Vitest** con jsdom y Testing Library (`npm test`).
+- Roadmap de plugins documentado en [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
 
-Ver [CHANGELOG.md](CHANGELOG.md) para el detalle completo y la política de XP del Focus Engine.
+Ver [CHANGELOG.md](CHANGELOG.md) para el detalle completo.
 
-## Novedades anteriores (v1.3.0)
+## Novedades anteriores (v1.4.0)
 
-- Sistema de autenticación multiusuario local (registro, login, recuperación) con SQLite.
-- Aislamiento total por usuario: base de datos, configuración y sesión persistente independientes.
-- Módulo core Planner (vista diaria/semanal/mensual + DnD entre días) integrado con gamificación.
-- Control Center por plugin con configuración persistida.
-- Dashboard principal reequilibrado, fondos diferenciados y animaciones por dominio.
+- **Focus Engine 2.0**: pause / resume reales sin penalización, switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie.
+- **Pomodoro con notificación nativa**: objetivo configurable (15/25/45/60/90m).
+- **Tarjetas con prioridad, estimación y checklist** embebida.
+- **Date picker nativo** para vencimientos con etiquetas relativas.
+- **WIP limit y edición inline de columnas**.
+- **Archivado automático** de tarjetas en Done con >7 días sin actividad.
+- **FIX · Drag & Drop del Kanban** (overlay portalada, posiciones atómicas).
 
 Ver [docs/AUTH.md](docs/AUTH.md) para detalles técnicos de autenticación.
 
@@ -174,12 +177,12 @@ Desde la versión `1.2.0`, el sistema incluye misión diaria core del Planner y 
 
 Desde v1.3.0, Personal OS incluye un **sistema de autenticación completamente local** con soporte multiusuario:
 
-- **NEW · Registro seguro**: username, contraseña (8+ chars) y pregunta secreta personalizada.
-- **NEW · Aislamiento total**: cada usuario tiene su propia base de datos, configuración y plugins.
-- **NEW · Auto-login**: las sesiones persistentes se restauran automáticamente al abrir la app.
-- **NEW · Recuperación**: reset de contraseña mediante pregunta secreta.
-- **NEW · Sin backend**: funcionamiento 100% local y offline.
-- **NEW · UX-friendly**: mensajes de error claros en español y validación progresiva.
+- **Registro seguro**: username, contraseña (8+ chars) y pregunta secreta personalizada.
+- **Aislamiento total**: cada usuario tiene su propia base de datos, configuración y plugins.
+- **Auto-login**: las sesiones persistentes se restauran automáticamente al abrir la app.
+- **Recuperación**: reset de contraseña mediante pregunta secreta.
+- **Sin backend**: funcionamiento 100% local y offline.
+- **UX-friendly**: mensajes de error claros en español y validación progresiva.
 
 ### Datos técnicos
 
@@ -249,8 +252,11 @@ Ver [docs/DATABASE.md](docs/DATABASE.md) para el esquema completo.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — Arquitectura general del sistema
 - [docs/AUTH.md](docs/AUTH.md) — Sistema de autenticación multiusuario y seguridad
 - [docs/PLUGINS.md](docs/PLUGINS.md) — Sistema de plugins y cómo crear uno
+- [docs/PLUGIN_API.md](docs/PLUGIN_API.md) — Superficie completa del CoreAPI (v1.5.0)
 - [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md) — Estructura base estándar e integración de plugins
+- [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md) — Roadmap de plugins futuros priorizados
 - [docs/DATABASE.md](docs/DATABASE.md) — Esquema SQL completo
 - [docs/EVENTS.md](docs/EVENTS.md) — Catálogo de eventos del sistema
 - [docs/GAMIFICATION.md](docs/GAMIFICATION.md) — Sistema de gamificación
+- [docs/SHORTCUTS.md](docs/SHORTCUTS.md) — Atajos de teclado
 - [docs/KNOWLEDGE_BASE_PLAN.md](docs/KNOWLEDGE_BASE_PLAN.md) — Roadmap para llevar documentación a sitio web

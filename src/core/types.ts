@@ -61,6 +61,66 @@ export interface AuthBridge {
   resetPasswordWithRecovery: (payload: ResetPasswordWithRecoveryPayload) => Promise<void>
 }
 
+// ─── Backup ───
+
+export interface BackupResult {
+  ok: boolean
+  canceled?: boolean
+  path?: string
+}
+
+export interface BackupBridge {
+  exportPlain: () => Promise<BackupResult>
+  exportEncrypted: (passphrase: string) => Promise<BackupResult>
+  importPlain: () => Promise<BackupResult>
+  importEncrypted: (passphrase: string) => Promise<BackupResult>
+}
+
+// ─── Ollama (AI local) ───
+
+export interface OllamaHealth {
+  ok: boolean
+  baseUrl: string
+  error?: string
+}
+
+export interface OllamaModel {
+  name: string
+  size: number
+  modifiedAt: string
+}
+
+export interface OllamaGenerateRequest {
+  model: string
+  prompt: string
+  system?: string
+  options?: Record<string, unknown>
+}
+
+export interface OllamaGenerateResponse {
+  text: string
+  durationMs?: number
+}
+
+export interface OllamaBridge {
+  health: () => Promise<OllamaHealth>
+  listModels: () => Promise<OllamaModel[]>
+  generate: (req: OllamaGenerateRequest) => Promise<OllamaGenerateResponse>
+}
+
+// ─── Notifications ───
+
+export interface NotificationPayload {
+  title: string
+  body?: string
+  silent?: boolean
+}
+
+export interface NotificationsBridge {
+  isSupported: () => Promise<boolean>
+  show: (payload: NotificationPayload) => Promise<{ ok: boolean; reason?: string }>
+}
+
 // ─── UI Registration ───
 
 export interface WidgetDefinition {

@@ -5,6 +5,9 @@ import { registerStorageIpc } from './services/storage-ipc'
 import { DatabaseService } from './services/database'
 import { AuthService } from './services/auth'
 import { registerAuthIpc } from './services/auth-ipc'
+import { registerBackupIpc } from './services/backup-ipc'
+import { registerOllamaIpc } from './services/ollama-ipc'
+import { registerNotificationsIpc } from './services/notifications-ipc'
 
 let mainWindow: BrowserWindow | null = null
 const rendererUrl = process.env.ELECTRON_RENDERER_URL
@@ -110,6 +113,9 @@ app.whenReady().then(() => {
   const authService = new AuthService(db)
   registerStorageIpc(db)
   registerAuthIpc(authService)
+  registerBackupIpc(db)
+  registerOllamaIpc()
+  registerNotificationsIpc()
 
   createWindow()
 

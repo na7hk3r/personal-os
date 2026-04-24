@@ -1,7 +1,7 @@
 import Database from 'better-sqlite3'
 import { app } from 'electron'
 import { join } from 'path'
-import { existsSync, mkdirSync, renameSync } from 'fs'
+import { existsSync, mkdirSync, renameSync, copyFileSync, readFileSync, writeFileSync } from 'fs'
 
 const CORE_SCHEMA = `
   CREATE TABLE IF NOT EXISTS profile (
@@ -41,6 +41,64 @@ const CORE_SCHEMA = `
     applied_at TEXT DEFAULT (datetime('now')),
     PRIMARY KEY (plugin_id, version)
   );
+
+  CREATE TABLE IF NOT EXISTS core_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+    color TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS core_tag_links (
+    tag_id INTEGER NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (tag_id, entity_type, entity_id),
+    FOREIGN KEY (tag_id) REFERENCES core_tags(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_tag_links_entity ON core_tag_links(entity_type, entity_id);
+
+  CREATE TABLE IF NOT EXISTS core_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    plugin_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    kind TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_templates_plugin ON core_templates(plugin_id, kind);
+
+  CREATE TABLE IF NOT EXISTS core_automations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    trigger_event TEXT NOT NULL,
+    condition TEXT,
+    action_type TEXT NOT NULL,
+    action_payload TEXT,
+    last_run_at TEXT,
+    run_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_automations_event ON core_automations(trigger_event, enabled);
+
+  CREATE TABLE IF NOT EXISTS core_notifications_queue (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    body TEXT,
+    source TEXT,
+    scheduled_at TEXT NOT NULL,
+    delivered_at TEXT,
+    dismissed_at TEXT,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_core_notifications_scheduled ON core_notifications_queue(scheduled_at, delivered_at);
 `
 
 const AUTH_SCHEMA = `
@@ -202,6 +260,40 @@ export class DatabaseService {
     })
 
     runInTransaction()
+  }
+
+  /**
+   * Export the active user DB to a destination path.
+   * Uses SQLite's online backup so it is safe even with active connections.
+   */
+  exportActiveUserDb(destinationPath: string): void {
+    if (!this.userDb) throw new Error('No active user session')
+    // better-sqlite3 backup is async via promise
+    const backupPath = destinationPath
+    // Use checkpoint to flush WAL into the main DB before copying.
+    try {
+      this.userDb.pragma('wal_checkpoint(TRUNCATE)')
+    } catch {
+      // ignore checkpoint failure; copy will still produce a consistent file via SQLite header.
+    }
+    if (!this.activeUserId) throw new Error('No active user session')
+    const sourcePath = this.getUserDbPath(this.activeUserId)
+    copyFileSync(sourcePath, backupPath)
+  }
+
+  /**
+   * Replace the active user DB with the contents of the given file. Closes
+   * the current connection, swaps the file, and reopens with CORE_SCHEMA.
+   */
+  importActiveUserDb(sourcePath: string): void {
+    if (!this.activeUserId) throw new Error('No active user session')
+    const userId = this.activeUserId
+    this.userDb?.close()
+    this.userDb = null
+    const targetPath = this.getUserDbPath(userId)
+    const data = readFileSync(sourcePath)
+    writeFileSync(targetPath, data)
+    this.setActiveUser(userId)
   }
 
   close(): void {

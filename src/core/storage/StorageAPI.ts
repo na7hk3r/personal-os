@@ -65,6 +65,31 @@ const ALLOWED_TABLE_COLUMNS: Record<string, Set<string>> = {
     'paused_at',
     'paused_total',
   ]),
+  core_tags: new Set(['id', 'name', 'color', 'created_at']),
+  core_tag_links: new Set(['tag_id', 'entity_type', 'entity_id', 'created_at']),
+  core_templates: new Set(['id', 'plugin_id', 'name', 'kind', 'content', 'created_at', 'updated_at']),
+  core_automations: new Set([
+    'id',
+    'name',
+    'enabled',
+    'trigger_event',
+    'condition',
+    'action_type',
+    'action_payload',
+    'last_run_at',
+    'run_count',
+    'created_at',
+  ]),
+  core_notifications_queue: new Set([
+    'id',
+    'title',
+    'body',
+    'source',
+    'scheduled_at',
+    'delivered_at',
+    'dismissed_at',
+    'created_at',
+  ]),
 }
 
 function assertTableName(table: string): void {
@@ -169,6 +194,21 @@ export class StorageAPI {
     return this.query<EventLogEntry>(
       `SELECT id, event_type, source, payload, created_at FROM events_log ORDER BY created_at DESC LIMIT ?`,
       [safeLimit],
+    )
+  }
+
+  async getSetting(key: string): Promise<string | undefined> {
+    const rows = await this.query<{ value: string }>(
+      `SELECT value FROM settings WHERE key = ? LIMIT 1`,
+      [key],
+    )
+    return rows[0]?.value
+  }
+
+  async setSetting(key: string, value: string): Promise<void> {
+    await this.execute(
+      `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+      [key, value],
     )
   }
 }

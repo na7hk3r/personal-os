@@ -171,6 +171,18 @@ export function Sidebar() {
           {!sidebarCollapsed && <span className="truncate">Planner</span>}
         </NavLink>
 
+        {/* Core: Calendario unificado */}
+        <NavLink to="/calendar" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <CalendarDays size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Calendario</span>}
+        </NavLink>
+
+        {/* Core: Review */}
+        <NavLink to="/review" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <Flame size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Review</span>}
+        </NavLink>
+
         {/* Plugin nav items */}
         {navItems.length > 0 && (
           <>

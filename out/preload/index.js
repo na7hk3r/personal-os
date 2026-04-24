@@ -13,5 +13,23 @@ const authBridge = {
   getRecoveryQuestion: (username) => electron.ipcRenderer.invoke("auth:get-recovery-question", username),
   resetPasswordWithRecovery: (payload) => electron.ipcRenderer.invoke("auth:reset-password-with-recovery", payload)
 };
+const backupBridge = {
+  exportPlain: () => electron.ipcRenderer.invoke("backup:export-plain"),
+  exportEncrypted: (passphrase) => electron.ipcRenderer.invoke("backup:export-encrypted", passphrase),
+  importPlain: () => electron.ipcRenderer.invoke("backup:import-plain"),
+  importEncrypted: (passphrase) => electron.ipcRenderer.invoke("backup:import-encrypted", passphrase)
+};
+const ollamaBridge = {
+  health: () => electron.ipcRenderer.invoke("ollama:health"),
+  listModels: () => electron.ipcRenderer.invoke("ollama:list-models"),
+  generate: (req) => electron.ipcRenderer.invoke("ollama:generate", req)
+};
+const notificationsBridge = {
+  isSupported: () => electron.ipcRenderer.invoke("notifications:supported"),
+  show: (payload) => electron.ipcRenderer.invoke("notifications:show", payload)
+};
 electron.contextBridge.exposeInMainWorld("storage", storageBridge);
 electron.contextBridge.exposeInMainWorld("auth", authBridge);
+electron.contextBridge.exposeInMainWorld("backup", backupBridge);
+electron.contextBridge.exposeInMainWorld("ollama", ollamaBridge);
+electron.contextBridge.exposeInMainWorld("notifications", notificationsBridge);

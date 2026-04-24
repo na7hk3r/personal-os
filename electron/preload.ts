@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { StorageBridge } from '../src/core/types'
-import type { AuthBridge } from '../src/core/types'
+import type { AuthBridge, BackupBridge, OllamaBridge, NotificationsBridge } from '../src/core/types'
 
 const storageBridge: StorageBridge = {
   query: (sql, params) => ipcRenderer.invoke('storage:query', sql, params),
@@ -17,5 +17,26 @@ const authBridge: AuthBridge = {
   resetPasswordWithRecovery: (payload) => ipcRenderer.invoke('auth:reset-password-with-recovery', payload),
 }
 
+const backupBridge: BackupBridge = {
+  exportPlain: () => ipcRenderer.invoke('backup:export-plain'),
+  exportEncrypted: (passphrase) => ipcRenderer.invoke('backup:export-encrypted', passphrase),
+  importPlain: () => ipcRenderer.invoke('backup:import-plain'),
+  importEncrypted: (passphrase) => ipcRenderer.invoke('backup:import-encrypted', passphrase),
+}
+
+const ollamaBridge: OllamaBridge = {
+  health: () => ipcRenderer.invoke('ollama:health'),
+  listModels: () => ipcRenderer.invoke('ollama:list-models'),
+  generate: (req) => ipcRenderer.invoke('ollama:generate', req),
+}
+
+const notificationsBridge: NotificationsBridge = {
+  isSupported: () => ipcRenderer.invoke('notifications:supported'),
+  show: (payload) => ipcRenderer.invoke('notifications:show', payload),
+}
+
 contextBridge.exposeInMainWorld('storage', storageBridge)
 contextBridge.exposeInMainWorld('auth', authBridge)
+contextBridge.exposeInMainWorld('backup', backupBridge)
+contextBridge.exposeInMainWorld('ollama', ollamaBridge)
+contextBridge.exposeInMainWorld('notifications', notificationsBridge)
