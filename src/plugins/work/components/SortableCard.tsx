@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card } from '../types'
-import { CalendarClock, CheckSquare, FileText, Flag, Pause, Play, Target, Timer } from 'lucide-react'
+import { CalendarClock, CheckCircle2, CheckSquare, FileText, Flag, Pause, Play, Target, Timer } from 'lucide-react'
 
 interface Props {
   card: Card
@@ -11,6 +11,7 @@ interface Props {
   onOpen: (card: Card) => void
   onStartFocus: (card: Card) => void
   onStopFocus: () => void
+  onComplete?: (card: Card) => void
   isFocusActive: boolean
 }
 
@@ -58,6 +59,7 @@ export function SortableCard({
   onOpen,
   onStartFocus,
   onStopFocus,
+  onComplete,
   isFocusActive,
 }: Props) {
   const {
@@ -219,27 +221,45 @@ export function SortableCard({
         <span className={`text-[10px] uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
           {isFocusActive ? 'En foco' : 'Listo para foco'}
         </span>
-        <button
-          type="button"
-          data-focus="true"
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => {
-            e.stopPropagation()
-            if (isFocusActive) {
-              onStopFocus()
-              return
-            }
-            onStartFocus(card)
-          }}
-          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
-            isFocusActive
-              ? 'bg-warning/15 text-warning hover:bg-warning/25'
-              : 'bg-accent/15 text-accent-light hover:bg-accent/25'
-          }`}
-        >
-          {isFocusActive ? <Pause size={12} /> : <Play size={12} />}
-          {isFocusActive ? 'Pause' : 'Start Focus'}
-        </button>
+        <div className="flex items-center gap-1.5">
+          {onComplete && (
+            <button
+              type="button"
+              data-focus="true"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                onComplete(card)
+              }}
+              title="Completar tarea (mueve a Hecho y detiene el foco)"
+              className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-medium text-success transition-colors hover:bg-success/25"
+            >
+              <CheckCircle2 size={12} />
+              Completar
+            </button>
+          )}
+          <button
+            type="button"
+            data-focus="true"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isFocusActive) {
+                onStopFocus()
+                return
+              }
+              onStartFocus(card)
+            }}
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              isFocusActive
+                ? 'bg-warning/15 text-warning hover:bg-warning/25'
+                : 'bg-accent/15 text-accent-light hover:bg-accent/25'
+            }`}
+          >
+            {isFocusActive ? <Pause size={12} /> : <Play size={12} />}
+            {isFocusActive ? 'Pause' : 'Start Focus'}
+          </button>
+        </div>
       </div>
     </div>
   )

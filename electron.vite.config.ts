@@ -1,9 +1,16 @@
 import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
+import { readFileSync } from 'fs'
+
+const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')) as { version: string }
+const APP_VERSION_DEFINE = {
+  __APP_VERSION__: JSON.stringify(pkg.version),
+}
 
 export default defineConfig({
   main: {
+    define: APP_VERSION_DEFINE,
     build: {
       outDir: 'out/main',
       lib: {
@@ -19,6 +26,7 @@ export default defineConfig({
     },
   },
   preload: {
+    define: APP_VERSION_DEFINE,
     build: {
       outDir: 'out/preload',
       lib: {
@@ -34,6 +42,7 @@ export default defineConfig({
   },
   renderer: {
     root: '.',
+    define: APP_VERSION_DEFINE,
     build: {
       outDir: 'out/renderer',
       rollupOptions: {

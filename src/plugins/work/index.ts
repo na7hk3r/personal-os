@@ -108,6 +108,18 @@ const workPlugin: PluginManifest = {
         ALTER TABLE work_columns ADD COLUMN wip_limit INTEGER;
       `,
     },
+    {
+      version: 8,
+      up: `
+        ALTER TABLE work_columns ADD COLUMN is_done INTEGER DEFAULT 0;
+        UPDATE work_columns SET is_done = 1 WHERE id = 'col-done';
+        UPDATE work_columns
+           SET is_done = 1
+         WHERE is_done = 0
+           AND board_id NOT IN (SELECT DISTINCT board_id FROM work_columns WHERE is_done = 1)
+           AND (LOWER(name) LIKE '%hecho%' OR LOWER(name) LIKE '%done%' OR LOWER(name) LIKE '%completad%');
+      `,
+    },
   ],
 
   widgets: [
@@ -176,6 +188,7 @@ const workPlugin: PluginManifest = {
         name: row.name as string,
         position: row.position as number,
         wipLimit: row.wip_limit == null ? null : Number(row.wip_limit),
+        isDone: Boolean(row.is_done),
       }))
       : []
 
@@ -243,7 +256,7 @@ const workPlugin: PluginManifest = {
     // Auto-archivado: tarjetas en columna "Done/Hecho" con >7 días sin modificar.
     const DONE_ARCHIVE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000
     const doneColumnIds = parsedColumns
-      .filter((col) => /hecho|done/i.test(col.name))
+      .filter((col) => col.isDone || col.id === 'col-done' || /hecho|done|completad/i.test(col.name))
       .map((col) => col.id)
     const focusByTask = new Map<string, number>()
     focusSessions.forEach((s) => {

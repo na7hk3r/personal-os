@@ -5,15 +5,17 @@ import { eventBus } from '@core/events/EventBus'
 import { useWorkStore } from '../store'
 import {
   completeWorkFocusSession,
+  completeWorkTask,
   getEffectiveDuration,
   interruptWorkFocusSession,
   pauseWorkFocusSession,
   resumeWorkFocusSession,
   startWorkFocusSession,
+  stopWorkTask,
 } from '../focus'
 import { WORK_EVENTS } from '../events'
 import { KanbanBoard } from '../components/KanbanBoard'
-import { ClipboardList, ListChecks, NotebookPen, TimerReset, Play, Pause, Square, XCircle } from 'lucide-react'
+import { CheckCircle2, ClipboardList, History, KanbanSquare, ListChecks, NotebookPen, Sparkles, TimerReset, Play, Pause, Square, XCircle } from 'lucide-react'
 
 const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
   WORK_EVENTS.TASK_CREATED,
@@ -47,6 +49,22 @@ const EVENT_LABELS: Record<string, string> = {
   [WORK_EVENTS.NOTE_CREATED]: 'Nota creada',
 }
 
+const EVENT_ACCENT: Record<string, string> = {
+  [WORK_EVENTS.TASK_CREATED]: 'text-sky-300',
+  [WORK_EVENTS.TASK_UPDATED]: 'text-amber-300',
+  [WORK_EVENTS.TASK_COMPLETED]: 'text-success',
+  [WORK_EVENTS.TASK_DELETED]: 'text-danger',
+  [WORK_EVENTS.TASK_MOVED]: 'text-sky-300',
+  [WORK_EVENTS.TASK_STARTED]: 'text-accent-light',
+  [WORK_EVENTS.TASK_SWITCHED]: 'text-amber-300',
+  [WORK_EVENTS.FOCUS_STARTED]: 'text-accent-light',
+  [WORK_EVENTS.FOCUS_PAUSED]: 'text-warning',
+  [WORK_EVENTS.FOCUS_RESUMED]: 'text-accent-light',
+  [WORK_EVENTS.FOCUS_COMPLETED]: 'text-success',
+  [WORK_EVENTS.FOCUS_INTERRUPTED]: 'text-danger',
+  [WORK_EVENTS.NOTE_CREATED]: 'text-purple-300',
+}
+
 function formatDuration(durationMs: number) {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000))
   const hours = Math.floor(totalSeconds / 3600)
@@ -69,6 +87,111 @@ function formatRelative(timestamp: string) {
   return `hace ${Math.floor(hours / 24)} d`
 }
 
+interface ActivityDetails {
+  /** Texto principal: título de la entidad afectada (tarea/nota). */
+  primary: string | null
+  /** Subtexto: contexto adicional (ej. "→ Hecho", "12 min"). */
+  secondary: string | null
+}
+
+interface ActivityContext {
+  cardsById: Map<string, { title: string }>
+  notesById: Map<string, { title: string }>
+  columnsById: Map<string, { name: string }>
+}
+
+function safeParsePayload(raw: string): Record<string, unknown> {
+  if (!raw) return {}
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {}
+  } catch {
+    return {}
+  }
+}
+
+function asString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null
+}
+
+function asNumber(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function formatShortDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  if (minutes < 1) return `${totalSeconds}s`
+  if (minutes < 60) return `${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  const remMin = minutes % 60
+  return remMin === 0 ? `${hours}h` : `${hours}h ${remMin}m`
+}
+
+function describeActivity(entry: EventLogEntry, ctx: ActivityContext): ActivityDetails {
+  const payload = safeParsePayload(entry.payload)
+
+  const taskId = asString(payload.taskId) ?? asString(payload.cardId) ?? asString(payload.id)
+  const taskTitle =
+    asString(payload.title) ?? (taskId ? ctx.cardsById.get(taskId)?.title ?? null : null)
+
+  switch (entry.event_type) {
+    case WORK_EVENTS.TASK_CREATED:
+    case WORK_EVENTS.TASK_UPDATED:
+    case WORK_EVENTS.TASK_DELETED:
+    case WORK_EVENTS.TASK_STARTED:
+      return { primary: taskTitle, secondary: null }
+
+    case WORK_EVENTS.TASK_COMPLETED: {
+      const colId = asString(payload.columnId)
+      const colName = colId ? ctx.columnsById.get(colId)?.name ?? null : null
+      return { primary: taskTitle, secondary: colName ? `→ ${colName}` : null }
+    }
+
+    case WORK_EVENTS.TASK_MOVED: {
+      const fromId = asString(payload.fromColumn)
+      const toId = asString(payload.toColumn)
+      const fromName = fromId ? ctx.columnsById.get(fromId)?.name ?? null : null
+      const toName = toId ? ctx.columnsById.get(toId)?.name ?? null : null
+      const arrow = fromName && toName ? `${fromName} → ${toName}` : toName ? `→ ${toName}` : null
+      return { primary: taskTitle, secondary: arrow }
+    }
+
+    case WORK_EVENTS.TASK_SWITCHED: {
+      const fromId = asString(payload.fromTaskId)
+      const toId = asString(payload.toTaskId)
+      const fromTitle = fromId ? ctx.cardsById.get(fromId)?.title ?? null : null
+      const toTitle = toId ? ctx.cardsById.get(toId)?.title ?? taskTitle : taskTitle
+      const arrow = fromTitle && toTitle ? `${fromTitle} → ${toTitle}` : toTitle
+      return { primary: arrow, secondary: null }
+    }
+
+    case WORK_EVENTS.FOCUS_STARTED:
+    case WORK_EVENTS.FOCUS_PAUSED:
+    case WORK_EVENTS.FOCUS_RESUMED:
+      return { primary: taskTitle ?? 'Foco libre', secondary: null }
+
+    case WORK_EVENTS.FOCUS_COMPLETED:
+    case WORK_EVENTS.FOCUS_INTERRUPTED: {
+      const duration = asNumber(payload.duration)
+      return {
+        primary: taskTitle ?? 'Foco libre',
+        secondary: duration != null ? formatShortDuration(duration) : null,
+      }
+    }
+
+    case WORK_EVENTS.NOTE_CREATED: {
+      const noteId = asString(payload.id)
+      const noteTitle =
+        asString(payload.title) ?? (noteId ? ctx.notesById.get(noteId)?.title ?? null : null)
+      return { primary: noteTitle ?? 'Nota sin título', secondary: null }
+    }
+
+    default:
+      return { primary: taskTitle, secondary: null }
+  }
+}
+
 export function WorkDashboard() {
   const { boards, columns, cards, notes, focusSessions, currentFocusSession } = useWorkStore()
   const [now, setNow] = useState(Date.now())
@@ -80,6 +203,8 @@ export function WorkDashboard() {
     const n = raw ? Number.parseInt(raw, 10) : NaN
     return Number.isFinite(n) && n > 0 ? n : 25
   })
+  // Horas de jornada laboral configuradas en el Control Center (pluginSettings:work).
+  const [workdayHours, setWorkdayHours] = useState<number>(8)
   // Evita notificar varias veces por la misma sesión.
   const [notifiedSessionId, setNotifiedSessionId] = useState<string | null>(null)
   const totalCards = cards.length
@@ -89,6 +214,36 @@ export function WorkDashboard() {
     if (typeof window === 'undefined') return
     window.localStorage.setItem('work.pomodoroGoalMin', String(pomodoroGoalMin))
   }, [pomodoroGoalMin])
+
+  // Lee la jornada laboral desde settings (pluginSettings:work) y se mantiene viva
+  // ante cambios disparados desde el Control Center via storage event.
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      if (!window.storage) return
+      try {
+        const rows = await window.storage.query(
+          `SELECT value FROM settings WHERE key = ? LIMIT 1`,
+          ['pluginSettings:work'],
+        )
+        const value = (rows as Array<{ value: string }> | undefined)?.[0]?.value
+        if (!value || cancelled) return
+        const parsed = JSON.parse(value) as { workdayHours?: number }
+        if (typeof parsed.workdayHours === 'number' && parsed.workdayHours > 0) {
+          setWorkdayHours(parsed.workdayHours)
+        }
+      } catch {
+        // settings no disponible — mantener default.
+      }
+    }
+    void load()
+    const handler = () => { void load() }
+    window.addEventListener('focus', handler)
+    return () => {
+      cancelled = true
+      window.removeEventListener('focus', handler)
+    }
+  }, [])
 
   // Solicitar permiso de notificación una única vez.
   useEffect(() => {
@@ -161,6 +316,13 @@ export function WorkDashboard() {
       .slice(0, 5)
   }, [cards, columns])
 
+  // Indices para resolver títulos referenciados desde el feed de actividad.
+  const activityContext = useMemo<ActivityContext>(() => ({
+    cardsById: new Map(cards.map((c) => [c.id, { title: c.title }])),
+    notesById: new Map(notes.map((n) => [n.id, { title: n.title }])),
+    columnsById: new Map(columns.map((c) => [c.id, { name: c.name }])),
+  }), [cards, notes, columns])
+
   const isPaused = Boolean(currentFocusSession?.pausedAt)
   const currentDuration = currentFocusSession ? getEffectiveDuration(currentFocusSession, now) : 0
   const pomodoroGoalMs = pomodoroGoalMin * 60_000
@@ -191,10 +353,10 @@ export function WorkDashboard() {
 
   return (
     <div className="plugin-shell plugin-shell-work space-y-6">
-      <section className="plugin-panel rounded-2xl p-5">
+      <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-accent/70 shadow-[inset_1px_0_0_0_rgba(249,115,22,0.18)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-muted">Now Panel</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-accent-light flex items-center gap-2"><Sparkles size={12} /> Now Panel</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">
               {currentTask?.title ?? (currentFocusSession ? 'Foco libre en curso' : 'Sin foco activo')}
             </h2>
@@ -248,6 +410,30 @@ export function WorkDashboard() {
                 </p>
               </div>
             )}
+            {(() => {
+              const requiredSessions = Math.max(
+                1,
+                Math.ceil((workdayHours * 60) / Math.max(1, pomodoroGoalMin)),
+              )
+              const completedToday = todayMetrics.sessionsToday.filter(
+                (s) => s.endTime && !s.interrupted,
+              ).length
+              return (
+                <p
+                  className="text-[10px] text-muted"
+                  title={`Jornada de ${workdayHours} h \u00f7 ${pomodoroGoalMin} min por sesi\u00f3n`}
+                >
+                  Sesiones de jornada:{' '}
+                  <span
+                    className={`font-semibold tabular-nums ${
+                      completedToday >= requiredSessions ? 'text-success' : 'text-accent-light'
+                    }`}
+                  >
+                    {completedToday}/{requiredSessions}
+                  </span>
+                </p>
+              )
+            })()}
             <div className="flex flex-wrap gap-2">
               {!currentFocusSession && (
                 <button
@@ -277,9 +463,16 @@ export function WorkDashboard() {
                 </button>
               )}
               <button
-                onClick={() => completeWorkFocusSession()}
+                onClick={() => {
+                  const taskId = currentFocusSession?.taskId ?? null
+                  if (taskId) {
+                    void completeWorkTask(taskId)
+                  } else {
+                    void completeWorkFocusSession()
+                  }
+                }}
                 disabled={!currentFocusSession}
-                title="Finalizar y contar como sesión completada"
+                title="Finalizar y mover la tarea a Completada"
                 className="inline-flex items-center gap-2 rounded-xl border border-success/30 px-3 py-2 text-sm text-success transition-colors hover:bg-success/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Square size={14} />
@@ -332,18 +525,22 @@ export function WorkDashboard() {
       </div>
 
       <div>
-        <h3 className="text-lg font-semibold mb-4">Tablero principal</h3>
+        <div className="mb-3 flex items-center gap-2 border-l-4 border-l-sky-400/60 pl-3">
+          <KanbanSquare size={14} className="text-sky-300" />
+          <h3 className="text-lg font-semibold">Tablero principal</h3>
+          <span className="text-[10px] uppercase tracking-[0.2em] text-sky-300/70">Kanban</span>
+        </div>
         <KanbanBoard />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="plugin-panel rounded-2xl p-5">
+        <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-success/70 shadow-[inset_1px_0_0_0_rgba(34,197,94,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-muted">Active Tasks</p>
+              <p className="text-xs uppercase tracking-[0.2em] text-success flex items-center gap-2"><ListChecks size={12} /> Active Tasks</p>
               <h3 className="mt-1 text-lg font-semibold text-white">Tareas en progreso</h3>
             </div>
-            <span className="rounded-full bg-surface px-2 py-1 text-xs text-muted">{activeTasks.length}</span>
+            <span className="rounded-full bg-success/10 border border-success/20 px-2 py-1 text-xs text-success">{activeTasks.length}</span>
           </div>
 
           <div className="mt-4 space-y-3">
@@ -353,30 +550,103 @@ export function WorkDashboard() {
               </div>
             )}
 
-            {activeTasks.map((card) => (
-              <div
-                key={card.id}
-                className={`rounded-xl border px-4 py-3 ${currentFocusSession?.taskId === card.id ? 'border-success/40 bg-success/5' : 'border-border bg-surface'}`}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium text-white">{card.title}</p>
-                    {card.description && <p className="mt-1 text-xs text-muted">{card.description}</p>}
+            {activeTasks.map((card) => {
+              const isFocused = currentFocusSession?.taskId === card.id
+              const isFocusedPaused = isFocused && Boolean(currentFocusSession?.pausedAt)
+              const sessionElapsed = isFocused && currentFocusSession
+                ? getEffectiveDuration(currentFocusSession, now)
+                : 0
+              const stateLabel = isFocusedPaused
+                ? 'Pausada'
+                : isFocused
+                  ? 'En foco'
+                  : 'En progreso'
+              const stateClass = isFocusedPaused
+                ? 'border-warning/30 bg-warning/10 text-warning'
+                : isFocused
+                  ? 'border-success/40 bg-success/10 text-success'
+                  : 'border-border bg-surface text-muted'
+              const cardClass = isFocusedPaused
+                ? 'border-warning/40 bg-warning/5'
+                : isFocused
+                  ? 'border-success/40 bg-success/5'
+                  : 'border-border bg-surface'
+
+              return (
+                <div key={card.id} className={`rounded-xl border px-4 py-3 transition-colors ${cardClass}`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="truncate text-sm font-medium text-white">{card.title}</p>
+                        <span className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${stateClass}`}>
+                          {isFocusedPaused ? <Pause size={10} /> : isFocused ? <Play size={10} /> : <ListChecks size={10} />}
+                          {stateLabel}
+                          {isFocused && (
+                            <span className="tabular-nums normal-case tracking-normal">· {formatDuration(sessionElapsed)}</span>
+                          )}
+                        </span>
+                      </div>
+                      {card.description && <p className="mt-1 text-xs text-muted line-clamp-2">{card.description}</p>}
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                      <button
+                        onClick={() => completeWorkTask(card.id)}
+                        title="Completar tarea (mueve a Hecho y detiene el foco)"
+                        className="inline-flex items-center gap-1 rounded-full border border-success/30 px-2.5 py-1 text-xs text-success transition-colors hover:bg-success/10"
+                      >
+                        <CheckCircle2 size={12} />
+                        Completar
+                      </button>
+                      {!isFocused && (
+                        <button
+                          onClick={() => startWorkFocusSession(card.id)}
+                          title="Iniciar foco en esta tarea"
+                          className="inline-flex items-center gap-1 rounded-full border border-accent/30 px-3 py-1 text-xs text-accent-light transition-colors hover:bg-accent/10"
+                        >
+                          <Play size={12} />
+                          Focus
+                        </button>
+                      )}
+                      {isFocused && isFocusedPaused && (
+                        <button
+                          onClick={() => resumeWorkFocusSession()}
+                          title="Reanudar foco"
+                          className="inline-flex items-center gap-1 rounded-full border border-accent/30 px-3 py-1 text-xs text-accent-light transition-colors hover:bg-accent/10"
+                        >
+                          <Play size={12} />
+                          Reanudar
+                        </button>
+                      )}
+                      {isFocused && !isFocusedPaused && (
+                        <button
+                          onClick={() => pauseWorkFocusSession()}
+                          title="Pausar foco"
+                          className="inline-flex items-center gap-1 rounded-full border border-warning/30 px-3 py-1 text-xs text-warning transition-colors hover:bg-warning/10"
+                        >
+                          <Pause size={12} />
+                          Pausa
+                        </button>
+                      )}
+                      {isFocused && (
+                        <button
+                          onClick={() => stopWorkTask(card.id)}
+                          title="Detener foco y mover la tarea a Completada"
+                          className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted transition-colors hover:border-red-400/40 hover:text-red-300"
+                        >
+                          <Square size={12} />
+                          Stop
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => startWorkFocusSession(card.id)}
-                    className="rounded-full border border-accent/30 px-3 py-1 text-xs text-accent-light transition-colors hover:bg-accent/10"
-                  >
-                    {currentFocusSession?.taskId === card.id ? 'En foco' : 'Focus'}
-                  </button>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
 
-        <section className="plugin-panel rounded-2xl p-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted">Recent Work Activity</p>
+        <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-purple-400/60 shadow-[inset_1px_0_0_0_rgba(168,85,247,0.18)]">
+          <p className="text-xs uppercase tracking-[0.2em] text-purple-300 flex items-center gap-2"><History size={12} /> Recent Work Activity</p>
           <h3 className="mt-1 text-lg font-semibold text-white">Actividad reciente</h3>
 
           <div className="mt-4 space-y-3">
@@ -386,14 +656,32 @@ export function WorkDashboard() {
               </div>
             )}
 
-            {recentEvents.map((entry) => (
-              <div key={entry.id} className="rounded-xl border border-border bg-surface px-4 py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm text-white">{EVENT_LABELS[entry.event_type] ?? entry.event_type}</p>
-                  <span className="text-xs text-muted">{formatRelative(entry.created_at)}</span>
+            {recentEvents.map((entry) => {
+              const details = describeActivity(entry, activityContext)
+              const accent = EVENT_ACCENT[entry.event_type] ?? 'text-muted'
+              return (
+                <div key={entry.id} className="rounded-xl border border-border bg-surface px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-[10px] uppercase tracking-[0.18em] ${accent}`}>
+                        {EVENT_LABELS[entry.event_type] ?? entry.event_type}
+                      </p>
+                      {details.primary && (
+                        <p className="mt-0.5 truncate text-sm font-medium text-white" title={details.primary}>
+                          {details.primary}
+                        </p>
+                      )}
+                      {details.secondary && (
+                        <p className="mt-0.5 truncate text-xs text-muted" title={details.secondary}>
+                          {details.secondary}
+                        </p>
+                      )}
+                    </div>
+                    <span className="flex-shrink-0 text-xs text-muted">{formatRelative(entry.created_at)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </section>
       </div>

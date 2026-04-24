@@ -236,3 +236,155 @@ export async function interruptWorkFocusSession() {
   return finalizeCurrentSession({ interrupted: true })
 }
 
+/**
+ * Devuelve el id de la columna "Hecho" del tablero principal, si existe.
+ * Detecta tanto por id canónico como por nombre.
+ */
+function findDoneColumnId(): string | null {
+  const { columns } = useWorkStore.getState()
+  const flagged = columns.find((column) => column.isDone)
+  if (flagged) return flagged.id
+  const explicit = columns.find((column) => column.id === 'col-done')
+  if (explicit) return explicit.id
+  const byName = columns.find((column) => /hecho|done|completad/i.test(column.name))
+  return byName?.id ?? null
+}
+
+/**
+ * Marca una tarea como completada:
+ *  - Detiene la sesión de foco activa si pertenece a esa tarea (cuenta como completed).
+ *  - Mueve la card al final de la columna "Hecho".
+ *  - Persiste cambios y emite TASK_MOVED + TASK_COMPLETED.
+ *
+ * Es la operación canónica detrás del botón "Completar" y del drag a Hecho.
+ */
+export async function completeWorkTask(cardId: string): Promise<void> {
+  const store = useWorkStore.getState()
+  const card = store.cards.find((c) => c.id === cardId)
+  if (!card) return
+
+  const doneColumnId = findDoneColumnId()
+  if (!doneColumnId) return
+
+  // 1. Detener la sesión de foco si corresponde a esta tarea.
+  if (store.currentFocusSession && store.currentFocusSession.taskId === cardId) {
+    await completeWorkFocusSession()
+  }
+
+  // 2. Si ya está en Hecho, sólo emitimos completed (idempotente respecto a la columna).
+  if (card.columnId === doneColumnId) {
+    eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
+      taskId: card.id,
+      title: card.title,
+      columnId: doneColumnId,
+    })
+    return
+  }
+
+  const fromColumnId = card.columnId
+
+  // 3. Calcular nueva posición (al final de la columna destino).
+  const doneSiblings = store.cards
+    .filter((c) => c.columnId === doneColumnId && c.id !== cardId && !c.archived)
+    .sort((a, b) => a.position - b.position)
+
+  const newPosition = doneSiblings.length
+
+  // Re-slot columna origen (compactar posiciones).
+  const sourceSiblings = store.cards
+    .filter((c) => c.columnId === fromColumnId && c.id !== cardId && !c.archived)
+    .sort((a, b) => a.position - b.position)
+
+  const updates: Array<{ id: string; columnId: string; position: number }> = [
+    { id: cardId, columnId: doneColumnId, position: newPosition },
+    ...sourceSiblings.map((s, idx) => ({ id: s.id, columnId: fromColumnId, position: idx })),
+  ]
+
+  store.reorderCards(updates)
+
+  if (window.storage) {
+    await Promise.all(
+      updates.map((u) =>
+        window.storage.execute(
+          `UPDATE work_cards SET column_id = ?, position = ? WHERE id = ?`,
+          [u.columnId, u.position, u.id],
+        ),
+      ),
+    )
+  }
+
+  eventBus.emit(WORK_EVENTS.TASK_MOVED, {
+    cardId,
+    fromColumn: fromColumnId,
+    toColumn: doneColumnId,
+  })
+  eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
+    taskId: cardId,
+    title: card.title,
+    columnId: doneColumnId,
+  })
+}
+
+/**
+ * Detiene la sesión de foco activa marcándola como interrumpida y mueve la
+ * tarea asociada a la columna marcada como Completada (si existe).
+ *
+ * Diferencia con `completeWorkTask`:
+ *  - Mantiene la semántica de "interrumpido" en la sesión (penaliza puntos).
+ *  - Igualmente reubica la card en Done para reflejar que el trabajo se cerró.
+ *
+ * Si no hay tarea asociada, sólo interrumpe el foco.
+ */
+export async function stopWorkTask(cardId: string | null): Promise<void> {
+  // 1. Interrumpir la sesión de foco actual (sea o no del cardId indicado).
+  await interruptWorkFocusSession()
+
+  if (!cardId) return
+
+  const store = useWorkStore.getState()
+  const card = store.cards.find((c) => c.id === cardId)
+  if (!card) return
+
+  const doneColumnId = findDoneColumnId()
+  if (!doneColumnId || card.columnId === doneColumnId) return
+
+  const fromColumnId = card.columnId
+  const doneSiblings = store.cards
+    .filter((c) => c.columnId === doneColumnId && c.id !== cardId && !c.archived)
+    .sort((a, b) => a.position - b.position)
+  const newPosition = doneSiblings.length
+
+  const sourceSiblings = store.cards
+    .filter((c) => c.columnId === fromColumnId && c.id !== cardId && !c.archived)
+    .sort((a, b) => a.position - b.position)
+
+  const updates: Array<{ id: string; columnId: string; position: number }> = [
+    { id: cardId, columnId: doneColumnId, position: newPosition },
+    ...sourceSiblings.map((s, idx) => ({ id: s.id, columnId: fromColumnId, position: idx })),
+  ]
+
+  store.reorderCards(updates)
+
+  if (window.storage) {
+    await Promise.all(
+      updates.map((u) =>
+        window.storage.execute(
+          `UPDATE work_cards SET column_id = ?, position = ? WHERE id = ?`,
+          [u.columnId, u.position, u.id],
+        ),
+      ),
+    )
+  }
+
+  eventBus.emit(WORK_EVENTS.TASK_MOVED, {
+    cardId,
+    fromColumn: fromColumnId,
+    toColumn: doneColumnId,
+  })
+  eventBus.emit(WORK_EVENTS.TASK_COMPLETED, {
+    taskId: cardId,
+    title: card.title,
+    columnId: doneColumnId,
+  })
+}
+

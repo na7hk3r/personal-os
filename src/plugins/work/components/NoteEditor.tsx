@@ -60,7 +60,7 @@ export function NoteEditor() {
       [id, note.title, '', '[]', now, now],
     )
 
-    eventBus.emit(WORK_EVENTS.NOTE_CREATED, { id })
+    eventBus.emit(WORK_EVENTS.NOTE_CREATED, { id, title: note.title })
   }
 
   const handleSave = () => {

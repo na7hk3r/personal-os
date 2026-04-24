@@ -10,6 +10,12 @@ export interface Column {
   position: number
   /** Límite de trabajo en progreso (WIP). null/0 = sin límite. */
   wipLimit?: number | null
+  /**
+   * Marca explícita de columna "completada" (DONE). Sólo una columna por board
+   * debe tener este flag activo. Es la columna a la que se mueven las tareas
+   * al completarse y la que dispara el cierre de sesión de foco.
+   */
+  isDone?: boolean
 }
 
 export interface ChecklistItem {

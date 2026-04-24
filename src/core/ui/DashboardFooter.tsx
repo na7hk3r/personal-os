@@ -1,7 +1,6 @@
 import { Database, Circle } from 'lucide-react'
 import { pluginManager } from '@core/plugins/PluginManager'
-
-const APP_VERSION = '1.0.0'
+import { APP_VERSION } from '@core/utils/version'
 
 export function DashboardFooter() {
   const activeCount = pluginManager.getAllPlugins().filter((p) => p.status === 'active').length
@@ -11,7 +10,7 @@ export function DashboardFooter() {
       {/* Brand */}
       <div className="flex items-center gap-3">
         <img src="/GRUPO.png" alt="Personal OS" className="h-6 object-contain opacity-70" />
-        <span className="text-xs text-muted">v{APP_VERSION}</span>
+        <span className="text-xs text-muted" title={`Personal OS v${APP_VERSION}`}>v{APP_VERSION}</span>
       </div>
 
       {/* System status */}

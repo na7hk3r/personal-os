@@ -13,10 +13,13 @@ function isColumnMatch(name: string, pattern: RegExp): boolean {
 }
 
 /**
- * Check if column is a "Done" column
+ * Check if column is a "Done" column.
+ * Prioriza el flag explícito `isDone`; si no está, usa heurística por id/nombre
+ * (compatibilidad hacia atrás antes de la migración v8).
  */
 export function isDoneColumn(col: Column): boolean {
-  return col.id === 'col-done' || isColumnMatch(col.name, /hecho|done/)
+  if (col.isDone) return true
+  return col.id === 'col-done' || isColumnMatch(col.name, /hecho|done|completad/)
 }
 
 /**

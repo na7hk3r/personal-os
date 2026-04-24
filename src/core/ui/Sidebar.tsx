@@ -22,6 +22,7 @@ import { eventBus } from '../events/EventBus'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { getLevelTier, getLevelTitle } from '@core/gamification/gamificationUtils'
 import { useAuthStore } from '@core/state/authStore'
+import { APP_VERSION } from '@core/utils/version'
 
 const iconMap: Record<string, LucideIcon> = {
   LayoutDashboard,
@@ -278,7 +279,7 @@ export function Sidebar() {
               Cerrar sesion
             </button>
             <img src="/ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
-            <span>v1.2.0</span>
+            <span title={`Personal OS v${APP_VERSION}`}>v{APP_VERSION}</span>
           </div>
         )}
       </div>

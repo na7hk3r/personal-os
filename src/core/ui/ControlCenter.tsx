@@ -19,6 +19,8 @@ interface WorkPluginSettings {
   overdueAlertHours: number
   wipLimit: number
   defaultBoardView: 'kanban' | 'list'
+  /** Horas de jornada laboral (decimal, ej. 8.5). Usado para calcular sesiones de foco diarias. */
+  workdayHours: number
 }
 
 const FITNESS_SETTINGS_KEY = 'pluginSettings:fitness'
@@ -38,6 +40,7 @@ const DEFAULT_WORK_SETTINGS: WorkPluginSettings = {
   overdueAlertHours: 24,
   wipLimit: 6,
   defaultBoardView: 'kanban',
+  workdayHours: 8,
 }
 
 export function ControlCenter() {
@@ -509,6 +512,34 @@ export function ControlCenter() {
                   }))}
                   className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
                 />
+              </label>
+
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Jornada laboral (horas)</span>
+                <input
+                  type="number"
+                  step={0.25}
+                  min={0.5}
+                  max={24}
+                  value={workSettings.workdayHours}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value)
+                    const clamped = Number.isFinite(raw) ? Math.min(24, Math.max(0.5, raw)) : 8
+                    setWorkSettings((prev) => ({ ...prev, workdayHours: clamped }))
+                  }}
+                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                />
+                <p className="text-[11px] text-muted/80">
+                  Necesitás aproximadamente{' '}
+                  <span className="font-semibold text-accent-light">
+                    {Math.max(
+                      1,
+                      Math.ceil((workSettings.workdayHours * 60) / Math.max(1, workSettings.focusSessionMinutes)),
+                    )}
+                  </span>{' '}
+                  sesiones de foco de {workSettings.focusSessionMinutes} min para cubrir tu jornada de{' '}
+                  {workSettings.workdayHours} h.
+                </p>
               </label>
             </div>
 
