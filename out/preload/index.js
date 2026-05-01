@@ -49,6 +49,13 @@ const scheduledBackupBridge = {
   setPassphrase: (passphrase) => electron.ipcRenderer.invoke("scheduled-backup:set-passphrase", passphrase),
   runNow: () => electron.ipcRenderer.invoke("scheduled-backup:run-now")
 };
+const dbEncryptionBridge = {
+  status: () => electron.ipcRenderer.invoke("dbencryption:status"),
+  enable: (passphrase) => electron.ipcRenderer.invoke("dbencryption:enable", passphrase),
+  disable: () => electron.ipcRenderer.invoke("dbencryption:disable"),
+  checkStrength: (passphrase) => electron.ipcRenderer.invoke("dbencryption:check-strength", passphrase),
+  unlock: (passphrase) => electron.ipcRenderer.invoke("dbencryption:unlock", passphrase)
+};
 electron.contextBridge.exposeInMainWorld("storage", storageBridge);
 electron.contextBridge.exposeInMainWorld("auth", authBridge);
 electron.contextBridge.exposeInMainWorld("backup", backupBridge);
@@ -57,3 +64,4 @@ electron.contextBridge.exposeInMainWorld("notifications", notificationsBridge);
 electron.contextBridge.exposeInMainWorld("diagnostic", diagnosticBridge);
 electron.contextBridge.exposeInMainWorld("appUpdate", appUpdateBridge);
 electron.contextBridge.exposeInMainWorld("scheduledBackup", scheduledBackupBridge);
+electron.contextBridge.exposeInMainWorld("dbEncryption", dbEncryptionBridge);

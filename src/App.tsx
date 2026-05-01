@@ -185,10 +185,10 @@ export function App() {
     return (
       <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#16324f_0%,_#101923_45%,_#070d14_100%)] text-white">
         <div className="absolute inset-0 opacity-20">
-          <img src="/grupo_alt.jpg" alt="Background corporativo" className="h-full w-full object-cover" />
+          <img src="./grupo_alt.jpg" alt="Background corporativo" className="h-full w-full object-cover" />
         </div>
         <div className="relative rounded-2xl border border-white/10 bg-surface-light/70 px-10 py-8 text-center shadow-2xl backdrop-blur">
-          <img src="/gif-eye.gif" alt="Loader" className="mx-auto h-16 w-16 rounded-full" />
+          <img src="./gif-eye.gif" alt="Loader" className="mx-auto h-16 w-16 rounded-full" />
           <p className="mt-4 text-base font-medium">{messages.loading.initializing}</p>
           <p className="mt-1 text-sm text-muted">{messages.loading.initializingDetail}</p>
         </div>

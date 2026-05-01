@@ -5,6 +5,7 @@ import { Features } from './sections/Features'
 import { Plugins } from './sections/Plugins'
 import { Screenshots } from './sections/Screenshots'
 import { Download_ } from './sections/Download'
+import { Docs } from './sections/Docs'
 import { FAQ } from './sections/FAQ'
 import { Footer } from './sections/Footer'
 
@@ -38,6 +39,9 @@ export default function App() {
             <a href="#download" className="hover:text-foreground transition-colors">
               Descargar
             </a>
+            <a href="#docs" className="hover:text-foreground transition-colors">
+              Docs
+            </a>
             <a href="#faq" className="hover:text-foreground transition-colors">
               FAQ
             </a>
@@ -63,6 +67,7 @@ export default function App() {
         <Plugins />
         <Screenshots />
         <Download_ />
+        <Docs />
         <FAQ />
       </main>
 

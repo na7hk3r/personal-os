@@ -5,7 +5,7 @@ const url = require("url");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const crypto = require("crypto");
-const CHANNELS$5 = {
+const CHANNELS$6 = {
   query: "storage:query",
   execute: "storage:execute",
   migrate: "storage:migrate"
@@ -123,31 +123,134 @@ function withStorageErrorHandling(fn) {
   }
 }
 function registerStorageIpc(db) {
-  electron.ipcMain.handle(CHANNELS$5.query, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$6.query, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$5.query);
+      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$6.query);
       return db.query(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$5.execute, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$6.execute, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$5.execute);
+      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$6.execute);
       return db.execute(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$5.migrate, (_event, pluginId, migrations) => {
+  electron.ipcMain.handle(CHANNELS$6.migrate, (_event, pluginId, migrations) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId);
       assertMigrations(migrations, pluginId);
       db.runMigrations(pluginId, migrations);
     });
   });
+}
+const MAGIC$2 = Buffer.from("POS1", "utf8");
+const VERSION = 1;
+const KEY_LENGTH = 32;
+const IV_LENGTH = 12;
+const SALT_LENGTH = 16;
+const TAG_LENGTH = 16;
+const SCRYPT_N = 1 << 15;
+const SCRYPT_R = 8;
+const SCRYPT_P = 1;
+const MIN_PASSPHRASE_LENGTH = 12;
+class EncryptionError extends Error {
+  constructor(message, code) {
+    super(message);
+    this.code = code;
+    this.name = "EncryptionError";
+  }
+  code;
+}
+function deriveKey$2(passphrase, salt) {
+  return crypto.scryptSync(passphrase.normalize("NFKC"), salt, KEY_LENGTH, {
+    N: SCRYPT_N,
+    r: SCRYPT_R,
+    p: SCRYPT_P,
+    maxmem: 128 * SCRYPT_N * SCRYPT_R * 2
+  });
+}
+function isPassphraseStrongEnough(passphrase) {
+  if (passphrase.length < MIN_PASSPHRASE_LENGTH) return false;
+  let categories = 0;
+  if (/[a-z]/.test(passphrase)) categories += 1;
+  if (/[A-Z]/.test(passphrase)) categories += 1;
+  if (/[0-9]/.test(passphrase)) categories += 1;
+  if (/[^A-Za-z0-9]/.test(passphrase)) categories += 1;
+  return categories >= 2;
+}
+function encryptFile(plainPath, encryptedPath, passphrase) {
+  if (!isPassphraseStrongEnough(passphrase)) {
+    throw new EncryptionError("passphrase too weak", "WEAK_PASSPHRASE");
+  }
+  if (!fs.existsSync(plainPath)) {
+    throw new EncryptionError(`source not found: ${plainPath}`, "IO");
+  }
+  const salt = crypto.randomBytes(SALT_LENGTH);
+  const iv = crypto.randomBytes(IV_LENGTH);
+  const key = deriveKey$2(passphrase, salt);
+  const plaintext = fs.readFileSync(plainPath);
+  const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
+  const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  const versionByte = Buffer.from([VERSION]);
+  const out = Buffer.concat([MAGIC$2, versionByte, salt, iv, tag, ciphertext]);
+  fs.writeFileSync(encryptedPath, out);
+  try {
+    fs.unlinkSync(plainPath);
+  } catch (err) {
+    console.warn("[encryption] failed to remove plain file after encrypt:", err);
+  }
+}
+function decryptFile(encryptedPath, plainPath, passphrase) {
+  if (!fs.existsSync(encryptedPath)) {
+    throw new EncryptionError(`encrypted file not found: ${encryptedPath}`, "IO");
+  }
+  const blob = fs.readFileSync(encryptedPath);
+  const headerSize = MAGIC$2.length + 1 + SALT_LENGTH + IV_LENGTH + TAG_LENGTH;
+  if (blob.length < headerSize) {
+    throw new EncryptionError("file too small to be a valid POS1 blob", "CORRUPT_FILE");
+  }
+  const magic = blob.subarray(0, MAGIC$2.length);
+  if (!magic.equals(MAGIC$2)) {
+    throw new EncryptionError("invalid magic header", "CORRUPT_FILE");
+  }
+  const version = blob[MAGIC$2.length];
+  if (version !== VERSION) {
+    throw new EncryptionError(`unsupported version ${version}`, "CORRUPT_FILE");
+  }
+  let offset = MAGIC$2.length + 1;
+  const salt = blob.subarray(offset, offset + SALT_LENGTH);
+  offset += SALT_LENGTH;
+  const iv = blob.subarray(offset, offset + IV_LENGTH);
+  offset += IV_LENGTH;
+  const tag = blob.subarray(offset, offset + TAG_LENGTH);
+  offset += TAG_LENGTH;
+  const ciphertext = blob.subarray(offset);
+  const key = deriveKey$2(passphrase, salt);
+  const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
+  decipher.setAuthTag(tag);
+  let plaintext;
+  try {
+    plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  } catch {
+    throw new EncryptionError("passphrase incorrect or file tampered", "BAD_PASSPHRASE");
+  }
+  fs.writeFileSync(plainPath, plaintext);
+}
+function isEncryptedFile(path2) {
+  if (!fs.existsSync(path2)) return false;
+  try {
+    const fd = fs.readFileSync(path2).subarray(0, MAGIC$2.length);
+    return fd.equals(MAGIC$2);
+  } catch {
+    return false;
+  }
 }
 const CORE_SCHEMA = `
   CREATE TABLE IF NOT EXISTS profile (
@@ -279,6 +382,8 @@ class DatabaseService {
   userDb = null;
   dataDir = null;
   activeUserId = null;
+  /** Passphrase mantenida en memoria sólo mientras la sesión esté activa. */
+  activePassphrase = null;
   static getInstance() {
     if (!DatabaseService.instance) {
       DatabaseService.instance = new DatabaseService();
@@ -307,6 +412,17 @@ class DatabaseService {
     if (!this.dataDir) throw new Error("Database not initialized");
     return path.join(this.dataDir, `personal-os-user-${userId}.db`);
   }
+  /** Path del archivo cifrado en reposo (si el usuario lo activó). */
+  getEncryptedDbPath(userId) {
+    return `${this.getUserDbPath(userId)}.enc`;
+  }
+  /**
+   * Devuelve true si el usuario tiene el archivo cifrado en reposo. Útil
+   * para que el frontend sepa que va a necesitar pedir passphrase.
+   */
+  hasEncryptedDb(userId) {
+    return isEncryptedFile(this.getEncryptedDbPath(userId));
+  }
   hasLegacySingleUserDb() {
     return fs.existsSync(this.getLegacyDbPath());
   }
@@ -318,18 +434,46 @@ class DatabaseService {
     }
     fs.renameSync(legacyPath, userDbPath);
   }
-  setActiveUser(userId) {
+  setActiveUser(userId, passphrase) {
     if (this.activeUserId === userId && this.userDb) {
       return;
     }
+    const plainPath = this.getUserDbPath(userId);
+    const encPath = this.getEncryptedDbPath(userId);
+    if (isEncryptedFile(encPath)) {
+      if (!passphrase) {
+        this.userDb?.close();
+        this.userDb = null;
+        this.activeUserId = userId;
+        this.activePassphrase = null;
+        return;
+      }
+      decryptFile(encPath, plainPath, passphrase);
+      this.activePassphrase = passphrase;
+    } else {
+      this.activePassphrase = null;
+    }
     this.userDb?.close();
-    this.userDb = new Database(this.getUserDbPath(userId));
+    this.userDb = new Database(plainPath);
     this.userDb.pragma("journal_mode = WAL");
     this.userDb.pragma("foreign_keys = ON");
     this.userDb.pragma("busy_timeout = 5000");
     this.userDb.exec(CORE_SCHEMA);
     this.activeUserId = userId;
     this.purgeOldEvents();
+  }
+  /**
+   * Si el usuario activo quedó con .enc bloqueado, desbloquearlo con la
+   * passphrase. Idempotente: si ya está abierto, no hace nada.
+   */
+  unlockEncryptedDb(passphrase) {
+    if (!this.activeUserId) throw new Error("No active user session");
+    if (this.userDb) return;
+    this.setActiveUser(this.activeUserId, passphrase);
+  }
+  /** True si el usuario activo todavía no abrió su DB cifrada. */
+  isLocked() {
+    return this.activeUserId != null && this.userDb == null;
   }
   /**
    * Política de retención del log de eventos.
@@ -357,9 +501,27 @@ class DatabaseService {
     }
   }
   clearActiveUser() {
+    if (this.activeUserId && this.activePassphrase) {
+      try {
+        try {
+          this.userDb?.pragma("wal_checkpoint(TRUNCATE)");
+        } catch {
+        }
+        this.userDb?.close();
+        this.userDb = null;
+        const plainPath = this.getUserDbPath(this.activeUserId);
+        const encPath = this.getEncryptedDbPath(this.activeUserId);
+        encryptFile(plainPath, encPath, this.activePassphrase);
+      } catch (err) {
+        console.error("[DatabaseService] failed to re-encrypt on logout:", err);
+      } finally {
+        this.activePassphrase = null;
+      }
+    }
     this.userDb?.close();
     this.userDb = null;
     this.activeUserId = null;
+    this.activePassphrase = null;
   }
   getActiveUserId() {
     return this.activeUserId;
@@ -435,8 +597,68 @@ class DatabaseService {
     this.setActiveUser(userId);
   }
   close() {
+    if (this.activeUserId && this.activePassphrase) {
+      try {
+        try {
+          this.userDb?.pragma("wal_checkpoint(TRUNCATE)");
+        } catch {
+        }
+        this.userDb?.close();
+        this.userDb = null;
+        const plainPath = this.getUserDbPath(this.activeUserId);
+        const encPath = this.getEncryptedDbPath(this.activeUserId);
+        encryptFile(plainPath, encPath, this.activePassphrase);
+      } catch (err) {
+        console.error("[DatabaseService] failed to re-encrypt on close:", err);
+      }
+    }
     this.userDb?.close();
     this.authDb?.close();
+    this.activePassphrase = null;
+  }
+  // ─── Cifrado opt-in ────────────────────────────────────────────────
+  /**
+   * Activa el cifrado para el usuario activo: cifra inmediatamente la DB,
+   * borra el plano y guarda la passphrase en memoria para esta sesión.
+   * Lanza EncryptionError si la passphrase es débil.
+   */
+  enableEncryptionForActiveUser(passphrase) {
+    if (!this.activeUserId || !this.userDb) throw new Error("No active user session");
+    if (!isPassphraseStrongEnough(passphrase)) {
+      throw new EncryptionError("passphrase too weak", "WEAK_PASSPHRASE");
+    }
+    const userId = this.activeUserId;
+    try {
+      this.userDb.pragma("wal_checkpoint(TRUNCATE)");
+    } catch {
+    }
+    this.userDb.close();
+    this.userDb = null;
+    const plainPath = this.getUserDbPath(userId);
+    const encPath = this.getEncryptedDbPath(userId);
+    encryptFile(plainPath, encPath, passphrase);
+    decryptFile(encPath, plainPath, passphrase);
+    this.userDb = new Database(plainPath);
+    this.userDb.pragma("journal_mode = WAL");
+    this.userDb.pragma("foreign_keys = ON");
+    this.userDb.pragma("busy_timeout = 5000");
+    this.activePassphrase = passphrase;
+  }
+  /**
+   * Desactiva el cifrado: borra el archivo .enc y deja el plano. Requiere
+   * que la sesión esté activa (es decir, ya con la passphrase válida).
+   */
+  disableEncryptionForActiveUser() {
+    if (!this.activeUserId) throw new Error("No active user session");
+    const encPath = this.getEncryptedDbPath(this.activeUserId);
+    if (fs.existsSync(encPath)) {
+      fs.unlinkSync(encPath);
+    }
+    this.activePassphrase = null;
+  }
+  /** True si el usuario activo tiene el cifrado en uso esta sesión. */
+  isEncryptionEnabledForActiveUser() {
+    return Boolean(this.activeUserId && this.activePassphrase);
   }
 }
 function normalizeUsername(username) {
@@ -703,7 +925,7 @@ class AuthService {
     }
   }
 }
-const CHANNELS$4 = {
+const CHANNELS$5 = {
   register: "auth:register",
   login: "auth:login",
   logout: "auth:logout",
@@ -725,7 +947,7 @@ function withAuthErrorHandling(fn) {
   });
 }
 function registerAuthIpc(authService) {
-  electron.ipcMain.handle(CHANNELS$4.register, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$5.register, (_event, payload) => {
     return withAuthErrorHandling(async () => {
       if (typeof payload !== "object" || payload === null) {
         throw new Error("payload is required");
@@ -743,29 +965,29 @@ function registerAuthIpc(authService) {
       });
     });
   });
-  electron.ipcMain.handle(CHANNELS$4.login, (_event, username, password) => {
+  electron.ipcMain.handle(CHANNELS$5.login, (_event, username, password) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       assertString(password, "password");
       return authService.login(username, password);
     });
   });
-  electron.ipcMain.handle(CHANNELS$4.logout, () => {
+  electron.ipcMain.handle(CHANNELS$5.logout, () => {
     return withAuthErrorHandling(async () => {
       await authService.logout();
     });
   });
-  electron.ipcMain.handle(CHANNELS$4.me, () => {
+  electron.ipcMain.handle(CHANNELS$5.me, () => {
     return withAuthErrorHandling(async () => authService.getCurrentUser());
   });
-  electron.ipcMain.handle(CHANNELS$4.getRecoveryQuestion, (_event, username) => {
+  electron.ipcMain.handle(CHANNELS$5.getRecoveryQuestion, (_event, username) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       return authService.getRecoveryQuestion(username);
     });
   });
   electron.ipcMain.handle(
-    CHANNELS$4.resetPasswordWithRecovery,
+    CHANNELS$5.resetPasswordWithRecovery,
     (_event, payload) => {
       return withAuthErrorHandling(async () => {
         if (typeof payload !== "object" || payload === null) {
@@ -784,7 +1006,7 @@ function registerAuthIpc(authService) {
     }
   );
 }
-const CHANNELS$3 = {
+const CHANNELS$4 = {
   exportPlain: "backup:export-plain",
   exportEncrypted: "backup:export-encrypted",
   importPlain: "backup:import-plain",
@@ -846,14 +1068,14 @@ async function pickOpenPath() {
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
 }
 function registerBackupIpc(db) {
-  electron.ipcMain.handle(CHANNELS$3.exportPlain, async () => {
+  electron.ipcMain.handle(CHANNELS$4.exportPlain, async () => {
     const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const dest = await pickSavePath(`personal-os-backup-${stamp}.db`);
     if (!dest) return { ok: false, canceled: true };
     db.exportActiveUserDb(dest);
     return { ok: true, path: dest };
   });
-  electron.ipcMain.handle(CHANNELS$3.exportEncrypted, async (_event, passphrase) => {
+  electron.ipcMain.handle(CHANNELS$4.exportEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 8) {
       throw new Error("La passphrase debe tener al menos 8 caracteres");
     }
@@ -876,13 +1098,13 @@ function registerBackupIpc(db) {
     }
     return { ok: true, path: dest };
   });
-  electron.ipcMain.handle(CHANNELS$3.importPlain, async () => {
+  electron.ipcMain.handle(CHANNELS$4.importPlain, async () => {
     const src = await pickOpenPath();
     if (!src) return { ok: false, canceled: true };
     db.importActiveUserDb(src);
     return { ok: true };
   });
-  electron.ipcMain.handle(CHANNELS$3.importEncrypted, async (_event, passphrase) => {
+  electron.ipcMain.handle(CHANNELS$4.importEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 1) {
       throw new Error("Ingresá la passphrase usada al exportar");
     }
@@ -900,7 +1122,7 @@ function registerBackupIpc(db) {
     return { ok: true };
   });
 }
-const CHANNELS$2 = {
+const CHANNELS$3 = {
   health: "ollama:health",
   generate: "ollama:generate",
   listModels: "ollama:list-models"
@@ -991,7 +1213,7 @@ function getJson(path2, timeoutMs = 5e3) {
   });
 }
 function registerOllamaIpc() {
-  electron.ipcMain.handle(CHANNELS$2.health, async () => {
+  electron.ipcMain.handle(CHANNELS$3.health, async () => {
     try {
       await getJson("/api/tags", 3e3);
       return { ok: true, baseUrl: getBase() };
@@ -999,11 +1221,11 @@ function registerOllamaIpc() {
       return { ok: false, baseUrl: getBase(), error: err.message };
     }
   });
-  electron.ipcMain.handle(CHANNELS$2.listModels, async () => {
+  electron.ipcMain.handle(CHANNELS$3.listModels, async () => {
     const data = await getJson("/api/tags", 5e3);
     return data.models?.map((m) => ({ name: m.name, size: m.size, modifiedAt: m.modified_at })) ?? [];
   });
-  electron.ipcMain.handle(CHANNELS$2.generate, async (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$3.generate, async (_event, payload) => {
     if (!payload || typeof payload !== "object") {
       throw new Error("Payload inválido");
     }
@@ -1029,13 +1251,13 @@ function registerOllamaIpc() {
     return { text: result.response, durationMs: result.total_duration ? Math.round(result.total_duration / 1e6) : void 0 };
   });
 }
-const CHANNELS$1 = {
+const CHANNELS$2 = {
   show: "notifications:show",
   isSupported: "notifications:supported"
 };
 function registerNotificationsIpc() {
-  electron.ipcMain.handle(CHANNELS$1.isSupported, () => electron.Notification.isSupported());
-  electron.ipcMain.handle(CHANNELS$1.show, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$2.isSupported, () => electron.Notification.isSupported());
+  electron.ipcMain.handle(CHANNELS$2.show, (_event, payload) => {
     if (!electron.Notification.isSupported()) return { ok: false, reason: "not-supported" };
     if (!payload || typeof payload !== "object") {
       throw new Error("Payload inválido");
@@ -1093,7 +1315,47 @@ function registerDiagnosticIpc() {
     }
   });
 }
-const CHANNELS = {
+const DEFAULT_BOOT_DELAY_MS = 1e4;
+const DEFAULT_INTERVAL_MS = 6 * 60 * 60 * 1e3;
+function scheduleAutoUpdateChecks(opts) {
+  const {
+    check,
+    disabled = false,
+    bootDelayMs = DEFAULT_BOOT_DELAY_MS,
+    intervalMs = DEFAULT_INTERVAL_MS,
+    setTimeoutFn = setTimeout,
+    setIntervalFn = setInterval,
+    clearTimeoutFn = clearTimeout,
+    clearIntervalFn = clearInterval
+  } = opts;
+  if (disabled) {
+    return { stop: () => {
+    }, isActive: false };
+  }
+  const safeCheck = () => {
+    try {
+      const result = check();
+      if (result && typeof result.then === "function") {
+        void result.catch(() => {
+        });
+      }
+    } catch {
+    }
+  };
+  const bootHandle = setTimeoutFn(safeCheck, bootDelayMs);
+  const intervalHandle = setIntervalFn(safeCheck, intervalMs);
+  const handle = {
+    isActive: true,
+    stop: () => {
+      if (!handle.isActive) return;
+      clearTimeoutFn(bootHandle);
+      clearIntervalFn(intervalHandle);
+      handle.isActive = false;
+    }
+  };
+  return handle;
+}
+const CHANNELS$1 = {
   getStatus: "app-update:get-status",
   check: "app-update:check",
   download: "app-update:download",
@@ -1103,11 +1365,12 @@ const CHANNELS = {
 let currentStatus = { state: "idle" };
 let updater = null;
 let mainWindowGetter = null;
+let scheduleHandle = null;
 function broadcast(status) {
   currentStatus = status;
   const win = mainWindowGetter?.();
   if (win && !win.isDestroyed()) {
-    win.webContents.send(CHANNELS.status, status);
+    win.webContents.send(CHANNELS$1.status, status);
   }
 }
 function tryLoadUpdater() {
@@ -1163,8 +1426,8 @@ function registerAppUpdateIpc(getMainWindow) {
       });
     }
   }
-  electron.ipcMain.handle(CHANNELS.getStatus, () => currentStatus);
-  electron.ipcMain.handle(CHANNELS.check, async () => {
+  electron.ipcMain.handle(CHANNELS$1.getStatus, () => currentStatus);
+  electron.ipcMain.handle(CHANNELS$1.check, async () => {
     if (!updater) return currentStatus;
     try {
       await updater.checkForUpdates();
@@ -1173,7 +1436,7 @@ function registerAppUpdateIpc(getMainWindow) {
     }
     return currentStatus;
   });
-  electron.ipcMain.handle(CHANNELS.download, async () => {
+  electron.ipcMain.handle(CHANNELS$1.download, async () => {
     if (!updater) return currentStatus;
     try {
       await updater.downloadUpdate();
@@ -1182,9 +1445,71 @@ function registerAppUpdateIpc(getMainWindow) {
     }
     return currentStatus;
   });
-  electron.ipcMain.handle(CHANNELS.quitAndInstall, () => {
+  electron.ipcMain.handle(CHANNELS$1.quitAndInstall, () => {
     if (!updater) return;
     updater.quitAndInstall();
+  });
+  if (updater) {
+    const localUpdater = updater;
+    scheduleHandle = scheduleAutoUpdateChecks({
+      disabled: !electron.app.isPackaged,
+      check: () => localUpdater.checkForUpdates()
+    });
+  }
+}
+function shutdownAppUpdateIpc() {
+  scheduleHandle?.stop();
+  scheduleHandle = null;
+}
+const CHANNELS = {
+  status: "dbencryption:status",
+  enable: "dbencryption:enable",
+  disable: "dbencryption:disable",
+  checkStrength: "dbencryption:check-strength",
+  unlock: "dbencryption:unlock"
+};
+function registerDbEncryptionIpc() {
+  const db = DatabaseService.getInstance();
+  electron.ipcMain.handle(CHANNELS.status, () => {
+    const userId = db.getActiveUserId();
+    return {
+      enabled: db.isEncryptionEnabledForActiveUser(),
+      hasEncryptedAtRest: userId ? db.hasEncryptedDb(userId) : false,
+      locked: db.isLocked()
+    };
+  });
+  electron.ipcMain.handle(CHANNELS.unlock, (_evt, passphrase) => {
+    try {
+      db.unlockEncryptedDb(passphrase);
+      return { ok: true };
+    } catch (err) {
+      if (err instanceof EncryptionError) {
+        return { ok: false, code: err.code, message: err.message };
+      }
+      return { ok: false, code: "IO", message: err.message };
+    }
+  });
+  electron.ipcMain.handle(CHANNELS.checkStrength, (_evt, passphrase) => {
+    return { strong: isPassphraseStrongEnough(passphrase ?? "") };
+  });
+  electron.ipcMain.handle(CHANNELS.enable, (_evt, passphrase) => {
+    try {
+      db.enableEncryptionForActiveUser(passphrase);
+      return { ok: true };
+    } catch (err) {
+      if (err instanceof EncryptionError) {
+        return { ok: false, code: err.code, message: err.message };
+      }
+      return { ok: false, code: "IO", message: err.message };
+    }
+  });
+  electron.ipcMain.handle(CHANNELS.disable, () => {
+    try {
+      db.disableEncryptionForActiveUser();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
   });
 }
 const SETTINGS_KEY = "scheduledBackup";
@@ -1501,6 +1826,7 @@ electron.app.whenReady().then(() => {
   registerDiagnosticIpc();
   registerScheduledBackupIpc(db);
   registerAppUpdateIpc(() => mainWindow);
+  registerDbEncryptionIpc();
   bootScheduledBackup(db);
   createWindow();
   electron.app.on("activate", () => {
@@ -1511,6 +1837,7 @@ electron.app.whenReady().then(() => {
 });
 electron.app.on("window-all-closed", () => {
   shutdownScheduledBackup();
+  shutdownAppUpdateIpc();
   if (process.platform !== "darwin") {
     electron.app.quit();
   }

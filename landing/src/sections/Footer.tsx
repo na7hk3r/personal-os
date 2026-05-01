@@ -70,7 +70,15 @@ export function Footer() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 hover:text-accent transition-colors"
               >
-                <FileText className="w-4 h-4" aria-hidden="true" /> Documentación
+                <FileText className="w-4 h-4" aria-hidden="true" /> Documentación (GitHub)
+              </a>
+            </li>
+            <li>
+              <a
+                href="#docs"
+                className="inline-flex items-center gap-2 hover:text-accent transition-colors"
+              >
+                <FileText className="w-4 h-4" aria-hidden="true" /> Docs en la web
               </a>
             </li>
           </ul>

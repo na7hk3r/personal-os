@@ -220,13 +220,13 @@ export function ControlCenter() {
             </p>
           </div>
           <img
-            src="/ntkr-logo-alt.png"
+            src="./ntkr-logo-alt.png"
             alt="Marca NTKR"
             className="h-14 w-auto shrink-0 self-start rounded-md border border-border/80 bg-surface p-2"
           />
         </div>
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-border/80 bg-surface px-4 py-2">
-          <img src="/gif-mano.gif" alt="Activity" className="h-9 w-9 shrink-0 rounded-md" />
+          <img src="./gif-mano.gif" alt="Activity" className="h-9 w-9 shrink-0 rounded-md" />
           <p className="text-xs text-muted">Monitoreo operativo activo en tiempo real</p>
         </div>
       </section>

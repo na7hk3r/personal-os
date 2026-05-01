@@ -96,7 +96,7 @@ export function SystemStatusHero() {
     >
       {/* Background decoration */}
       <div className="absolute right-0 top-0 h-full w-1/3 opacity-20 pointer-events-none">
-        <img src="/GRUPO.png" alt="" className="h-full w-full object-cover" />
+        <img src="./GRUPO.png" alt="" className="h-full w-full object-cover" />
       </div>
 
       <div className="relative flex flex-col gap-4">

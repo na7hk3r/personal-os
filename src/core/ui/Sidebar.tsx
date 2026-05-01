@@ -105,7 +105,7 @@ export function Sidebar() {
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!sidebarCollapsed && (
           <div className="flex min-w-0 items-center gap-2">
-            <img src="/smc-logo-alt.png" alt="SMC" className="h-8 w-8 shrink-0 rounded border border-border/70" />
+            <img src="./smc-logo-alt.png" alt="SMC" className="h-8 w-8 shrink-0 rounded border border-border/70" />
             <div className="min-w-0">
               <p className="truncate text-xs uppercase tracking-[0.18em] text-muted">Personal OS</p>
               <p className="truncate text-sm font-semibold text-white">Executive Suite</p>
@@ -279,7 +279,7 @@ export function Sidebar() {
               <LogOut size={14} />
               Cerrar sesion
             </button>
-            <img src="/ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
+            <img src="./ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
             <span title={`Personal OS v${APP_VERSION}`}>v{APP_VERSION}</span>
           </div>
         )}
