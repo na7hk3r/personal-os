@@ -17,6 +17,9 @@ import { useGamificationStore } from './core/gamification/gamificationStore'
 import { useAuthStore } from './core/state/authStore'
 import { AuthScreen } from './core/ui/auth/AuthScreen'
 import { ErrorBoundary } from './core/ui/components/ErrorBoundary'
+import { GlobalErrorBoundary } from './core/ui/components/GlobalErrorBoundary'
+import { ToastProvider } from './core/ui/components/ToastProvider'
+import { messages } from './core/ui/messages'
 import { automationsService } from './core/services/automationsService'
 import { notificationsService } from './core/services/notificationsService'
 
@@ -107,7 +110,7 @@ export function App() {
     return (
       <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#16324f_0%,_#101923_45%,_#070d14_100%)] text-white">
         <div className="relative rounded-2xl border border-white/10 bg-surface-light/70 px-10 py-8 text-center shadow-2xl backdrop-blur">
-          <p className="text-base font-medium">Verificando sesion...</p>
+          <p className="text-base font-medium">{messages.loading.checkingSession}</p>
         </div>
       </div>
     )
@@ -125,53 +128,57 @@ export function App() {
         </div>
         <div className="relative rounded-2xl border border-white/10 bg-surface-light/70 px-10 py-8 text-center shadow-2xl backdrop-blur">
           <img src="/gif-eye.gif" alt="Loader" className="mx-auto h-16 w-16 rounded-full" />
-          <p className="mt-4 text-base font-medium">Inicializando Personal OS</p>
-          <p className="mt-1 text-sm text-muted">Cargando módulos, datos y preferencias...</p>
+          <p className="mt-4 text-base font-medium">{messages.loading.initializing}</p>
+          <p className="mt-1 text-sm text-muted">{messages.loading.initializingDetail}</p>
         </div>
       </div>
     )
   }
 
   return (
-    <ErrorBoundary label="app-root">
-      <HashRouter>
-        {ready && !onboardingComplete && <OnboardingWizard />}
-        <CommandPalette />
-        {safeMode && (
-          <div
-            role="status"
-            className="fixed left-1/2 top-3 z-50 -translate-x-1/2 rounded-full border border-amber-400/40 bg-amber-500/15 px-4 py-1.5 text-xs font-medium text-amber-100 shadow-lg backdrop-blur"
-          >
-            Modo seguro activo — plugins desactivados
-          </div>
-        )}
-        <Routes>
-          <Route element={<Shell />}>
-            <Route index element={<Dashboard />} />
-            <Route path="/control" element={<ControlCenter />} />
-            <Route path="/notes" element={<CoreNotesPage />} />
-            <Route path="/links" element={<CoreLinksPage />} />
-            <Route path="/planner" element={<CorePlannerPage />} />
-            <Route path="/calendar" element={<CalendarPage />} />
-            <Route path="/review" element={<ReviewPage />} />
-            {pluginPages.map((page) => {
-              const PageComponent = page.component
-              return (
-                <Route
-                  key={page.id}
-                  path={page.path}
-                  element={
-                    <ErrorBoundary label={`plugin:${page.pluginId}`}>
-                      <PageComponent />
-                    </ErrorBoundary>
-                  }
-                />
-              )
-            })}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </HashRouter>
-    </ErrorBoundary>
+    <GlobalErrorBoundary>
+      <ToastProvider>
+        <ErrorBoundary label="app-root">
+          <HashRouter>
+            {ready && !onboardingComplete && <OnboardingWizard />}
+            <CommandPalette />
+            {safeMode && (
+              <div
+                role="status"
+                className="fixed left-1/2 top-3 z-50 -translate-x-1/2 rounded-full border border-amber-400/40 bg-amber-500/15 px-4 py-1.5 text-xs font-medium text-amber-100 shadow-lg backdrop-blur"
+              >
+                Modo seguro activo — plugins desactivados
+              </div>
+            )}
+            <Routes>
+              <Route element={<Shell />}>
+                <Route index element={<Dashboard />} />
+                <Route path="/control" element={<ControlCenter />} />
+                <Route path="/notes" element={<CoreNotesPage />} />
+                <Route path="/links" element={<CoreLinksPage />} />
+                <Route path="/planner" element={<CorePlannerPage />} />
+                <Route path="/calendar" element={<CalendarPage />} />
+                <Route path="/review" element={<ReviewPage />} />
+                {pluginPages.map((page) => {
+                  const PageComponent = page.component
+                  return (
+                    <Route
+                      key={page.id}
+                      path={page.path}
+                      element={
+                        <ErrorBoundary label={`plugin:${page.pluginId}`}>
+                          <PageComponent />
+                        </ErrorBoundary>
+                      }
+                    />
+                  )
+                })}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
+            </Routes>
+          </HashRouter>
+        </ErrorBoundary>
+      </ToastProvider>
+    </GlobalErrorBoundary>
   )
 }
