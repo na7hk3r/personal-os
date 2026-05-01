@@ -1,0 +1,88 @@
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Settings, History, Repeat } from 'lucide-react'
+import { useHabitsStore } from '../store'
+import { HabitCard } from '../components/HabitCard'
+import { HabitQuickAdd } from '../components/HabitQuickAdd'
+import { computeStats } from '../utils'
+import { messages } from '@core/ui/messages'
+
+/**
+ * Página principal del plugin Hábitos. Lista vertical de hábitos activos
+ * con toggle rápido del día.
+ */
+export function HabitsDashboard() {
+  const navigate = useNavigate()
+  const habits = useHabitsStore((s) => s.habits)
+  const logs = useHabitsStore((s) => s.logs)
+  const [showAdd, setShowAdd] = useState(false)
+
+  const active = useMemo(() => habits.filter((h) => !h.archived), [habits])
+
+  const overall = useMemo(() => {
+    let completed = 0
+    for (const h of active) {
+      const stats = computeStats(h, logs.filter((l) => l.habitId === h.id))
+      if (stats.completedThisPeriod) completed += 1
+    }
+    return { completed, total: active.length }
+  }, [active, logs])
+
+  return (
+    <div className="space-y-5">
+      <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
+          <h1 className="text-2xl font-semibold text-white">
+            {active.length === 0 ? '—' : `${overall.completed}/${overall.total}`}
+          </h1>
+          <p className="text-xs text-muted">
+            {active.length === 0 ? messages.empty.habitsAll : 'Cumplidos en el período actual'}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <button
+            type="button"
+            onClick={() => setShowAdd((v) => !v)}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-white hover:border-accent/50"
+          >
+            <Repeat size={12} aria-hidden="true" />
+            {showAdd ? 'Cerrar' : 'Nuevo hábito'}
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/habits/history')}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-white hover:border-accent/50"
+          >
+            <History size={12} aria-hidden="true" />
+            Historial
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/habits/manage')}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-3 py-1.5 text-white hover:border-accent/50"
+          >
+            <Settings size={12} aria-hidden="true" />
+            Administrar
+          </button>
+        </div>
+      </header>
+
+      {showAdd && <HabitQuickAdd onCreated={() => setShowAdd(false)} />}
+
+      {active.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted">
+          {messages.empty.habitsAll}
+        </div>
+      ) : (
+        <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" role="list" aria-label="Lista de hábitos">
+          {active.map((h) => (
+            <li key={h.id}>
+              <HabitCard habit={h} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
