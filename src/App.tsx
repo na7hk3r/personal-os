@@ -8,6 +8,7 @@ const CoreLinksPage = lazy(() => import('./core/ui/pages/LinksPage').then((m) =>
 const CorePlannerPage = lazy(() => import('./core/ui/pages/PlannerPage').then((m) => ({ default: m.CorePlannerPage })))
 const CalendarPage = lazy(() => import('./core/ui/pages/CalendarPage').then((m) => ({ default: m.CalendarPage })))
 const ReviewPage = lazy(() => import('./core/ui/pages/ReviewPage').then((m) => ({ default: m.ReviewPage })))
+const ShortcutsPage = lazy(() => import('./core/ui/pages/ShortcutsPage').then((m) => ({ default: m.ShortcutsPage })))
 import { CommandPalette } from './core/ui/CommandPalette'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
@@ -16,6 +17,7 @@ import { useCoreStore } from './core/state/coreStore'
 import { useGamificationStore } from './core/gamification/gamificationStore'
 import { useAuthStore } from './core/state/authStore'
 import { AuthScreen } from './core/ui/auth/AuthScreen'
+import { UnlockScreen } from './core/ui/auth/UnlockScreen'
 import { ErrorBoundary } from './core/ui/components/ErrorBoundary'
 import { GlobalErrorBoundary } from './core/ui/components/GlobalErrorBoundary'
 import { ToastProvider } from './core/ui/components/ToastProvider'
@@ -27,6 +29,8 @@ import { notificationsService } from './core/services/notificationsService'
 import './plugins/fitness'
 import './plugins/work'
 import './plugins/finance'
+import './plugins/habits'
+import './plugins/journal'
 
 /**
  * Safe mode skips plugin initialization so the shell can boot even if a plugin
@@ -49,6 +53,8 @@ function RouteFallback() {
 export function App() {
   const [ready, setReady] = useState(false)
   const [safeMode] = useState(isSafeModeRequested)
+  const [locked, setLocked] = useState(false)
+  const [lockChecked, setLockChecked] = useState(false)
   const authStatus = useAuthStore((s) => s.status)
   const initializeSession = useAuthStore((s) => s.initializeSession)
   const currentUser = useAuthStore((s) => s.currentUser)
@@ -66,6 +72,37 @@ export function App() {
   useEffect(() => {
     if (authStatus !== 'authenticated' || !currentUser) {
       setReady(false)
+      setLocked(false)
+      setLockChecked(false)
+      return
+    }
+
+    let cancelled = false
+    async function checkLock() {
+      try {
+        const status = await window.dbEncryption.status()
+        if (cancelled) return
+        setLocked(Boolean(status.locked))
+      } catch (err) {
+        console.warn('[App] dbEncryption.status failed', err)
+        if (!cancelled) setLocked(false)
+      } finally {
+        if (!cancelled) setLockChecked(true)
+      }
+    }
+    void checkLock()
+    return () => {
+      cancelled = true
+    }
+  }, [authStatus, currentUser])
+
+  useEffect(() => {
+    if (authStatus !== 'authenticated' || !currentUser) {
+      setReady(false)
+      return
+    }
+    if (!lockChecked || locked) {
+      // Esperar a que se desbloquee la DB cifrada antes de inicializar plugins.
       return
     }
 
@@ -113,7 +150,7 @@ export function App() {
       }
     }
     void bootstrap()
-  }, [authStatus, currentUser, loadFromStorage, loadGamificationFromStorage, safeMode])
+  }, [authStatus, currentUser, loadFromStorage, loadGamificationFromStorage, safeMode, lockChecked, locked])
 
   if (authStatus === 'checking') {
     return (
@@ -127,6 +164,16 @@ export function App() {
 
   if (authStatus !== 'authenticated') {
     return <AuthScreen />
+  }
+
+  if (locked) {
+    return (
+      <UnlockScreen
+        onUnlocked={() => {
+          setLocked(false)
+        }}
+      />
+    )
   }
 
   if (!ready) {
@@ -168,6 +215,7 @@ export function App() {
                 <Route path="/planner" element={<Suspense fallback={<RouteFallback />}><CorePlannerPage /></Suspense>} />
                 <Route path="/calendar" element={<Suspense fallback={<RouteFallback />}><CalendarPage /></Suspense>} />
                 <Route path="/review" element={<Suspense fallback={<RouteFallback />}><ReviewPage /></Suspense>} />
+                <Route path="/shortcuts" element={<Suspense fallback={<RouteFallback />}><ShortcutsPage /></Suspense>} />
                 {pluginPages.map((page) => {
                   const PageComponent = page.component
                   return (

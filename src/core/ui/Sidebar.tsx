@@ -95,6 +95,8 @@ export function Sidebar() {
 
   return (
     <aside
+      role="complementary"
+      aria-label="Navegación principal"
       className={`fixed left-0 top-0 z-40 flex h-full flex-col border-r border-border bg-surface-light/95 backdrop-blur-md transition-all duration-200 ${
         sidebarCollapsed ? 'w-16' : 'w-56'
       }`}
@@ -112,14 +114,16 @@ export function Sidebar() {
         )}
         <button
           onClick={toggleCollapse}
+          aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+          aria-expanded={!sidebarCollapsed}
           className="shrink-0 rounded p-1 text-muted hover:bg-surface-lighter"
         >
-          {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          {sidebarCollapsed ? <ChevronRight size={18} aria-hidden /> : <ChevronLeft size={18} aria-hidden />}
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
+      <nav aria-label="Secciones de la app" className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {/* Core: Dashboard */}
         <NavLink to="/" end className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
           <PluginIcon name="LayoutDashboard" size={18} className="shrink-0" />
@@ -160,6 +164,12 @@ export function Sidebar() {
         <NavLink to="/review" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
           <Flame size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Review</span>}
+        </NavLink>
+
+        {/* Core: Atajos de teclado */}
+        <NavLink to="/shortcuts" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <PluginIcon name="Keyboard" size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Atajos</span>}
         </NavLink>
 
         {/* Plugin nav items */}

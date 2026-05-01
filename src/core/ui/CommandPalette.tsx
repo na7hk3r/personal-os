@@ -20,6 +20,7 @@ const NAV_RESULTS: CommandResult[] = [
   { id: 'nav:planner', kind: 'nav', title: 'Planner', ctaPath: '/planner' },
   { id: 'nav:calendar', kind: 'nav', title: 'Calendario unificado', ctaPath: '/calendar' },
   { id: 'nav:review', kind: 'nav', title: 'Review semanal/mensual', ctaPath: '/review' },
+  { id: 'nav:shortcuts', kind: 'nav', title: 'Atajos de teclado', ctaPath: '/shortcuts' },
 ]
 
 const ICONS: Record<CommandResult['kind'], React.ComponentType<{ size?: number; className?: string }>> = {
@@ -147,6 +148,7 @@ export function CommandPalette() {
       className="fixed inset-0 z-[100] flex items-start justify-center bg-black/60 px-4 pt-24 backdrop-blur-sm"
       onClick={() => setOpen(false)}
       role="dialog"
+      aria-modal="true"
       aria-label="Búsqueda global"
     >
       <div
@@ -154,25 +156,37 @@ export function CommandPalette() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-          <Search size={16} className="text-muted" />
+          <Search size={16} className="text-muted" aria-hidden />
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Buscar notas, tareas, enlaces, navegación..."
+            aria-label="Buscar comandos"
+            role="combobox"
+            aria-expanded={visibleResults.length > 0}
+            aria-controls="command-palette-listbox"
+            aria-activedescendant={visibleResults[activeIndex] ? `cmd-result-${visibleResults[activeIndex].id}` : undefined}
+            aria-autocomplete="list"
             className="flex-1 bg-transparent text-sm text-white outline-none placeholder:text-muted/70"
           />
           <button
             onClick={() => setOpen(false)}
+            aria-label="Cerrar búsqueda"
             className="rounded p-1 text-muted hover:text-white"
             title="Cerrar (Esc)"
           >
-            <X size={16} />
+            <X size={16} aria-hidden />
           </button>
         </div>
 
-        <div className="max-h-[55vh] overflow-y-auto p-2">
+        <div
+          id="command-palette-listbox"
+          role="listbox"
+          aria-label="Resultados"
+          className="max-h-[55vh] overflow-y-auto p-2"
+        >
           {visibleResults.length === 0 ? (
             <p className="px-3 py-6 text-center text-xs text-muted">Sin resultados</p>
           ) : (
@@ -182,13 +196,16 @@ export function CommandPalette() {
               return (
                 <button
                   key={r.id}
+                  id={`cmd-result-${r.id}`}
+                  role="option"
+                  aria-selected={active}
                   onClick={() => handleSelect(r)}
                   onMouseEnter={() => setActiveIndex(i)}
                   className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors ${
                     active ? 'bg-accent/15 text-white' : 'text-foreground/80 hover:bg-surface-lighter'
                   }`}
                 >
-                  <Icon size={14} className="shrink-0 text-muted" />
+                  <Icon size={14} className="shrink-0 text-muted" aria-hidden />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm">{r.title}</p>
                     {r.subtitle && <p className="truncate text-xs text-muted">{r.subtitle}</p>}

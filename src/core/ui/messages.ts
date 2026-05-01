@@ -37,6 +37,11 @@ export const messages = {
     financeRecurring: 'Sin gastos recurrentes configurados.',
     financeBudgets: 'Sin presupuestos. Definí límites por categoría.',
     financeInsights: 'Cargá movimientos durante el mes para tener insights.',
+    habitsAll: 'Sin hábitos. Creá el primero para arrancar.',
+    habitsHistory: 'Sin actividad en los últimos 30 días.',
+    journalEntries: 'Sin entradas. Escribí la primera.',
+    journalSearch: 'Sin resultados para esa búsqueda.',
+    shortcuts: 'Sin atajos disponibles en este contexto.',
   },
 
   // ─── Errores (causa + acción) ────────────────────────────────────────
@@ -65,6 +70,11 @@ export const messages = {
     financeAccountMissing: 'Elegí una cuenta para el movimiento.',
     financeAccountInUse: 'Cuenta con movimientos. Archivala en lugar de borrarla.',
     financeRrule: 'Frecuencia inválida. Revisá el formato.',
+    habitNameInvalid: 'Nombre inválido. Usá 1 a 60 caracteres.',
+    habitCreate: 'Hábito no creado. Reintentá.',
+    journalEmpty: 'No se puede guardar una entrada vacía.',
+    dbEncryptionUnavailable: 'Cifrado de base no disponible en este sistema.',
+    dbEncryptionWeakPassphrase: 'Passphrase muy débil. Mínimo 12 caracteres y mezcla de tipos.',
   },
 
   // ─── Confirmaciones destructivas (consecuencia concreta) ─────────────
@@ -80,6 +90,14 @@ export const messages = {
     deleteNote: (title: string) => `Borrar nota "${title}". No se puede deshacer.`,
     deleteAutomation: (name: string) => `Borrar automatización "${name}". No se puede deshacer.`,
     deleteTemplate: (name: string) => `Borrar plantilla "${name}". No se puede deshacer.`,
+    deleteHabit: (name: string) =>
+      `Borrar hábito "${name}" y todos sus registros. No se puede deshacer.`,
+    deleteJournalEntry: (date: string) =>
+      `Borrar entrada del ${date}. No se puede deshacer.`,
+    enableDbEncryption:
+      'Activar cifrado en reposo. Vas a necesitar la passphrase cada vez que abras la app.',
+    disableDbEncryption:
+      'Quitar cifrado. La base queda en claro hasta el próximo cifrado.',
     restoreBackup: 'Restaurar reemplaza tu base actual. No se puede deshacer.',
     deactivatePlugin: (name: string) =>
       `Desactivar "${name}". Tus datos se conservan, pero el módulo no aparece más.`,
@@ -102,6 +120,12 @@ export const messages = {
     financeTransactionDeleted: 'Movimiento borrado.',
     financeRecurringMaterialized: (count: number) =>
       count === 1 ? '1 movimiento recurrente generado.' : `${count} movimientos recurrentes generados.`,
+    habitLogged: 'Hábito registrado.',
+    habitGoalMet: (name: string) => `Meta cumplida: ${name}.`,
+    journalEntrySaved: 'Entrada guardada.',
+    journalEntryDeleted: 'Entrada borrada.',
+    dbEncryptionEnabled: 'Cifrado activado. La passphrase se pide al abrir la app.',
+    dbEncryptionDisabled: 'Cifrado desactivado.',
   },
 
   // ─── Loading (qué está pasando, no spinner mudo) ─────────────────────
