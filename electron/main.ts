@@ -8,6 +8,13 @@ import { registerAuthIpc } from './services/auth-ipc'
 import { registerBackupIpc } from './services/backup-ipc'
 import { registerOllamaIpc } from './services/ollama-ipc'
 import { registerNotificationsIpc } from './services/notifications-ipc'
+import { registerDiagnosticIpc } from './services/diagnostic-ipc'
+import { registerAppUpdateIpc } from './services/app-update-ipc'
+import {
+  registerScheduledBackupIpc,
+  bootScheduledBackup,
+  shutdownScheduledBackup,
+} from './services/scheduled-backup'
 
 let mainWindow: BrowserWindow | null = null
 const rendererUrl = process.env.ELECTRON_RENDERER_URL
@@ -116,6 +123,10 @@ app.whenReady().then(() => {
   registerBackupIpc(db)
   registerOllamaIpc()
   registerNotificationsIpc()
+  registerDiagnosticIpc()
+  registerScheduledBackupIpc(db)
+  registerAppUpdateIpc(() => mainWindow)
+  bootScheduledBackup(db)
 
   createWindow()
 
@@ -127,6 +138,7 @@ app.whenReady().then(() => {
 })
 
 app.on('window-all-closed', () => {
+  shutdownScheduledBackup()
   if (process.platform !== 'darwin') {
     app.quit()
   }
