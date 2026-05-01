@@ -143,6 +143,11 @@ export function App() {
         // Boot core services that depend on the active user DB
         await automationsService.init().catch((err) => console.error('[App] automations init failed', err))
         await notificationsService.init().catch((err) => console.error('[App] notifications init failed', err))
+
+        // Run consistency auditor (best-effort, no bloquea boot).
+        void import('@core/audit/store')
+          .then(({ useAuditStore }) => useAuditStore.getState().runAudit())
+          .catch((err) => console.warn('[App] audit run failed', err))
       } catch (err) {
         console.error('[App] Bootstrap failed:', err)
       } finally {

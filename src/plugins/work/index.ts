@@ -13,6 +13,12 @@ const workPlugin: PluginManifest = {
   version: '1.0.0',
   description: 'Kanban boards, notas y enlaces de trabajo',
   icon: 'BriefcaseBusiness',
+  domain: 'productivity',
+  domainKeywords: ['kanban', 'tasks', 'focus', 'notes'],
+  iconography: {
+    primary: 'BriefcaseBusiness',
+    gallery: ['BriefcaseBusiness', 'Briefcase', 'KanbanSquare', 'CheckSquare', 'Timer', 'Target', 'ListTodo'],
+  },
 
   migrations: [
     {

@@ -24,6 +24,12 @@ const habitsPlugin: PluginManifest = {
   version: '1.0.0',
   description: 'Hábitos diarios y semanales con racha y heatmap.',
   icon: 'Repeat',
+  domain: 'habits',
+  domainKeywords: ['routine', 'streak', 'daily'],
+  iconography: {
+    primary: 'Repeat',
+    gallery: ['Repeat', 'CalendarDays', 'CheckCircle2', 'Flame', 'Target', 'Sparkles', 'Settings'],
+  },
 
   migrations: [
     {

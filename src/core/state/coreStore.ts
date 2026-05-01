@@ -149,6 +149,11 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     }
     set({ activePlugins: nextIds })
 
+    // Re-correr el auditor tras cualquier toggle (best-effort, no bloqueante).
+    void import('@core/audit/store')
+      .then(({ useAuditStore }) => useAuditStore.getState().runAudit())
+      .catch((err) => console.warn('[coreStore] audit re-run failed', err))
+
     const updated = pluginManager.getPlugin(pluginId)
     if (updated?.status === 'active') return 'active'
     if (updated?.status === 'error') return 'error'

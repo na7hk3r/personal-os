@@ -288,12 +288,60 @@ export interface OnboardingQuestion {
   options?: string[]
 }
 
+/**
+ * Dominio semántico del plugin: describe DE QUÉ TRATA el plugin (su contenido),
+ * NO el theme visual de la app. Usado por el Consistency Auditor (R6) para
+ * verificar que la iconografía sea coherente con el dominio.
+ */
+export type PluginDomain =
+  | 'finance'
+  | 'health'
+  | 'fitness'
+  | 'nutrition'
+  | 'nature'
+  | 'knowledge'
+  | 'reading'
+  | 'productivity'
+  | 'habits'
+  | 'social'
+  | 'travel'
+  | 'creativity'
+  | 'music'
+  | 'gaming'
+  | 'spirituality'
+  | 'home'
+  | 'pets'
+  | 'weather'
+  | 'time'
+  | 'utility'
+
+/** Nombre de un ícono de lucide-react (string, validado por catálogo). */
+export type LucideIconName = string
+
+export interface PluginIconography {
+  /** Ícono principal del plugin. Debe pertenecer al catálogo del dominio. */
+  primary: LucideIconName
+  /** Íconos auxiliares que el plugin promete usar (extienden el catálogo). */
+  gallery?: LucideIconName[]
+}
+
 export interface PluginManifest {
   id: string
   name: string
   version: string
   description: string
   icon: string
+
+  /**
+   * Dominio semántico del plugin (R6 audit). Describe el contenido del
+   * plugin (finanzas → billetes, naturaleza → hojas). Independiente del theme
+   * visual de la app.
+   */
+  domain?: PluginDomain
+  /** Sub-temas libres dentro del dominio (ej: ["garden","plants"]). */
+  domainKeywords?: string[]
+  /** Ícono principal + galería declarada del plugin. */
+  iconography?: PluginIconography
 
   // Lifecycle
   init(api: CoreAPI): Promise<void>

@@ -1,4 +1,6 @@
 import { storageAPI } from '@core/storage/StorageAPI'
+import { useCoreStore } from '@core/state/coreStore'
+import { pluginManager } from '@core/plugins/PluginManager'
 
 export interface QueuedNotification {
   id: number
@@ -66,7 +68,29 @@ async function processQueue(): Promise<void> {
      WHERE delivered_at IS NULL AND dismissed_at IS NULL AND scheduled_at <= datetime('now')
      ORDER BY scheduled_at ASC LIMIT 5`,
   )
+
+  // Auditor R4: filtrar notificaciones cuya fuente sea un plugin inactivo.
+  // Las fuentes core conocidas (`core`, `instant`, `automations`) siempre se
+  // entregan; si la fuente es un pluginId, solo entregamos cuando ese plugin
+  // está activo o no está registrado en absoluto (notificaciones legacy).
+  const activePluginIds = new Set(useCoreStore.getState().activePlugins)
+  const knownPluginIds = new Set(pluginManager.getAllPlugins().map((e) => e.manifest.id))
+  const CORE_SOURCES = new Set(['core', 'instant', 'automations'])
+
   for (const n of due) {
+    const source = n.source ?? ''
+    const isCoreSource = !source || CORE_SOURCES.has(source)
+    const isKnownPlugin = knownPluginIds.has(source)
+    const isActivePlugin = activePluginIds.has(source)
+    if (!isCoreSource && isKnownPlugin && !isActivePlugin) {
+      // Plugin conocido pero inactivo: no entregar; marcar como descartada
+      // para que no quede pendiente para siempre.
+      await storageAPI.execute(
+        "UPDATE core_notifications_queue SET dismissed_at = datetime('now') WHERE id = ?",
+        [n.id],
+      )
+      continue
+    }
     try {
       await window.notifications.show({ title: n.title, body: n.body ?? undefined })
       await storageAPI.execute(

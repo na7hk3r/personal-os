@@ -1,5 +1,20 @@
 # Changelog - Personal OS
 
+## [Unreleased]
+
+### 🛡 Consistency Auditor
+
+Sistema de validación cruzada entre el core y los plugins. Detecta logros y misiones huérfanas, eventos sin emisor, notificaciones de plugins inactivos, UI fantasma, iconografía incoherente con el dominio, listeners cruzados rotos, quick actions inconsistentes y residuos de onboarding/persistencia.
+
+- Nuevo módulo `src/core/audit/` con 10 reglas (R1–R10), catálogo de íconos por dominio (`DOMAIN_ICON_CATALOG` cubriendo 20 dominios) y store reactivo (`useAuditStore`).
+- `PluginManifest` extendido con `domain`, `domainKeywords` y `iconography: { primary, gallery? }` (campos opcionales, retrocompatibles).
+- Ejecución automática en boot (`App.tsx`) y al togglear plugins (`coreStore.setPluginEnabled`).
+- `notificationsService.processQueue` filtra notificaciones cuya `source` es un plugin conocido pero inactivo.
+- Nueva sección **Audit Panel** en el Control Center con filtros por regla / plugin / severidad, contador en el header y autofix `replaceIcon` para plugins oficiales.
+- 5 plugins oficiales migrados con `domain` + `iconography`.
+- Documentación: [docs/CONSISTENCY_AUDITOR.md](docs/CONSISTENCY_AUDITOR.md), update en [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md), template `scripts/create-plugin.mjs` actualizado.
+- 24 tests unitarios cubriendo cada regla + catálogo + autofix.
+
 ## [1.8.0] - 2026-05-01
 
 Wave 3: **plugin Hábitos**, **plugin Journal**, **capa Repository** sobre `StorageAPI`, **cifrado de la DB de usuario en reposo opt-in**, **catálogo de atajos in-app** y **pasada de accesibilidad ARIA** sobre los componentes core.

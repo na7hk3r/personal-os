@@ -30,6 +30,12 @@ const financePlugin: PluginManifest = {
   version: '1.0.0',
   description: 'Movimientos, cuentas, presupuestos y gastos recurrentes.',
   icon: 'Wallet',
+  domain: 'finance',
+  domainKeywords: ['money', 'budget', 'transactions', 'recurring'],
+  iconography: {
+    primary: 'Wallet',
+    gallery: ['Wallet', 'Receipt', 'Tag', 'Repeat', 'PiggyBank', 'Coins', 'TrendingUp', 'TrendingDown', 'BarChart3'],
+  },
 
   migrations: [
     {
