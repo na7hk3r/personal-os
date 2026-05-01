@@ -20,7 +20,7 @@ import type { PluginManifest } from '@core/types'
  * el plugin es oficial (heurística: id ∈ OFFICIAL_PLUGIN_IDS).
  */
 
-const OFFICIAL_PLUGIN_IDS = new Set(['fitness', 'work', 'finance', 'habits', 'journal'])
+const OFFICIAL_PLUGIN_IDS = new Set(['fitness', 'work', 'finance', 'habits', 'journal', 'goals'])
 
 interface IconUsage {
   location: string

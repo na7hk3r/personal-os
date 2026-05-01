@@ -181,6 +181,35 @@ const ALLOWED_TABLE_COLUMNS: Record<string, Set<string>> = {
     'builtin',
     'created_at',
   ]),
+  goals_objectives: new Set([
+    'id',
+    'title',
+    'description',
+    'period',
+    'year',
+    'status',
+    'color',
+    'created_at',
+  ]),
+  goals_key_results: new Set([
+    'id',
+    'goal_id',
+    'name',
+    'source',
+    'baseline',
+    'target_value',
+    'current_value',
+    'unit',
+    'direction',
+    'created_at',
+  ]),
+  goals_milestones: new Set([
+    'id',
+    'kr_id',
+    'value',
+    'achieved_at',
+    'note',
+  ]),
 }
 
 function assertTableName(table: string): void {
