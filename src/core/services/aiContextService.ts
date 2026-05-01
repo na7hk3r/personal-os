@@ -1,6 +1,7 @@
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
+import { getAIContextProviders } from './aiContextRegistry'
 
 /**
  * Snapshot del estado del usuario que se entrega como contexto a Ollama.
@@ -38,6 +39,12 @@ export interface UserContextSnapshot {
     completedToday: number
     pendingToday: number
   }
+  /**
+   * Slices aportados por plugins via `registerAIContextProvider`. La key es el
+   * id del proveedor (típicamente el plugin id). Permite que plugins como
+   * Finance contribuyan datos sin que el core los conozca.
+   */
+  pluginSlices: Record<string, { data: unknown; lines: string[] }>
   recentEvents: { type: string; source: string; createdAt: string }[]
 }
 
@@ -177,12 +184,27 @@ export const aiContextService = {
   async snapshot(): Promise<UserContextSnapshot> {
     const profile = useCoreStore.getState().profile
     const gam = useGamificationStore.getState()
-    const [fitness, work, planner, recent] = await Promise.all([
+    const providers = getAIContextProviders()
+    const [fitness, work, planner, recent, ...providerResults] = await Promise.all([
       getFitnessSnapshot().catch(() => undefined),
       getWorkSnapshot().catch(() => undefined),
       getPlannerSnapshot().catch(() => undefined),
       getRecentEvents().catch(() => []),
+      ...providers.map(async (p) => {
+        try {
+          const data = await p.collect()
+          if (data === undefined || data === null) return null
+          return { id: p.id, data, lines: p.render(data) }
+        } catch (err) {
+          console.warn(`[aiContextService] provider "${p.id}" falló:`, err)
+          return null
+        }
+      }),
     ])
+    const pluginSlices: UserContextSnapshot['pluginSlices'] = {}
+    for (const r of providerResults) {
+      if (r) pluginSlices[r.id] = { data: r.data, lines: r.lines }
+    }
     return {
       generatedAt: new Date().toISOString(),
       profile: {
@@ -195,6 +217,7 @@ export const aiContextService = {
       fitness,
       work,
       planner,
+      pluginSlices,
       recentEvents: recent,
     }
   },
@@ -226,6 +249,11 @@ export const aiContextService = {
     }
     if (snapshot.planner) {
       lines.push(`Planner hoy: completadas=${snapshot.planner.completedToday} pendientes=${snapshot.planner.pendingToday}`)
+    }
+    for (const [id, slice] of Object.entries(snapshot.pluginSlices)) {
+      if (!slice.lines.length) continue
+      lines.push(`Plugin ${id}:`)
+      for (const ln of slice.lines) lines.push(`  ${ln}`)
     }
     if (snapshot.recentEvents.length) {
       lines.push('Últimos eventos:')

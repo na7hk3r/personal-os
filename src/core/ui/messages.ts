@@ -31,6 +31,12 @@ export const messages = {
     review: 'Cargá actividad durante la semana para tener review.',
     calendar: 'Sin eventos en el rango seleccionado.',
     planner: 'Día vacío. Sumá una tarea al planner.',
+    financeAccounts: 'Sin cuentas. Creá una para arrancar.',
+    financeTransactions: 'Sin movimientos en el período.',
+    financeCategories: 'Sin categorías. Creá la primera.',
+    financeRecurring: 'Sin gastos recurrentes configurados.',
+    financeBudgets: 'Sin presupuestos. Definí límites por categoría.',
+    financeInsights: 'Cargá movimientos durante el mes para tener insights.',
   },
 
   // ─── Errores (causa + acción) ────────────────────────────────────────
@@ -55,6 +61,10 @@ export const messages = {
     notificationDenied: 'Permiso de notificaciones denegado por el sistema.',
     generic: 'Algo salió mal. Reintentá en unos segundos.',
     diagnosticExportFailed: 'No se pudo exportar el diagnóstico.',
+    financeAmountInvalid: 'Monto inválido. Usá un número mayor a 0.',
+    financeAccountMissing: 'Elegí una cuenta para el movimiento.',
+    financeAccountInUse: 'Cuenta con movimientos. Archivala en lugar de borrarla.',
+    financeRrule: 'Frecuencia inválida. Revisá el formato.',
   },
 
   // ─── Confirmaciones destructivas (consecuencia concreta) ─────────────
@@ -88,6 +98,10 @@ export const messages = {
     automationCreated: 'Automatización creada.',
     diagnosticExported: (path: string) => `Diagnóstico exportado en ${path}.`,
     undo: 'Acción deshecha.',
+    financeTransactionCreated: 'Movimiento registrado.',
+    financeTransactionDeleted: 'Movimiento borrado.',
+    financeRecurringMaterialized: (count: number) =>
+      count === 1 ? '1 movimiento recurrente generado.' : `${count} movimientos recurrentes generados.`,
   },
 
   // ─── Loading (qué está pasando, no spinner mudo) ─────────────────────
@@ -131,6 +145,11 @@ export const messages = {
     fitnessNoWeight7d: 'No registraste peso esta semana.',
     workNoFocus24h: 'Sin sesiones de foco en 24h.',
     streakAtRisk: (days: number) => `Tu racha de ${days} días está en riesgo. Cargá algo hoy.`,
+    dailyBriefHeading: 'Brief de hoy',
+    dailyBriefDismiss: 'Listo, no me lo muestres más hoy.',
+    focusNudgeHeading: 'Tenés tarjetas listas para arrancar',
+    focusNudgeStart: 'Empezar foco',
+    focusNudgeDismiss: 'Más tarde',
   },
 
   // ─── Onboarding ──────────────────────────────────────────────────────
