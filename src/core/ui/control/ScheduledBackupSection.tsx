@@ -1,0 +1,266 @@
+import { useEffect, useState } from 'react'
+import { CalendarClock, FolderOpen, KeyRound, Play, ShieldCheck } from 'lucide-react'
+import { messages } from '../messages'
+import type { ScheduledBackupConfig, ScheduledBackupStatus } from '../../types'
+
+const FREQ_OPTIONS = [
+  { value: 1, label: 'Diario' },
+  { value: 3, label: 'Cada 3 días' },
+  { value: 7, label: 'Semanal' },
+  { value: 14, label: 'Cada 2 semanas' },
+  { value: 30, label: 'Mensual' },
+]
+
+function formatDate(iso: string | null): string {
+  if (!iso) return '—'
+  try {
+    const d = new Date(iso)
+    return d.toLocaleString()
+  } catch {
+    return iso
+  }
+}
+
+export function ScheduledBackupSection() {
+  const bridge = window.scheduledBackup
+  const [status, setStatus] = useState<ScheduledBackupStatus | null>(null)
+  const [passphrase, setPassphrase] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [feedback, setFeedback] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null)
+
+  const refresh = async () => {
+    if (!bridge) return
+    const result = await bridge.getStatus()
+    setStatus(result)
+  }
+
+  useEffect(() => {
+    void refresh()
+  }, [])
+
+  if (!bridge) {
+    return (
+      <section className="rounded-2xl border border-border bg-surface-light/40 p-5">
+        <h2 className="text-lg font-semibold text-white">Backup automático</h2>
+        <p className="mt-2 text-sm text-muted">No disponible en este entorno.</p>
+      </section>
+    )
+  }
+
+  const config = status?.config ?? null
+
+  const updateConfig = async (patch: Partial<ScheduledBackupConfig>) => {
+    if (!config) return
+    setBusy(true)
+    setFeedback(null)
+    try {
+      const result = await bridge.setConfig(patch)
+      setStatus(result)
+      setFeedback({ kind: 'ok', text: 'Configuración guardada.' })
+    } catch (err) {
+      setFeedback({ kind: 'err', text: (err as Error).message ?? messages.errors.generic })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const pickDestination = async () => {
+    setBusy(true)
+    try {
+      const result = await bridge.pickDestination()
+      if (result.path) {
+        await updateConfig({ destinationDir: result.path })
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const savePassphrase = async () => {
+    if (passphrase.length < 8) {
+      setFeedback({ kind: 'err', text: messages.errors.backupPassphraseShort })
+      return
+    }
+    setBusy(true)
+    try {
+      await bridge.setPassphrase(passphrase)
+      setPassphrase('')
+      setFeedback({ kind: 'ok', text: 'Passphrase guardada en memoria de la sesión.' })
+      await refresh()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const runNow = async () => {
+    setBusy(true)
+    setFeedback(null)
+    try {
+      const result = await bridge.runNow()
+      setStatus(result)
+      if (result.lastError) {
+        setFeedback({ kind: 'err', text: result.lastError })
+      } else if (result.lastResultPath) {
+        setFeedback({ kind: 'ok', text: messages.success.backupSaved(result.lastResultPath) })
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const enabled = config?.enabled ?? false
+  const passphraseLoaded = status?.passphraseLoaded ?? false
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface-light/40 p-5 space-y-4">
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+            <CalendarClock size={18} className="text-accent-light" />
+            Backup automático
+          </h2>
+          <p className="text-xs text-muted mt-1">
+            Se ejecuta solo según la frecuencia y guarda el archivo cifrado en tu carpeta elegida.
+          </p>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-muted">
+          <input
+            type="checkbox"
+            checked={enabled}
+            disabled={busy || !config}
+            onChange={(e) => updateConfig({ enabled: e.target.checked })}
+            className="h-4 w-4 accent-accent"
+          />
+          Activado
+        </label>
+      </header>
+
+      {config && (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="space-y-1">
+            <label className="text-xs text-muted">Frecuencia</label>
+            <select
+              value={config.frequencyDays}
+              disabled={busy}
+              onChange={(e) => updateConfig({ frequencyDays: Number(e.target.value) })}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white"
+            >
+              {FREQ_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-muted">Mantener últimas N copias</label>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={config.retainCount}
+              disabled={busy}
+              onChange={(e) => updateConfig({ retainCount: Number(e.target.value) })}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white"
+            />
+          </div>
+
+          <div className="space-y-1 md:col-span-2">
+            <label className="text-xs text-muted">Carpeta destino</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                readOnly
+                value={config.destinationDir ?? 'Sin definir'}
+                className="flex-1 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white"
+              />
+              <button
+                type="button"
+                onClick={pickDestination}
+                disabled={busy}
+                className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white hover:bg-surface-light"
+              >
+                <FolderOpen size={14} /> Elegir
+              </button>
+            </div>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm text-white md:col-span-2">
+            <input
+              type="checkbox"
+              checked={config.encrypt}
+              disabled={busy}
+              onChange={(e) => updateConfig({ encrypt: e.target.checked })}
+              className="h-4 w-4 accent-accent"
+            />
+            <ShieldCheck size={14} className="text-accent-light" />
+            Cifrar backup con passphrase (recomendado)
+          </label>
+        </div>
+      )}
+
+      {config?.encrypt && (
+        <div className="rounded-lg border border-border bg-surface px-3 py-3 space-y-2">
+          <p className="text-xs text-muted flex items-center gap-2">
+            <KeyRound size={12} /> Passphrase {passphraseLoaded ? '(cargada en memoria)' : '(no definida)'}
+          </p>
+          <p className="text-[11px] text-muted">
+            La passphrase no se guarda a disco. Tenés que volver a ingresarla cuando reiniciás Personal OS.
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              value={passphrase}
+              onChange={(e) => setPassphrase(e.target.value)}
+              placeholder="Mínimo 8 caracteres"
+              className="flex-1 rounded-lg border border-border bg-surface-light px-3 py-2 text-sm text-white"
+            />
+            <button
+              type="button"
+              onClick={savePassphrase}
+              disabled={busy || passphrase.length < 8}
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white disabled:opacity-40"
+            >
+              Guardar
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="rounded-lg border border-border bg-surface px-3 py-3 grid grid-cols-2 gap-3 text-xs">
+        <div>
+          <p className="text-muted">Última ejecución</p>
+          <p className="text-white mt-0.5">{formatDate(status?.lastRunAt ?? null)}</p>
+        </div>
+        <div>
+          <p className="text-muted">Próxima estimada</p>
+          <p className="text-white mt-0.5">{formatDate(status?.nextRunAt ?? null)}</p>
+        </div>
+        {status?.lastError && (
+          <div className="col-span-2">
+            <p className="text-rose-300">Último error: {status.lastError}</p>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={runNow}
+          disabled={busy || !config}
+          className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white hover:bg-surface-light disabled:opacity-40"
+        >
+          <Play size={14} /> Ejecutar ahora
+        </button>
+        {feedback && (
+          <span
+            className={`text-xs ${feedback.kind === 'ok' ? 'text-emerald-300' : 'text-rose-300'}`}
+          >
+            {feedback.text}
+          </span>
+        )}
+      </div>
+    </section>
+  )
+}

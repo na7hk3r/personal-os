@@ -4,7 +4,10 @@ import { Save } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
 import { THEMES } from '../config/themes'
+import { PluginIcon } from './components/PluginIcon'
 import { BackupSection } from './control/BackupSection'
+import { ScheduledBackupSection } from './control/ScheduledBackupSection'
+import { AutoUpdateSection } from './control/AutoUpdateSection'
 import { OllamaSection } from './control/OllamaSection'
 import { AutomationsSection } from './control/AutomationsSection'
 import { NotificationsSection } from './control/NotificationsSection'
@@ -601,7 +604,9 @@ export function ControlCenter() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <p className="flex items-center gap-2 text-sm font-medium">
-                      <span className="shrink-0">{plugin.manifest.icon}</span>
+                      <span className="shrink-0 text-accent-light">
+                        <PluginIcon name={plugin.manifest.icon} size={16} />
+                      </span>
                       <span className="truncate">{plugin.manifest.name}</span>
                     </p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted">{plugin.manifest.description}</p>
@@ -657,6 +662,8 @@ export function ControlCenter() {
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <OllamaSection />
         <BackupSection />
+        <ScheduledBackupSection />
+        <AutoUpdateSection />
         <NotificationsSection />
         <TagsSection />
       </section>

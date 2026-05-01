@@ -1,20 +1,11 @@
 import { NavLink } from 'react-router-dom'
 import { useMemo } from 'react'
 import {
-  LayoutDashboard,
-  SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
-  Dumbbell,
-  SquarePen,
-  Ruler,
-  BriefcaseBusiness,
-  NotebookPen,
-  Link2,
   CalendarDays,
   Flame,
   LogOut,
-  type LucideIcon,
 } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
 import { pluginManager } from '../plugins/PluginManager'
@@ -23,22 +14,10 @@ import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { getLevelTier, getLevelTitle } from '@core/gamification/gamificationUtils'
 import { useAuthStore } from '@core/state/authStore'
 import { APP_VERSION } from '@core/utils/version'
-
-const iconMap: Record<string, LucideIcon> = {
-  LayoutDashboard,
-  SlidersHorizontal,
-  Dumbbell,
-  SquarePen,
-  Ruler,
-  BriefcaseBusiness,
-  NotebookPen,
-  Link2,
-}
+import { PluginIcon } from './components/PluginIcon'
 
 function renderNavIcon(iconName: string, size = 18) {
-  const Icon = iconMap[iconName]
-  if (Icon) return <Icon size={size} />
-  return <LayoutDashboard size={size} />
+  return <PluginIcon name={iconName} size={size} />
 }
 
 function hasPluginActivityToday(pluginId: string): boolean {
@@ -143,25 +122,25 @@ export function Sidebar() {
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
         {/* Core: Dashboard */}
         <NavLink to="/" end className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <LayoutDashboard size={18} className="shrink-0" />
+          <PluginIcon name="LayoutDashboard" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Dashboard</span>}
         </NavLink>
 
         {/* Core: Control Center */}
         <NavLink to="/control" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <SlidersHorizontal size={18} className="shrink-0" />
+          <PluginIcon name="SlidersHorizontal" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Control Center</span>}
         </NavLink>
 
         {/* Core: Notas */}
         <NavLink to="/notes" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <NotebookPen size={18} className="shrink-0" />
+          <PluginIcon name="NotebookPen" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Notas</span>}
         </NavLink>
 
         {/* Core: Enlaces */}
         <NavLink to="/links" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <Link2 size={18} className="shrink-0" />
+          <PluginIcon name="Link2" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Enlaces</span>}
         </NavLink>
 
