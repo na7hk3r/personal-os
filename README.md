@@ -6,7 +6,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.6.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.7.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
@@ -37,7 +37,11 @@ A diferencia de un dashboard de SaaS o una app cloud, **toda tu información viv
 
 - Integración por canal IPC con `http://127.0.0.1:11434` (sin CORS, sin telemetría).
 - Tareas predefinidas: **coach diario**, **review semanal**, **nudge de foco** — en español rioplatense, sin emojis.
+- **Daily Brief** — una línea accionable cada mañana, cacheada por día, con fallback determinístico cuando Ollama está off.
+- **Smart Focus Nudge** — si llevás 45 s en `/work` sin actividad y la última sesión de foco fue hace más de 4 h, la app te ofrece arrancar foco con la tarea más prioritaria. Una vez por sesión de la app.
+- **Note → Task** — desde el editor de Notas extraés tareas accionables a Kanban con un click (requiere Ollama).
 - El servicio `aiContextService` arma un snapshot real de tu actividad (fitness 7d, work, planner, gamificación, eventos recientes) y lo entrega al LLM como contexto.
+- **Registry de proveedores de contexto** (`registerAIContextProvider`): cada plugin aporta su slice al snapshot sin que el core lo conozca.
 - Configurable desde Control Center: enable, modelo, system prompt, temperatura.
 
 ### 🧱 Plugins
@@ -46,10 +50,11 @@ Sistema de plugins de primera clase. Hoy vienen incluidos:
 
 | Plugin | Qué resuelve |
 | --- | --- |
-| **Work** | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. |
+| **Work** | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
 | **Fitness** | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
+| **Finance** | Cuentas, transacciones, categorías, presupuestos mensuales y gastos recurrentes con motor RRULE-light. **Insights IA opcionales**: detección de gastos inusuales, resumen mensual narrativo y sugerencia de presupuestos por mediana 3 meses. Default UYU, multi-moneda. |
 
-Para la próxima ola de plugins (Hábitos, Finanzas, Journal, OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
+Para la próxima ola de plugins (Hábitos, Journal, OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
 
 Para crear uno nuevo:
 
@@ -208,6 +213,7 @@ personal-os/
 │   │                            # CommandPalette, pages (Calendar, Review, Planner...)
 │   ├── plugins/
 │   │   ├── fitness/
+│   │   ├── finance/
 │   │   └── work/
 │   └── test/                    # setup.ts (stubs de bridges Electron)
 ├── docs/                        # Documentación técnica completa
@@ -253,7 +259,6 @@ Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md]
 
 - **Galería de temas** con preview en vivo y theme builder.
 - **Plugin Hábitos** (rachas, recordatorios, heatmap anual).
-- **Plugin Finanzas** (personal-first, opt-in para empresa más adelante).
 - **Plugin Journal** con búsqueda full-text.
 - **Plugin Knowledge** (notas conectadas estilo Zettelkasten).
 - **Mejoras de accesibilidad** (foco visible, ARIA completo, navegación por teclado en todo).

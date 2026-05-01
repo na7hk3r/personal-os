@@ -1,5 +1,87 @@
 # Changelog - Personal OS
 
+## [1.7.0] - 2026-05-01
+
+Wave 2: **plugin Finanzas v1.0** completo, **Daily Brief contextual**, **Smart Focus Nudge**, **extracción Note → Task con IA**, registry de proveedores de contexto IA y carga lazy + virtualización de listas largas.
+
+### ✨ Nuevas características — core
+
+#### AIContextProvider registry
+- Nueva API `registerAIContextProvider({ id, collect, render })` para que cualquier plugin enriquezca el snapshot que recibe Ollama sin que el core conozca su esquema.
+- `aiContextService.snapshot()` ejecuta los providers en paralelo y `asPromptContext()` renderiza cada slice como `Plugin {id}: ...`.
+- Fundamento para insights contextuales por plugin sin acoplar el core.
+
+#### Daily Brief
+- Nuevo `dailyBriefService` que entrega **una línea accionable** al abrir la app.
+- Cache diario en `settings` (`core:dailyBrief:YYYYMMDD`); regenerable manualmente con un click.
+- Cuando Ollama está activo combina el `userContextSnapshot` con un prompt corto en español rioplatense (máx. 14 palabras, sin emojis, sin moralizar).
+- Fallback determinístico cuando Ollama está off o no responde.
+- Banner `DailyBriefBanner` montado en el Dashboard, dismissable por el día actual.
+
+### ✨ Nuevas características — plugin Work
+
+#### Smart Focus Nudge
+- Detecta 45 s sin actividad del usuario en `/work` y, si la última `FocusSession` cerró hace más de 4 h, ofrece arrancar foco con la tarea más prioritaria (vencimiento más cercano o mejor posición).
+- Una sola disparación por sesión de la app, vía toast con CTA **Empezar foco** que llama a `startWorkFocusSession`.
+
+#### Note → Task extraction
+- Nuevo `noteExtractionService` que pide a Ollama un JSON estricto `{ tasks: [{ title, dueDate? }] }` y crea cards en la primera columna del primer board.
+- Botón **Extraer tareas** visible en el editor de Notas sólo cuando la nota supera los 200 caracteres.
+- Parser tolerante: si el modelo agrega texto fuera del JSON, se recortan los delimitadores.
+
+### ✨ Nuevo plugin — Finance
+
+Movimientos, cuentas, presupuestos y gastos recurrentes con awareness IA opcional. Default en **UYU** (configurable por cuenta), formato `es-UY`.
+
+#### Esquema y operaciones
+- Migraciones v1: `finance_accounts`, `finance_categories`, `finance_transactions`, `finance_recurring`, `finance_budgets`, `finance_merchant_aliases` con FKs (`account_id ON DELETE RESTRICT`, `category_id ON DELETE SET NULL`) e índices `idx_finance_tx_account_date` / `idx_finance_tx_category_date`.
+- Migración v2: seed de categorías por defecto (Comida, Transporte, Hogar, Salud, Entretenimiento, Suscripciones, Sueldo, etc.).
+- Allowlist de tablas y columnas finance agregada al `StorageAPI` para mantener el SQL sandbox cerrado.
+
+#### Páginas y componentes
+- **FinanceDashboard** con balance total, KPIs del mes (ingresos, gastos, neto con delta vs mes anterior), QuickAdd inline y movimientos recientes agrupados por día.
+- **TransactionsPage** con filtros por rango, cuenta, categoría, búsqueda y kind. Lista virtualizada con `@tanstack/react-virtual` cuando hay más de 50 movimientos.
+- **CategoriesPage** con conteo de uso y borrado seguro.
+- **BudgetsPage** con editor inline por categoría de gasto, barra de progreso (rosa al pasar el límite) y **Sugerir desde mediana 3 meses**.
+- **RecurringPage** con creación de plantillas RRULE-light (`DAILY`/`WEEKLY`/`MONTHLY` + `INTERVAL` + `BYMONTHDAY`), pausa/activación y **Ejecutar ahora**.
+- **InsightsPage** con resumen mensual narrativo (vía IA o fallback determinístico) y deltas vs mes anterior.
+- Widget `FinanceSummaryWidget` 1x1 para el Dashboard core.
+
+#### IA opcional
+- `financeAIProvider` registrado en el `aiContextRegistry`: aporta totales del mes, top categorías y recurrentes próximos al snapshot global.
+- **Detección de anomalías**: cada `TRANSACTION_CREATED` con categoría se compara contra el p90 de los últimos 5+ samples; si supera 1.5× se notifica vía toast informativo.
+- **Resumen mensual** con narrativa Ollama (máx. 4 oraciones, rioplatense) o fallback estructurado.
+- **Sugerencia de presupuestos** por mediana de los últimos 3 meses por categoría.
+
+#### Eventos y gamificación
+- Eventos: `FINANCE_TRANSACTION_CREATED`, `FINANCE_RECURRING_CREATED`, `FINANCE_BUDGET_CREATED`, `FINANCE_ANOMALY_DETECTED`.
+- Gamificación: +2 XP por transacción, +5 por recurrente, +5 por presupuesto.
+
+### ⚡ Performance
+
+#### Suspense por ruta
+- Páginas core pesadas (`ControlCenter`, `CalendarPage`, `ReviewPage`, `PlannerPage`, `NotesPage`, `LinksPage`) y todas las páginas de plugins ahora usan `React.lazy` + `Suspense` con fallback liviano.
+- Bundle inicial más liviano y arranque más rápido en el Dashboard.
+
+#### Virtualización
+- `@tanstack/react-virtual` agregado como dependencia.
+- `TransactionsPage` virtualiza filas a partir de 50 movimientos para mantener 60 fps con datasets largos.
+
+### 🐛 Fixes
+
+- Selectores Zustand del plugin Finance que devolvían arrays nuevos en cada render (`(s) => s.accounts.filter(...)`) provocaban *Maximum update depth exceeded*. Refactor a selector crudo + `useMemo`.
+- `QuickAddTransaction` y `RecurringPage` ahora sincronizan `accountId` cuando se crean cuentas tras el primer render (eliminando el falso "Elegí una cuenta").
+- `FinanceDashboard` pierde imports muertos y mantiene únicamente lo usado.
+
+### 🔧 Operativo
+
+- Bump a `1.7.0`.
+- Nueva dependencia: `@tanstack/react-virtual ^3.13`.
+- Nuevo plugin id `finance` registrado en `core/config/plugins.ts`.
+- README, CHANGELOG y versión en pantalla actualizados.
+
+---
+
 ## [1.6.0] - 2026-05-01
 
 Wave 1 de pulido **enterprise**: backups programados, auto-update integrado, exportación de diagnósticos, onboarding con primera acción, undo en operaciones destructivas, retención de eventos y endurecimiento general de la UI.
