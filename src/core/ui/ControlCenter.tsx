@@ -338,8 +338,19 @@ export function ControlCenter() {
 
             {/* Temas */}
             <div className="rounded-lg border border-border bg-surface px-4 py-3">
-              <p className="text-sm font-medium">Tema de color</p>
-              <p className="mb-3 text-xs text-muted">El tema se previsualiza al instante.</p>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium">Tema de color</p>
+                  <p className="text-xs text-muted">El tema se previsualiza al instante.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate('/themes')}
+                  className="shrink-0 rounded-md border border-border bg-surface-light px-2.5 py-1 text-[11px] text-muted hover:border-accent/50 hover:text-white"
+                >
+                  Galería completa
+                </button>
+              </div>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
                 {THEMES.map((t) => (
                   <button
