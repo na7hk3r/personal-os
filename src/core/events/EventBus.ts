@@ -15,6 +15,9 @@ function inferEventSource(event: string): string | undefined {
   if (event.startsWith('GAMIFICATION_')) {
     return 'gamification'
   }
+  if (event.startsWith('GOALS_')) {
+    return 'goals'
+  }
   return undefined
 }
 
