@@ -1,18 +1,33 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 import { GamificationNotificationHub } from './GamificationNotificationHub'
 import { SystemSuggestions } from './SystemSuggestions'
 import { AppUpdateBanner } from './components/AppUpdateBanner'
+import { CopilotPanel } from './CopilotPanel'
+
+const COPILOT_COLLAPSED_KEY = 'core:copilotPanel:collapsed'
 
 export function Shell() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const theme = useCoreStore((s) => s.settings.theme)
+  const [copilotCollapsed, setCopilotCollapsed] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.localStorage?.getItem(COPILOT_COLLAPSED_KEY) === 'true'
+  })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme || 'default')
   }, [theme])
+
+  const toggleCopilot = () => {
+    setCopilotCollapsed((prev) => {
+      const next = !prev
+      try { window.localStorage?.setItem(COPILOT_COLLAPSED_KEY, next ? 'true' : 'false') } catch { /* ignore */ }
+      return next
+    })
+  }
 
   return (
     <div
@@ -43,6 +58,8 @@ export function Shell() {
           <Outlet />
         </div>
       </main>
+      <CopilotPanel collapsed={copilotCollapsed} onToggle={toggleCopilot} />
     </div>
   )
 }
+

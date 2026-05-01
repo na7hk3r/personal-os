@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronUp, Maximize2, Minimize2, Puzzle, SlidersHorizontal, Zap } from 'lucide-react'
 import { pluginManager } from '../plugins/PluginManager'
 import { SystemStatusHero } from './SystemStatusHero'
-import { DailyBriefBanner } from './DailyBriefBanner'
 import { QuickActionsBar } from './QuickActionsBar'
 import { GlobalProgress } from './GlobalProgress'
 import { DailyMissions } from './DailyMissions'
@@ -170,10 +169,7 @@ export function Dashboard() {
       {/* 1. Hero */}
       <SystemStatusHero />
 
-      {/* 1b. Daily Brief */}
-      <DailyBriefBanner />
-
-      {/* 2. Quick Actions */}
+      {/* 2. Quick Actions (el brief diario ahora vive en el CopilotPanel persistente) */}
       <QuickActionsBar />
 
       {/* 3. Global Progress + Daily Missions */}
