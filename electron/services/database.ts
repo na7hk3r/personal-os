@@ -28,6 +28,9 @@ const CORE_SCHEMA = `
     created_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE INDEX IF NOT EXISTS idx_events_log_created_at ON events_log(created_at);
+  CREATE INDEX IF NOT EXISTS idx_events_log_type_created ON events_log(event_type, created_at);
+
   CREATE TABLE IF NOT EXISTS plugin_state (
     plugin_id TEXT NOT NULL,
     key TEXT NOT NULL,
@@ -193,6 +196,43 @@ export class DatabaseService {
     this.userDb.pragma('busy_timeout = 5000')
     this.userDb.exec(CORE_SCHEMA)
     this.activeUserId = userId
+    this.purgeOldEvents()
+  }
+
+  /**
+   * Política de retención del log de eventos.
+   * Sin esto, `events_log` crece sin tope y degrada inserts/queries con el
+   * tiempo. Llamado al activar usuario (≈ una vez por arranque); barato gracias
+   * al índice por `created_at` implícito en SQLite.
+   */
+  private static readonly EVENT_RETENTION_DAYS = 90
+  private static readonly EVENT_HARD_CAP_ROWS = 50_000
+
+  private purgeOldEvents(): void {
+    if (!this.userDb) return
+    try {
+      this.userDb
+        .prepare(
+          `DELETE FROM events_log WHERE created_at < datetime('now', ?)`,
+        )
+        .run(`-${DatabaseService.EVENT_RETENTION_DAYS} days`)
+
+      // Defensa adicional contra bursts: si todavía hay más filas que el cap,
+      // borra las más viejas hasta dejar el cap.
+      const row = this.userDb
+        .prepare(`SELECT COUNT(*) as c FROM events_log`)
+        .get() as { c: number }
+      if (row.c > DatabaseService.EVENT_HARD_CAP_ROWS) {
+        const excess = row.c - DatabaseService.EVENT_HARD_CAP_ROWS
+        this.userDb
+          .prepare(
+            `DELETE FROM events_log WHERE id IN (SELECT id FROM events_log ORDER BY id ASC LIMIT ?)`,
+          )
+          .run(excess)
+      }
+    } catch (err) {
+      console.warn('[DatabaseService] purgeOldEvents failed:', err)
+    }
   }
 
   clearActiveUser(): void {
