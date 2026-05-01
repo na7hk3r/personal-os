@@ -21,6 +21,18 @@ export function Shell() {
     document.documentElement.setAttribute('data-theme', theme || 'default')
   }, [theme])
 
+  // Permite que otras superficies (ej. DailyScoreScreen) abran el copiloto
+  // sin acoplarse al estado local de Shell. Persiste también el flag para
+  // que recargas mantengan la preferencia.
+  useEffect(() => {
+    const handler = () => {
+      setCopilotCollapsed(false)
+      try { window.localStorage?.setItem(COPILOT_COLLAPSED_KEY, 'false') } catch { /* ignore */ }
+    }
+    window.addEventListener('copilot:open', handler as EventListener)
+    return () => window.removeEventListener('copilot:open', handler as EventListener)
+  }, [])
+
   const toggleCopilot = () => {
     setCopilotCollapsed((prev) => {
       const next = !prev
