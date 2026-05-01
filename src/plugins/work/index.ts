@@ -3,6 +3,7 @@ import { registerPlugin } from '@core/plugins/PluginRegistry'
 import { useWorkStore } from './store'
 import { WORK_EVENTS } from './events'
 import { WorkDashboard } from './pages/WorkDashboard'
+import { NotesPage } from './pages/NotesPage'
 import { WorkSummaryWidget } from './components/WorkSummaryWidget'
 import { startWorkFocusSession } from './focus'
 import type { Board, Column, Card, Note, Link, FocusSession } from './types'
@@ -147,10 +148,19 @@ const workPlugin: PluginManifest = {
       icon: 'BriefcaseBusiness',
       component: WorkDashboard,
     },
+    {
+      id: 'work-notes',
+      pluginId: 'work',
+      path: '/work/notes',
+      title: 'Notas',
+      icon: 'SquarePen',
+      component: NotesPage,
+    },
   ],
 
   navItems: [
     { id: 'work-nav', pluginId: 'work', label: 'Work', icon: 'BriefcaseBusiness', path: '/work', order: 20 },
+    { id: 'work-notes-nav', pluginId: 'work', label: 'Notas', icon: 'SquarePen', path: '/work/notes', order: 22, parentId: 'work-nav' },
   ],
 
   events: {

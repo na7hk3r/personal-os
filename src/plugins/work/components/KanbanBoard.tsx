@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import {
@@ -229,6 +229,42 @@ export function KanbanBoard() {
 
     eventBus.emit(WORK_EVENTS.TASK_CREATED, { id, title, columnId })
   }
+
+  // Atajo global Ctrl/Cmd + T → crea tarea en la primera columna disponible.
+  useEffect(() => {
+    const onCreate = async () => {
+      const firstCol = columns[0]
+      if (!firstCol) return
+      const id = crypto.randomUUID()
+      const position = cards.filter((c) => c.columnId === firstCol.id && !c.archived).length
+      const card: Card = {
+        id,
+        columnId: firstCol.id,
+        title: 'Nueva tarea',
+        description: '',
+        content: '',
+        labels: [],
+        dueDate: null,
+        position,
+        priority: null,
+        estimateMinutes: null,
+        checklist: [],
+        archived: false,
+        archivedAt: null,
+      }
+      addCard(card)
+      if (window.storage) {
+        await window.storage.execute(
+          `INSERT INTO work_cards (id, column_id, title, description, content, labels, due_date, position, priority, estimate_minutes, checklist, archived, archived_at)
+           VALUES (?, ?, ?, '', '', '[]', NULL, ?, NULL, NULL, '[]', 0, NULL)`,
+          [id, firstCol.id, card.title, position],
+        )
+      }
+      eventBus.emit(WORK_EVENTS.TASK_CREATED, { id, title: card.title, columnId: firstCol.id })
+    }
+    window.addEventListener('work:new-task', onCreate as EventListener)
+    return () => window.removeEventListener('work:new-task', onCreate as EventListener)
+  }, [columns, cards, addCard])
 
   const handleDeleteCard = async (id: string) => {
     const target = cards.find((c) => c.id === id)
