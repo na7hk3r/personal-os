@@ -1,36 +1,82 @@
 import { Github, ExternalLink } from 'lucide-react'
 import { Button } from '../components/Button'
 import { DownloadButton } from '../components/DownloadButton'
+import { useTypewriter } from '../hooks/useTypewriter'
 
 const REPO_URL = 'https://github.com/na7hk3r/personal-os'
 
+const COPILOT_LINE =
+  'Hoy estás 18% por debajo de tu foco semanal. Tenés 2 tareas que vencen hoy.'
+
 export function Hero() {
+  const { text, done, ref } = useTypewriter<HTMLDivElement>(COPILOT_LINE, {
+    speed: 28,
+    startDelay: 600,
+    whenVisible: true,
+  })
+
   return (
     <section className="relative pt-28 pb-20 md:pt-36 md:pb-28 px-4 md:px-8 max-w-6xl mx-auto text-center overflow-hidden">
-      {/* Decorative blobs */}
+      {/* Grid de puntos sutil — sensación "datos / sistema" */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 opacity-50"
-      >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-accent/20 blur-3xl" />
-      </div>
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.35]"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgb(var(--color-muted) / 0.35) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+          maskImage:
+            'radial-gradient(ellipse at 50% 30%, #000 35%, transparent 75%)',
+          WebkitMaskImage:
+            'radial-gradient(ellipse at 50% 30%, #000 35%, transparent 75%)',
+        }}
+      />
+
+      {/* Glow de acento detrás del título */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute top-10 left-1/2 -translate-x-1/2 -z-10 w-[520px] h-[520px] rounded-full bg-accent/15 blur-3xl"
+      />
 
       <p className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-light border border-border text-sm text-muted mb-6 animate-fade-in">
         <span className="w-2 h-2 rounded-full bg-accent animate-pulse" aria-hidden="true" />
-        100 % local · open source · multiplataforma
+        Copiloto local · Sin nube · Open source
       </p>
 
-      <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground animate-slide-up">
-        Personal OS
-        <span className="block mt-3 text-2xl md:text-3xl lg:text-4xl font-medium text-muted">
-          Tu sistema operativo personal modular
-        </span>
+      <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground animate-slide-up leading-[1.05]">
+        El copiloto que conoce
+        <span className="block mt-2 text-accent">toda tu vida.</span>
       </h1>
 
       <p className="mt-8 max-w-2xl mx-auto text-lg md:text-xl text-muted leading-relaxed animate-slide-up">
-        Productividad, hábitos, finanzas y salud en una sola app de escritorio.
-        Plugins, gamificación, IA local opcional y cero telemetría.
+        Personal OS conecta tu trabajo, salud, hábitos y finanzas para decirte
+        qué hacer hoy — sin enviar tus datos a ningún servidor.
       </p>
+
+      {/* Línea typewriter simulando al copiloto */}
+      <div
+        ref={ref}
+        className="mt-10 mx-auto max-w-2xl rounded-2xl border border-border bg-surface/60 backdrop-blur-sm px-5 py-4 text-left shadow-sm animate-slide-up"
+        aria-live="polite"
+      >
+        <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted mb-2">
+          <span
+            className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"
+            aria-hidden="true"
+          />
+          Copiloto · ahora
+        </div>
+        <p className="font-mono text-sm md:text-base text-foreground min-h-[1.5em]">
+          {text}
+          <span
+            aria-hidden="true"
+            className={`inline-block w-[0.55ch] -mb-[2px] ml-[1px] bg-accent ${
+              done ? 'animate-pulse' : ''
+            }`}
+            style={{ height: '1em', verticalAlign: 'middle' }}
+          />
+        </p>
+      </div>
 
       <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up">
         <DownloadButton size="lg" />
@@ -49,7 +95,7 @@ export function Hero() {
       </div>
 
       <p className="mt-6 text-sm text-muted">
-        Disponible para Windows, Linux y macOS · Licencia ISC
+        Windows · Linux · macOS · Licencia ISC · Sin cuenta requerida
       </p>
     </section>
   )

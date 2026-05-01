@@ -1,17 +1,22 @@
 import { Github } from 'lucide-react'
 import { ThemeToggle } from './components/ThemeToggle'
 import { Hero } from './sections/Hero'
+import { HowItWorks } from './sections/HowItWorks'
 import { Features } from './sections/Features'
+import { CopilotDemo } from './sections/CopilotDemo'
 import { Plugins } from './sections/Plugins'
 import { Screenshots } from './sections/Screenshots'
+import { ForDevs } from './sections/ForDevs'
 import { Download_ } from './sections/Download'
-import { Docs } from './sections/Docs'
 import { FAQ } from './sections/FAQ'
 import { Footer } from './sections/Footer'
+import { useLatestRelease } from './hooks/useLatestRelease'
 
 const REPO_URL = 'https://github.com/na7hk3r/personal-os'
 
 export default function App() {
+  const { release } = useLatestRelease()
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Skip link */}
@@ -29,9 +34,15 @@ export default function App() {
             <span className="inline-block w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
             Personal OS
           </a>
-          <nav aria-label="Principal" className="hidden md:flex items-center gap-6 text-sm text-muted">
+          <nav
+            aria-label="Principal"
+            className="hidden md:flex items-center gap-6 text-sm text-muted"
+          >
+            <a href="#how-it-works" className="hover:text-foreground transition-colors">
+              Cómo funciona
+            </a>
             <a href="#features" className="hover:text-foreground transition-colors">
-              Características
+              Para vos
             </a>
             <a href="#plugins" className="hover:text-foreground transition-colors">
               Plugins
@@ -39,14 +50,25 @@ export default function App() {
             <a href="#download" className="hover:text-foreground transition-colors">
               Descargar
             </a>
-            <a href="#docs" className="hover:text-foreground transition-colors">
-              Docs
+            <a href="#devs" className="hover:text-foreground transition-colors">
+              Para devs
             </a>
             <a href="#faq" className="hover:text-foreground transition-colors">
               FAQ
             </a>
           </nav>
           <div className="flex items-center gap-2">
+            {release && (
+              <a
+                href={release.htmlUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Versión ${release.version}`}
+                className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-md bg-accent/10 border border-accent/30 text-xs font-mono text-accent hover:bg-accent/20 transition-colors"
+              >
+                v{release.version}
+              </a>
+            )}
             <ThemeToggle />
             <a
               href={REPO_URL}
@@ -63,11 +85,13 @@ export default function App() {
 
       <main id="main" className="flex-1">
         <Hero />
+        <HowItWorks />
         <Features />
+        <CopilotDemo />
         <Plugins />
         <Screenshots />
+        <ForDevs />
         <Download_ />
-        <Docs />
         <FAQ />
       </main>
 

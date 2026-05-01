@@ -1,6 +1,8 @@
 import { Section } from '../components/Section'
 import { plugins } from '../data/plugins'
 
+const REPO_URL = 'https://github.com/na7hk3r/personal-os'
+
 export function Plugins() {
   return (
     <Section
@@ -37,6 +39,23 @@ export function Plugins() {
             </div>
           </article>
         ))}
+      </div>
+
+      <div className="mt-10 rounded-2xl border border-dashed border-border bg-surface/30 p-6 text-center">
+        <p className="text-sm text-muted">
+          En desarrollo:{' '}
+          <span className="text-foreground font-medium">Knowledge</span>,{' '}
+          <span className="text-foreground font-medium">Time Tracking</span>,{' '}
+          <span className="text-foreground font-medium">Goals &amp; OKRs</span>
+        </p>
+        <a
+          href={`${REPO_URL}/blob/main/docs/PLUGIN_IDEAS.md`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-block text-sm text-accent hover:underline"
+        >
+          Ver roadmap completo →
+        </a>
       </div>
     </Section>
   )

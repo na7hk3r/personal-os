@@ -5,6 +5,21 @@ export interface FAQItem {
 
 export const faq: FAQItem[] = [
   {
+    question: '¿Funciona sin instalar Ollama?',
+    answer:
+      'Sí. Ollama es completamente opcional. La app funciona al 100% sin IA. Si lo instalás, el copiloto se activa automáticamente.',
+  },
+  {
+    question: '¿Qué tan difícil es empezar?',
+    answer:
+      'Instalás la app, elegís tus módulos y en 5 minutos tenés datos. No hay configuración compleja ni cuenta que crear.',
+  },
+  {
+    question: '¿Puedo ver el código que maneja mis datos?',
+    answer:
+      'Todo el código es público en GitHub. Podés auditar exactamente cómo se almacena, cifra y procesa cada dato.',
+  },
+  {
     question: '¿Es gratis?',
     answer:
       'Sí. Personal OS es open source bajo licencia ISC y gratuito para uso personal. No hay tier "Pro", no hay paywall.',

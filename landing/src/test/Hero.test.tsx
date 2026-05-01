@@ -3,11 +3,20 @@ import { render, screen } from '@testing-library/react'
 import { Hero } from '../sections/Hero'
 
 describe('Hero', () => {
-  it('renderiza el título principal y subtítulo', () => {
+  it('renderiza el título principal y subtítulo del copiloto', () => {
     render(<Hero />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/Personal OS/i)
+    const h1 = screen.getByRole('heading', { level: 1 })
+    expect(h1).toHaveTextContent(/copiloto que conoce/i)
+    expect(h1).toHaveTextContent(/toda tu vida/i)
     expect(
-      screen.getByText(/Tu sistema operativo personal modular/i),
+      screen.getByText(/Personal OS conecta tu trabajo, salud, hábitos y finanzas/i),
+    ).toBeInTheDocument()
+  })
+
+  it('muestra el badge de copiloto local y open source', () => {
+    render(<Hero />)
+    expect(
+      screen.getByText(/Copiloto local · Sin nube · Open source/i),
     ).toBeInTheDocument()
   })
 
