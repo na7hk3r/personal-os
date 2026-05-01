@@ -17,6 +17,7 @@ import { HabitsDashboard } from './pages/HabitsDashboard'
 import { HabitsManagePage } from './pages/HabitsManagePage'
 import { HabitsHistoryPage } from './pages/HabitsHistoryPage'
 import { habitDefinitionsRepo, habitLogsRepo } from './repository'
+import { computeStats } from './utils'
 
 const habitsPlugin: PluginManifest = {
   id: 'habits',
@@ -98,6 +99,30 @@ const habitsPlugin: PluginManifest = {
     store.setLogs(logs)
 
     registerAIContextProvider(habitsAIProvider)
+
+    // Publica métricas cross-plugin (consumidas por Goals/OKRs).
+    function publishHabitsMetrics() {
+      const state = useHabitsStore.getState()
+      const active = state.habits.filter((h) => !h.archived)
+      if (active.length === 0) {
+        api.metrics.publish('habits.top_streak', 0)
+        api.metrics.publish('habits.completion_rate_30d', 0)
+        return
+      }
+      let topStreak = 0
+      let rateSum = 0
+      for (const h of active) {
+        const s = computeStats(h, state.logs.filter((l) => l.habitId === h.id))
+        if (s.streak > topStreak) topStreak = s.streak
+        rateSum += s.rate30d
+      }
+      api.metrics.publish('habits.top_streak', topStreak)
+      api.metrics.publish('habits.completion_rate_30d', Math.round((rateSum / active.length) * 100))
+    }
+    publishHabitsMetrics()
+    api.events.on(HABITS_EVENTS.HABIT_LOGGED, publishHabitsMetrics)
+    api.events.on(HABITS_EVENTS.HABIT_UNLOGGED, publishHabitsMetrics)
+    api.events.on(HABITS_EVENTS.HABIT_GOAL_MET, publishHabitsMetrics)
 
     api.events.on(HABITS_EVENTS.HABIT_LOGGED, () => {
       api.gamification.addPoints(2, 'Hábito registrado')

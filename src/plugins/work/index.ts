@@ -312,6 +312,34 @@ const workPlugin: PluginManifest = {
       api.gamification.addPoints(3, 'Nota creada')
     })
 
+    // Métricas cross-plugin (consumidas por Goals/OKRs).
+    function publishWorkMetrics() {
+      const state = useWorkStore.getState()
+      const now = new Date()
+      const year = now.getFullYear()
+      const month = now.getMonth()
+      const quarterStart = new Date(year, month - (month % 3), 1).getTime()
+
+      let focusMs = 0
+      let sessionsCompleted = 0
+      for (const s of state.focusSessions) {
+        if (!s.endTime || s.interrupted) continue
+        if (s.startTime < quarterStart) continue
+        focusMs += s.duration ?? Math.max(0, s.endTime - s.startTime)
+        sessionsCompleted += 1
+      }
+      const tasksArchived = state.cards.filter(
+        (c) => c.archived && (c.archivedAt ?? 0) >= quarterStart,
+      ).length
+
+      api.metrics.publish('work.focus_hours', Math.round((focusMs / 3_600_000) * 10) / 10)
+      api.metrics.publish('work.focus_sessions', sessionsCompleted)
+      api.metrics.publish('work.tasks_completed', tasksArchived)
+    }
+    publishWorkMetrics()
+    api.events.on(WORK_EVENTS.FOCUS_COMPLETED, publishWorkMetrics)
+    api.events.on(WORK_EVENTS.TASK_COMPLETED, publishWorkMetrics)
+
     // Quick action del Core: iniciar foco libre si no hay sesión.
     api.events.on('core:focus-request', () => {
       const state = useWorkStore.getState()
