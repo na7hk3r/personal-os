@@ -73,7 +73,7 @@ describe('R5 — phantom UI', () => {
     const report = runAudit(emptyInputs({
       manifests: [makeManifest({
         id: 'finance',
-        pages: [{ id: 'dash', path: '/finance', icon: 'Wallet', component: (() => null) as unknown as PluginManifest['pages'] extends (infer T)[] ? T['component'] : never }],
+        pages: [{ id: 'dash', path: '/finance', icon: 'Wallet', component: (() => null) }] as unknown as PluginManifest['pages'],
       })],
       activePluginIds: [],
     }))
@@ -155,7 +155,7 @@ describe('R8 — quick actions', () => {
     const report = runAudit(emptyInputs({
       manifests: [makeManifest({
         id: 'finance',
-        pages: [{ id: 'dash', path: '/finance', icon: 'Wallet', component: (() => null) as never }],
+        pages: [{ id: 'dash', path: '/finance', icon: 'Wallet', component: (() => null) }] as unknown as PluginManifest['pages'],
       })],
       activePluginIds: [],
       quickActions: [{ label: 'Nuevo movimiento', path: '/finance/new' }],
@@ -170,7 +170,7 @@ describe('R9 — onboarding & R10 — persistence', () => {
       manifests: [makeManifest({
         id: 'fitness',
         onboarding: { questions: [] },
-      } as Partial<PluginManifest> & { id: string })],
+      } as unknown as Partial<PluginManifest> & { id: string })],
       activePluginIds: [],
     }))
     expect(report.findings.some((f) => f.rule === 'R9')).toBe(true)

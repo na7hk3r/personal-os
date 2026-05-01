@@ -84,5 +84,5 @@ export function applyIconFix(manifest: { icon?: string; iconography?: { primary:
   return false
 }
 
-export type { AuditInputs, AuditReport, Finding, Severity, RuleId, AuditFix } from './types'
+export type { AuditInputs, AuditReport, Finding, Severity, RuleId, AuditFix, AchievementBinding, MissionBinding, QuickActionRef } from './types'
 export { DOMAIN_ICON_CATALOG, NEUTRAL_ICONS, suggestIconsForDomain, isIconValidForDomain } from './domainIconCatalog'
