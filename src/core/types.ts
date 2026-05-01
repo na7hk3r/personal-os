@@ -121,6 +121,81 @@ export interface NotificationsBridge {
   show: (payload: NotificationPayload) => Promise<{ ok: boolean; reason?: string }>
 }
 
+// ─── Diagnostic ───
+
+export interface DiagnosticReportInput {
+  message?: string
+  stack?: string
+  componentStack?: string
+  label?: string
+  recentEvents?: Array<{ event: string; timestamp: number }>
+  recentLogs?: string[]
+  appVersion?: string
+}
+
+export interface DiagnosticExportResult {
+  ok: boolean
+  canceled?: boolean
+  path?: string
+  error?: string
+}
+
+export interface DiagnosticBridge {
+  export: (payload: DiagnosticReportInput) => Promise<DiagnosticExportResult>
+}
+
+// ─── Auto-update ───
+
+export type AppUpdateStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'no-update'; currentVersion: string }
+  | { state: 'available'; version: string; releaseNotes?: string }
+  | { state: 'downloading'; percent: number; transferredBytes: number; totalBytes: number }
+  | { state: 'downloaded'; version: string }
+  | { state: 'error'; message: string }
+  | { state: 'disabled'; reason: string }
+
+export interface AppUpdateBridge {
+  getStatus: () => Promise<AppUpdateStatus>
+  checkForUpdates: () => Promise<AppUpdateStatus>
+  downloadUpdate: () => Promise<AppUpdateStatus>
+  quitAndInstall: () => Promise<void>
+  onStatus: (cb: (status: AppUpdateStatus) => void) => () => void
+}
+
+// ─── Scheduled backup ───
+
+export interface ScheduledBackupConfig {
+  enabled: boolean
+  /** Frecuencia en días. */
+  frequencyDays: number
+  /** Carpeta destino (absoluta). */
+  destinationDir: string | null
+  /** Si es true, los backups se cifran usando la passphrase de la sesión almacenada en memoria. */
+  encrypt: boolean
+  /** Cantidad máxima de backups a retener en la carpeta destino. */
+  retainCount: number
+}
+
+export interface ScheduledBackupStatus {
+  config: ScheduledBackupConfig
+  lastRunAt: string | null
+  lastResultPath: string | null
+  lastError: string | null
+  nextRunAt: string | null
+  passphraseLoaded: boolean
+}
+
+export interface ScheduledBackupBridge {
+  getStatus: () => Promise<ScheduledBackupStatus>
+  setConfig: (config: Partial<ScheduledBackupConfig>) => Promise<ScheduledBackupStatus>
+  pickDestination: () => Promise<{ path: string | null }>
+  /** Provee la passphrase para esta sesión (no se persiste en disco). */
+  setPassphrase: (passphrase: string | null) => Promise<{ ok: boolean }>
+  runNow: () => Promise<ScheduledBackupStatus>
+}
+
 // ─── UI Registration ───
 
 export interface WidgetDefinition {
