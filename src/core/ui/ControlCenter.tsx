@@ -351,22 +351,36 @@ export function ControlCenter() {
                   Galería completa
                 </button>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <div className="max-h-[180px] space-y-2 overflow-y-auto pr-1">
                 {THEMES.map((t) => (
                   <button
                     key={t.value}
                     onClick={() => updateSettings({ theme: t.value })}
-                    className={`flex flex-col items-start rounded-lg border px-3 py-2 text-left transition-all ${
+                    className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition-all ${
                       settings.theme === t.value
                         ? 'border-accent bg-accent/15 text-white'
                         : 'border-border bg-surface-light/50 text-muted hover:border-accent/40 hover:text-white'
                     }`}
                   >
-                    <span className="text-xs font-semibold">{t.label}</span>
-                    <span className="mt-0.5 line-clamp-1 text-[11px] opacity-70">{t.description}</span>
+                    <span
+                      className="h-4 w-4 shrink-0 rounded-full border border-black/30"
+                      style={{ background: t.swatch.accent }}
+                      aria-hidden
+                    />
+                    <span className="flex min-w-0 flex-col">
+                      <span className="text-xs font-semibold">{t.label}</span>
+                      <span className="line-clamp-1 text-[11px] opacity-70">{t.description}</span>
+                    </span>
                   </button>
                 ))}
               </div>
+              <button
+                type="button"
+                onClick={() => navigate('/themes')}
+                className="mt-2 w-full rounded-md border border-dashed border-border px-3 py-1.5 text-[11px] text-muted hover:border-accent/50 hover:text-accent-light"
+              >
+                Ver los {THEMES.length} temas con previsualización en vivo →
+              </button>
             </div>
           </div>
 
