@@ -1,17 +1,22 @@
 import { useState } from 'react'
 import { useCoreStore } from '../../state/coreStore'
 import { pluginManager } from '../../plugins/PluginManager'
+import { eventBus } from '../../events/EventBus'
 import { StepWelcome } from './steps/StepWelcome'
 import { StepName } from './steps/StepName'
 import { StepPlugins, type PluginSelection } from './steps/StepPlugins'
 import { StepFitnessConfig, type FitnessConfig } from './steps/StepFitnessConfig'
+import { StepFirstAction, type FirstActionResult } from './steps/StepFirstAction'
 import { StepSummary } from './steps/StepSummary'
 
-type Step = 'welcome' | 'name' | 'plugins' | 'fitness' | 'summary'
+type Step = 'welcome' | 'name' | 'plugins' | 'fitness' | 'first-action' | 'summary'
 
-const STEPS: Step[] = ['welcome', 'name', 'plugins', 'fitness', 'summary']
+const DOTS_STEPS: Step[] = ['name', 'plugins', 'fitness', 'first-action', 'summary']
 
-const DOTS_STEPS: Step[] = ['name', 'plugins', 'fitness', 'summary']
+function makeId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID()
+  return `id-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+}
 
 export function OnboardingWizard() {
   const { updateProfile, setActivePlugins, completeOnboarding, persistProfile } = useCoreStore()
@@ -25,6 +30,7 @@ export function OnboardingWizard() {
     currentWeight: '',
     weightGoal: '',
   })
+  const [firstAction, setFirstAction] = useState<FirstActionResult | null>(null)
 
   const goTo = (s: Step) => setStep(s)
 
@@ -39,7 +45,7 @@ export function OnboardingWizard() {
     if (sel.fitness) {
       goTo('fitness')
     } else {
-      goTo('summary')
+      goTo('first-action')
     }
   }
 
@@ -66,6 +72,41 @@ export function OnboardingWizard() {
            VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
           [parseFloat(cfg.currentWeight)],
         )
+      }
+    }
+
+    goTo('first-action')
+  }
+
+  const handleFirstAction = async (result: FirstActionResult) => {
+    setFirstAction(result)
+
+    if (result.kind !== 'skip' && window.storage) {
+      try {
+        if (result.kind === 'work_task' && result.value && plugins.work) {
+          await window.storage.execute(
+            `INSERT INTO work_cards (id, column_id, title, description, position) VALUES (?, 'col-todo', ?, '', 0)`,
+            [makeId(), result.value],
+          )
+          eventBus.emit(
+            'WORK_CARD_CREATED',
+            { source: 'onboarding' },
+            { source: 'work', persist: true },
+          )
+        } else if (result.kind === 'fitness_weight' && result.value && plugins.fitness) {
+          await window.storage.execute(
+            `INSERT OR REPLACE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
+             VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
+            [parseFloat(result.value)],
+          )
+          eventBus.emit(
+            'FITNESS_WEIGHT_LOGGED',
+            { source: 'onboarding' },
+            { source: 'fitness', persist: true },
+          )
+        }
+      } catch (err) {
+        console.warn('[Onboarding] first-action insert failed', err)
       }
     }
 
@@ -136,11 +177,15 @@ export function OnboardingWizard() {
         {step === 'fitness' && (
           <StepFitnessConfig initial={fitnessConfig} onNext={handleFitness} />
         )}
+        {step === 'first-action' && (
+          <StepFirstAction available={plugins} onNext={handleFirstAction} />
+        )}
         {step === 'summary' && (
           <StepSummary
             name={name}
             plugins={plugins}
             fitnessGoal={plugins.fitness ? fitnessConfig.goal : undefined}
+            firstAction={firstAction}
             onFinish={handleFinish}
           />
         )}

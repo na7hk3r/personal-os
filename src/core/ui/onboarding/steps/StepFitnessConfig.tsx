@@ -25,9 +25,9 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
   return (
     <div className="flex flex-col items-center text-center gap-8 animate-fade-in">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-muted">Paso 3 de 3 · Fitness</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-muted">Paso 3 de 4 · Fitness</p>
         <h2 className="text-3xl font-bold">Configurá tu módulo de salud</h2>
-        <p className="text-sm text-muted">Para personalizar tu experiencia.</p>
+        <p className="text-sm text-muted">Para personalizar lo que ves al arrancar.</p>
       </div>
 
       <div className="w-full max-w-md space-y-5 text-left">

@@ -42,10 +42,10 @@ export function StepPlugins({ initial, onNext }: Props) {
   return (
     <div className="flex flex-col items-center text-center gap-8 animate-fade-in">
       <div className="space-y-2">
-        <p className="text-xs uppercase tracking-[0.25em] text-muted">Paso 2 de 3</p>
+        <p className="text-xs uppercase tracking-[0.25em] text-muted">Paso 2 de 4</p>
         <h2 className="text-3xl font-bold">¿Qué módulos querés activar?</h2>
         <p className="text-sm text-muted">
-          Podés cambiar esto después desde el Control Center.
+          Podés cambiarlos después en Control Center.
         </p>
       </div>
 
