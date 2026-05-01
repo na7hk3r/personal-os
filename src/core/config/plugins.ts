@@ -6,6 +6,7 @@
 export const PLUGIN_IDS = {
   FITNESS: 'fitness',
   WORK: 'work',
+  FINANCE: 'finance',
 } as const
 
 export type PluginId = typeof PLUGIN_IDS[keyof typeof PLUGIN_IDS]
@@ -13,11 +14,13 @@ export type PluginId = typeof PLUGIN_IDS[keyof typeof PLUGIN_IDS]
 export const PLUGIN_NAMES: Record<PluginId, string> = {
   [PLUGIN_IDS.FITNESS]: 'Fitness & Salud',
   [PLUGIN_IDS.WORK]: 'Work & Productividad',
+  [PLUGIN_IDS.FINANCE]: 'Finanzas',
 }
 
 export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
   [PLUGIN_IDS.FITNESS]: 'Registrá tu peso, comidas, entrenamientos y medidas corporales. Seguí tus hábitos día a día.',
   [PLUGIN_IDS.WORK]: 'Tablero Kanban, notas y gestión de enlaces. Todo lo que necesitás para organizar tu trabajo.',
+  [PLUGIN_IDS.FINANCE]: 'Movimientos, cuentas, presupuestos y gastos recurrentes. Awareness sin contabilidad.',
 }
 
 /**
