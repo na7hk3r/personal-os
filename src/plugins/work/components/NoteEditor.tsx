@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { Pin, PinOff, Plus, Search, Trash2, Sparkles } from 'lucide-react'
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
@@ -90,6 +90,14 @@ export function NoteEditor() {
 
     eventBus.emit(WORK_EVENTS.NOTE_CREATED, { id, title: note.title })
   }
+
+  // Atajo global Ctrl/Cmd + N → crea nota desde cualquier lugar.
+  useEffect(() => {
+    const onCreate = () => handleNew()
+    window.addEventListener('work:new-note', onCreate)
+    return () => window.removeEventListener('work:new-note', onCreate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleSave = () => {
     if (!selectedId) return
