@@ -1,10 +1,11 @@
 ﻿import { useMemo, useState } from 'react'
-import { Pin, PinOff, Plus, Search, Trash2 } from 'lucide-react'
+import { Pin, PinOff, Plus, Search, Trash2, Sparkles } from 'lucide-react'
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
 import { WORK_EVENTS } from '../events'
 import { useToast } from '@core/ui/components/ToastProvider'
 import { messages } from '@core/ui/messages'
+import { noteExtractionService } from '../noteExtractionService'
 
 type SortMode = 'recent' | 'alpha'
 
@@ -16,6 +17,31 @@ export function NoteEditor() {
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('recent')
   const { toast } = useToast()
+  const [extracting, setExtracting] = useState(false)
+
+  const handleExtractTasks = async () => {
+    if (!selected) return
+    const text = (content ?? '').trim()
+    if (text.length <= 200) {
+      toast.info('Necesitás más contenido para extraer tareas (mínimo 200 caracteres).')
+      return
+    }
+    setExtracting(true)
+    try {
+      const tasks = await noteExtractionService.extract(text)
+      if (tasks.length === 0) {
+        toast.info('No encontré tareas accionables en la nota.')
+        return
+      }
+      const ids = await noteExtractionService.createCards(tasks)
+      toast.success(`Creé ${ids.length} ${ids.length === 1 ? 'tarea' : 'tareas'} desde la nota.`)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Error al extraer tareas'
+      toast.error(msg)
+    } finally {
+      setExtracting(false)
+    }
+  }
 
   const selected = notes.find((n) => n.id === selectedId)
 
@@ -251,6 +277,20 @@ export function NoteEditor() {
               className="bg-transparent border-b border-border px-4 py-3 text-lg font-semibold outline-none"
               placeholder="Título"
             />
+            {(content ?? '').trim().length > 200 ? (
+              <div className="flex items-center justify-end gap-2 border-b border-border/60 px-4 py-1.5">
+                <button
+                  type="button"
+                  onClick={() => void handleExtractTasks()}
+                  disabled={extracting}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted hover:text-accent-light hover:border-accent/40 disabled:opacity-50"
+                  title="Extraer tareas accionables con IA"
+                >
+                  <Sparkles size={11} />
+                  {extracting ? 'Extrayendo…' : 'Extraer tareas'}
+                </button>
+              </div>
+            ) : null}
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}

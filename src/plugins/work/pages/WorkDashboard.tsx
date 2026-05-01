@@ -15,6 +15,7 @@ import {
 } from '../focus'
 import { WORK_EVENTS } from '../events'
 import { KanbanBoard } from '../components/KanbanBoard'
+import { useFocusNudge } from '../components/useFocusNudge'
 import { CheckCircle2, ClipboardList, History, KanbanSquare, ListChecks, NotebookPen, Sparkles, TimerReset, Play, Pause, Square, XCircle } from 'lucide-react'
 
 const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
@@ -194,6 +195,7 @@ function describeActivity(entry: EventLogEntry, ctx: ActivityContext): ActivityD
 
 export function WorkDashboard() {
   const { boards, columns, cards, notes, focusSessions, currentFocusSession } = useWorkStore()
+  useFocusNudge()
   const [now, setNow] = useState(Date.now())
   const [recentEvents, setRecentEvents] = useState<EventLogEntry[]>([])
   // Objetivo de Pomodoro en minutos (persistido en localStorage).
