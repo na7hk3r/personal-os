@@ -277,6 +277,17 @@ export interface CoreAPI {
     addPoints(amount: number, reason: string): void
     checkAchievement(achievementId: string): void
   }
+  /**
+   * Registry de métricas cross-plugin. Un plugin publica un valor numérico
+   * bajo un id estable (`<pluginId>.<snake_case>`) y otros plugins
+   * (típicamente Goals/OKRs) lo consumen sin acoplarse al store productor.
+   * Solo se almacena el último valor; no es una serie temporal.
+   */
+  metrics: {
+    publish(metricId: string, value: number): void
+    get(metricId: string): number | undefined
+    list(): Array<{ id: string; value: number; updatedAt: number }>
+  }
 }
 
 // ─── Plugin Manifest ───

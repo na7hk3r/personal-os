@@ -12,6 +12,7 @@ import { storageAPI } from '../storage/StorageAPI'
 import { CORE_EVENTS } from '../events/events'
 import { useCoreStore } from '../state/coreStore'
 import { useGamificationStore } from '../gamification/gamificationStore'
+import { publishMetric, getMetricValue, getMetric, listMetrics } from '../services/metricsRegistry'
 
 class PluginManager {
   private plugins = new Map<string, PluginEntry>()
@@ -178,8 +179,19 @@ class PluginManager {
           }
         },
       },
+      metrics: {
+        publish: (metricId, value) => {
+          // Si el plugin no antepone su id, lo prefijamos para mantener namespacing.
+          const id = metricId.includes('.') ? metricId : `${pluginId}.${metricId}`
+          publishMetric(id, value)
+        },
+        get: (metricId) => getMetric(metricId)?.value,
+        list: () => listMetrics(),
+      },
     }
   }
 }
 
 export const pluginManager = new PluginManager()
+// Re-export para tests / consumidores no-plugin que necesiten leer métricas.
+export { publishMetric, getMetricValue }
