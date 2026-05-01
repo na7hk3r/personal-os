@@ -13,6 +13,9 @@ import { OllamaSection } from './control/OllamaSection'
 import { AutomationsSection } from './control/AutomationsSection'
 import { NotificationsSection } from './control/NotificationsSection'
 import { TagsSection } from './control/TagsSection'
+import { AuditPanel } from './AuditPanel'
+import { useAuditStore } from '@core/audit/store'
+import { ShieldAlert } from 'lucide-react'
 
 interface FitnessPluginSettings {
   workoutTargetPerWeek: number
@@ -208,7 +211,10 @@ export function ControlCenter() {
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-[0.24em] text-muted">Control Center</p>
-            <h1 className="mt-2 text-3xl font-semibold text-white">Gobernanza de Personal OS</h1>
+            <h1 className="mt-2 flex items-center gap-3 text-3xl font-semibold text-white">
+              Gobernanza de Personal OS
+              <AuditHeaderBadge />
+            </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted">
               Administra identidad, preferencias, módulos y salud general de la plataforma desde un único panel.
             </p>
@@ -670,7 +676,27 @@ export function ControlCenter() {
         <TagsSection />
       </section>
 
+      <AuditPanel />
+
       <AutomationsSection />
     </div>
+  )
+}
+
+function AuditHeaderBadge() {
+  const errorCount = useAuditStore((s) => s.report?.countsBySeverity.error ?? 0)
+  const warnCount = useAuditStore((s) => s.report?.countsBySeverity.warn ?? 0)
+  if (errorCount === 0 && warnCount === 0) return null
+  const tone = errorCount > 0
+    ? 'border-red-500/40 bg-red-500/15 text-red-200'
+    : 'border-amber-500/40 bg-amber-500/15 text-amber-200'
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-xs font-medium ${tone}`}
+      title={`Auditoría: ${errorCount} error(es), ${warnCount} advertencia(s)`}
+    >
+      <ShieldAlert size={12} />
+      {errorCount > 0 ? `${errorCount} error${errorCount === 1 ? '' : 'es'}` : `${warnCount} aviso${warnCount === 1 ? '' : 's'}`}
+    </span>
   )
 }

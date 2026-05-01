@@ -14,6 +14,12 @@ const fitnessPlugin: PluginManifest = {
   version: '1.0.0',
   description: 'Control de peso, comidas, entrenos y hábitos de salud',
   icon: 'Dumbbell',
+  domain: 'fitness',
+  domainKeywords: ['workout', 'weight', 'measurements', 'sleep'],
+  iconography: {
+    primary: 'Dumbbell',
+    gallery: ['Dumbbell', 'SquarePen', 'Ruler', 'Scale', 'Activity', 'Flame', 'CalendarDays', 'Trophy'],
+  },
 
   migrations: [
     {

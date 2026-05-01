@@ -63,6 +63,12 @@ Todo plugin debe declarar:
 
 Opcionales pero recomendados:
 
+- `domain` — uno de los 20 dominios soportados (`finance`, `fitness`,
+  `productivity`, `habits`, `knowledge`, …). Habilita la auditoría de
+  iconografía (regla R6 del [Consistency Auditor](./CONSISTENCY_AUDITOR.md)).
+- `domainKeywords` — palabras clave usadas por la búsqueda y AI context.
+- `iconography` — `{ primary: LucideIconName, gallery?: LucideIconName[] }`.
+  El `primary` debe pertenecer al catálogo del dominio o a `NEUTRAL_ICONS`.
 - `migrations`
 - `widgets`
 - `pages`

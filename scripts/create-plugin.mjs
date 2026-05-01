@@ -32,7 +32,18 @@ export const ${pluginIdConst}Plugin: PluginManifest = {
   name: '${PluginName}',
   version: '0.1.0',
   description: 'TODO: describir el plugin',
-  icon: '🧩',
+  icon: 'LayoutDashboard',
+  // 🔍 Auditor: ajustar dominio + iconografía según el plugin.
+  // Ver docs/CONSISTENCY_AUDITOR.md y src/core/audit/domainIconCatalog.ts
+  // Dominios soportados: finance, health, fitness, nutrition, nature,
+  // knowledge, reading, productivity, habits, social, travel, creativity,
+  // music, gaming, spirituality, home, pets, weather, time, utility.
+  domain: 'utility',
+  domainKeywords: [],
+  iconography: {
+    primary: 'LayoutDashboard',
+    gallery: ['LayoutDashboard', 'Settings'],
+  },
   navItems: [
     { id: '${id}-main', label: '${PluginName}', path: '/${id}', icon: 'LayoutDashboard' },
   ],

@@ -24,6 +24,12 @@ const journalPlugin: PluginManifest = {
   version: '1.0.0',
   description: 'Diario personal con mood tracking y prompts.',
   icon: 'BookOpen',
+  domain: 'knowledge',
+  domainKeywords: ['journal', 'diary', 'mood', 'reflection'],
+  iconography: {
+    primary: 'BookOpen',
+    gallery: ['BookOpen', 'NotebookPen', 'Notebook', 'History', 'Bookmark'],
+  },
 
   migrations: [
     {
