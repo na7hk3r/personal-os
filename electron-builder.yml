@@ -1,0 +1,83 @@
+appId: com.na7hk3r.personalos
+productName: Personal OS
+copyright: Copyright © 2026 na7hk3r
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+directories:
+  buildResources: buildResources
+  output: release
+
+# Solo empaquetamos la build ya hecha por electron-vite (out/) + recursos estaticos.
+files:
+  - out/**/*
+  - package.json
+  - "!**/*.map"
+
+# Native deps (better-sqlite3) se reconstruyen con el postinstall de la app.
+asarUnpack:
+  - node_modules/better-sqlite3/**/*
+
+# ─── Windows ─────────────────────────────────────────────
+win:
+  # icon.ico se toma automaticamente de buildResources/ si esta presente.
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Personal OS
+  installerLanguages:
+    - es_ES
+    - en_US
+  language: "1034" # Spanish (ES) por defecto
+  # include: buildResources/installer.nsh  # Activar cuando se agregue script custom.
+
+portable:
+  artifactName: ${productName}-${version}-portable.${ext}
+
+# ─── macOS (preparado, no obligatorio) ───────────────────
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+  hardenedRuntime: true
+  gatekeeperAssess: false
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+# ─── Linux (preparado, no obligatorio) ───────────────────
+linux:
+  category: Utility
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+
+# ─── Auto-update / publish ───────────────────────────────
+publish:
+  - provider: github
+    owner: na7hk3r
+    repo: personal-os
+    releaseType: release
+
+# Code signing:
+#   Windows: definir CSC_LINK (path o https a .pfx) + CSC_KEY_PASSWORD.
+#   macOS:   definir CSC_LINK (.p12) + CSC_KEY_PASSWORD + APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD.
+# Sin estas variables electron-builder genera binarios sin firma (Windows SmartScreen
+# y macOS Gatekeeper mostraran una advertencia al primer usuario).

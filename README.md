@@ -142,6 +142,30 @@ Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 
 ---
 
+## Descargar
+
+Personal OS se distribuye como app nativa (sin servidor, sin cloud) con
+auto-update integrado vía GitHub Releases.
+
+➡️ **[Última versión — github.com/na7hk3r/personal-os/releases/latest](https://github.com/na7hk3r/personal-os/releases/latest)**
+
+| Plataforma | Asset                              | Notas                                       |
+| ---------- | ---------------------------------- | ------------------------------------------- |
+| Windows    | `Personal OS-<ver>-win-x64.exe`    | Instalador NSIS, elige carpeta y atajos     |
+| Windows    | `Personal OS-<ver>-portable.exe`   | Portable, no instala (sin auto-update)      |
+| Linux      | `Personal OS-<ver>.AppImage` / `.deb` | Próximamente                              |
+| macOS      | `Personal OS-<ver>-arm64.dmg`      | Próximamente                                |
+
+Una vez instalada, la app chequea actualizaciones al iniciar y cada 6 h. Si hay
+versión nueva aparece un banner discreto con el botón **Reiniciar e instalar**.
+
+> Code signing pendiente: en el primer arranque Windows SmartScreen puede
+> mostrar "Editor desconocido". Tocá *Más información → Ejecutar de todas formas*.
+
+Para distribuir tu propio fork, ver [docs/RELEASES.md](docs/RELEASES.md).
+
+---
+
 ## Instalación
 
 ### Requisitos

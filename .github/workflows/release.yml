@@ -1,0 +1,110 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+# Permite a la action publicar el GitHub Release con assets.
+permissions:
+  contents: write
+
+jobs:
+  # ─────────────────────────────────────────────────────────
+  # Windows: instalador NSIS + portable + latest.yml para
+  # auto-update vía electron-updater.
+  # ─────────────────────────────────────────────────────────
+  build-windows:
+    name: Build Windows installer
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+        # Acá sí dejamos correr postinstall: necesita rebuild de better-sqlite3
+        # contra la versión de Electron del package.json.
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build & Publish (NSIS + portable)
+        run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code signing (opcional). Para activarlo:
+          #   1. Subir el .pfx a GitHub Secrets como CSC_LINK (base64) o URL.
+          #   2. Subir el password como CSC_KEY_PASSWORD.
+          # CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+
+      - name: Upload artifacts (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installers
+          path: |
+            release/*.exe
+            release/*.yml
+            release/*.blockmap
+          if-no-files-found: ignore
+
+  # ─────────────────────────────────────────────────────────
+  # Linux: AppImage + .deb (opcional).
+  # ─────────────────────────────────────────────────────────
+  build-linux:
+    name: Build Linux packages
+    runs-on: ubuntu-latest
+    if: ${{ false }} # Activar quitando este `if` cuando se quiera publicar Linux.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run release -- --linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─────────────────────────────────────────────────────────
+  # macOS: dmg sin firmar (opcional). Con firma requiere
+  # CSC_LINK + CSC_KEY_PASSWORD + APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD.
+  # ─────────────────────────────────────────────────────────
+  build-mac:
+    name: Build macOS dmg
+    runs-on: macos-latest
+    if: ${{ false }} # Activar quitando este `if` cuando se quiera publicar macOS.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run release -- --mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          # CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          # APPLE_ID: ${{ secrets.APPLE_ID }}
+          # APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}

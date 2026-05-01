@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow, app } from 'electron'
 import type { AppUpdateStatus } from '../../src/core/types'
+import { scheduleAutoUpdateChecks, type AutoUpdateScheduleHandle } from '../updater'
 
 /**
  * Auto-update wiring (electron-updater).
@@ -43,6 +44,7 @@ type UpdaterModule = {
 }
 let updater: UpdaterModule['autoUpdater'] | null = null
 let mainWindowGetter: (() => BrowserWindow | null) | null = null
+let scheduleHandle: AutoUpdateScheduleHandle | null = null
 
 function broadcast(status: AppUpdateStatus): void {
   currentStatus = status
@@ -139,4 +141,23 @@ export function registerAppUpdateIpc(getMainWindow: () => BrowserWindow | null):
     if (!updater) return
     updater.quitAndInstall()
   })
+
+  // Auto-check periodico solo en builds empaquetadas con updater disponible.
+  // Boot delay 10s + cada 6h. En dev no se agenda nada.
+  if (updater) {
+    const localUpdater = updater
+    scheduleHandle = scheduleAutoUpdateChecks({
+      disabled: !app.isPackaged,
+      check: () => localUpdater.checkForUpdates(),
+    })
+  }
+}
+
+/**
+ * Detiene el scheduler de auto-update. Llamar en `before-quit` si se desea
+ * evitar que un check en vuelo retenga el event loop. Idempotente.
+ */
+export function shutdownAppUpdateIpc(): void {
+  scheduleHandle?.stop()
+  scheduleHandle = null
 }

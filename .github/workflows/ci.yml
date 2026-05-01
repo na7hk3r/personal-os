@@ -29,3 +29,27 @@ jobs:
 
       - name: Lint
         run: npm run lint --if-present
+
+      - name: Test
+        run: npm test
+
+  # Smoke test del empaquetado: corre electron-builder en modo --dir (sin
+  # generar instalador) para detectar problemas de config sin firmar ni
+  # subir artefactos. Solo Windows porque es el target principal.
+  pack:
+    name: Pack smoke test (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Pack (no installer)
+        run: npm run pack

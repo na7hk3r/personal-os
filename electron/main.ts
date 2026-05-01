@@ -9,7 +9,7 @@ import { registerBackupIpc } from './services/backup-ipc'
 import { registerOllamaIpc } from './services/ollama-ipc'
 import { registerNotificationsIpc } from './services/notifications-ipc'
 import { registerDiagnosticIpc } from './services/diagnostic-ipc'
-import { registerAppUpdateIpc } from './services/app-update-ipc'
+import { registerAppUpdateIpc, shutdownAppUpdateIpc } from './services/app-update-ipc'
 import { registerDbEncryptionIpc } from './services/db-encryption-ipc'
 import {
   registerScheduledBackupIpc,
@@ -141,6 +141,7 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   shutdownScheduledBackup()
+  shutdownAppUpdateIpc()
   if (process.platform !== 'darwin') {
     app.quit()
   }
