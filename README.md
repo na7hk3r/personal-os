@@ -6,7 +6,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.7.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.8.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
@@ -31,7 +31,9 @@ A diferencia de un dashboard de SaaS o una app cloud, **toda tu información viv
 - **Planner core** — tareas diarias, semanales y mensuales con drag & drop entre días y misión diaria gamificada.
 - **Calendario unificado** — agrega vencimientos de Work, entrenamientos de Fitness, sesiones de foco y tareas del Planner en una vista mensual con filtros por fuente.
 - **Command Palette (`Ctrl/Cmd + K`)** — búsqueda global instantánea sobre notas, tareas, enlaces y rutas (incluye páginas de plugins activos).
+- **Catálogo de atajos in-app** — página `/shortcuts` con todos los keybindings agrupados y buscables, sincronizada con `docs/SHORTCUTS.md`.
 - **Review semanal/mensual** — KPIs reales (fitness, work, gamificación) con análisis IA opcional para cerrar la semana.
+- **Accesibilidad** — skip-link, landmarks ARIA, command palette como combobox/listbox real, toasts con `role="alert"` para errores y modales con `aria-modal`.
 
 ### 🤖 IA local con Ollama (privacidad total)
 
@@ -53,8 +55,10 @@ Sistema de plugins de primera clase. Hoy vienen incluidos:
 | **Work** | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
 | **Fitness** | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
 | **Finance** | Cuentas, transacciones, categorías, presupuestos mensuales y gastos recurrentes con motor RRULE-light. **Insights IA opcionales**: detección de gastos inusuales, resumen mensual narrativo y sugerencia de presupuestos por mediana 3 meses. Default UYU, multi-moneda. |
+| **Habits** | Tracking de hábitos con metas diarias / semanales / mensuales, rachas reales, detección de "en riesgo" y proveedor IA con top streaks. Eventos `LOGGED` / `GOAL_MET` integrados a gamificación. |
+| **Journal** | Diario con prompts builtin, mood (1–5), tags, búsqueda y pin. Una entrada por día, undo en borrado. Privacy-first: el LLM sólo recibe agregados, nunca el contenido. |
 
-Para la próxima ola de plugins (Hábitos, Journal, OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
+Para la próxima ola de plugins (OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
 
 Para crear uno nuevo:
 
@@ -74,9 +78,11 @@ Cola persistente con processor cada 30 s, horas de silencio configurables (con w
 
 - **Multiusuario local** con autenticación scrypt + salt + `timingSafeEqual`.
 - **Aislamiento total**: `auth.db` global + `personal-os-user-{userId}.db` por usuario.
+- **Cifrado de la DB de usuario en reposo** (opt-in desde Control Center): AES-256-GCM con KDF scrypt, sin dependencias nativas extra. Al cerrar la sesión el archivo se re-cifra; al volver a entrar se pide la passphrase en una pantalla intermedia. Si la perdés, no hay recuperación.
 - **Backup cifrado** AES-256-GCM con derivación scrypt (passphrase ≥ 8 chars).
 - **Backup programado** (diario / semanal / mensual) hacia destino local elegido por el usuario, con passphrase persistido en `safeStorage` del SO.
 - **Context Isolation** + **sandbox** + preload script + allowlist de tablas/columnas en SQL IPC.
+- **Capa Repository** sobre `StorageAPI` para que los plugins eviten SQL crudo manteniendo el sandbox cerrado.
 - Sin `eval`, sin `innerHTML`, sin red salvo Ollama (opt-in) y verificación de updates (opt-in vía `electron-updater`).
 
 ### ⬆️ Auto-update integrado
@@ -109,6 +115,8 @@ Cola persistente con processor cada 30 s, horas de silencio configurables (con w
 | Sesión de foco completada | +5 |
 | Sesión de foco interrumpida | −2 |
 | Misión Planner (baja / media / alta) | +5 / +10 / +16 |
+| Hábito loggeado / meta cumplida | +2 / +5 |
+| Entrada de Journal nueva / update / mood | +5 / +2 / +1 |
 
 Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 

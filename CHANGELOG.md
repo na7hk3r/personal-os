@@ -1,5 +1,79 @@
 # Changelog - Personal OS
 
+## [1.8.0] - 2026-05-01
+
+Wave 3: **plugin Hábitos**, **plugin Journal**, **capa Repository** sobre `StorageAPI`, **cifrado de la DB de usuario en reposo opt-in**, **catálogo de atajos in-app** y **pasada de accesibilidad ARIA** sobre los componentes core.
+
+### ✨ Nuevo plugin — Habits
+
+Tracking de hábitos con metas diarias / semanales / mensuales y rachas reales.
+
+- Esquema v1: `habits_definitions` y `habits_logs` con índices por `habit_id` + `date`.
+- Operaciones: crear / editar / archivar / borrar (cascade a logs vía `deleteWhere`), `logHabit` / `unlogHabit` / `toggleTodayLog` con detección del filo de cumplimiento de meta.
+- `computeStats`: streak actual, mejor streak, % cumplimiento del período activo y "en riesgo" si no se loggeó hoy y faltan ≤ 2 días para cerrar el período.
+- Páginas: `HabitsDashboard` (overview + quick add), `HabitsManagePage`, `HabitsHistoryPage`.
+- Widget `HabitsSummaryWidget` 1x1 para el Dashboard core.
+- `habitsAIProvider` registrado en el snapshot global: total, completados hoy, top streaks, en riesgo.
+- Eventos: `HABIT_CREATED|UPDATED|ARCHIVED|LOGGED|UNLOGGED|GOAL_MET|STREAK_BROKEN`.
+- Gamificación: +2 XP por log, +5 XP al cumplir meta del período.
+
+### ✨ Nuevo plugin — Journal
+
+Diario personal con prompts, mood, tags, búsqueda y pin. **Privacy-first**: el contenido nunca se manda al LLM.
+
+- Esquema v1: `journal_entries` (única por fecha, FTS-friendly) y `journal_prompts`.
+- Esquema v2: seed de prompts builtin (`morning_intent`, `morning_energy`, `evening_review`, `gratitude`, `lesson`, `blocker`, `free`).
+- Editor con `Ctrl/Cmd + S`, mood (1–5), prompt picker, tags, contador de palabras y undo al borrar.
+- Páginas: `JournalDashboard` (date picker), `JournalHistoryPage` (search + tag filter + pinned-only).
+- `journalAIProvider` expone **sólo agregados** (total, últimos 7 días, mood promedio 7d, top tags, escribió hoy). Nunca el contenido literal.
+- Eventos: `ENTRY_CREATED|UPDATED|DELETED|PINNED|MOOD_LOGGED`.
+- Gamificación: +5 XP por entrada nueva, +2 por update, +1 por mood logged.
+
+### 🧱 Capa Repository sobre StorageAPI
+
+Refactor A5: introducir un patrón Repository tipado para que los plugins eviten escribir SQL crudo manteniendo intactos el sandbox y la allowlist del core.
+
+- Nuevo `defineRepository<TEntity, TRow>({ table, mapRow, toRow, primaryKey? })` en `src/core/storage/Repository.ts`.
+- API: `find`, `findOne`, `findById`, `count`, `create`, `update`, `delete`, `deleteWhere` con `WhereClause` que soporta operadores `= != < <= > >= LIKE IS IS NOT IN`.
+- `assertIdentifier` + reuso del allowlist del `StorageAPI` para no abrir nuevos vectores de SQL injection.
+- `deleteWhere` exige `where` no vacío para impedir borrados full-table accidentales.
+- Plugins **Habits** y **Journal** ya estrenan el patrón con repos dedicados (`habitDefinitionsRepo`, `habitLogsRepo`, `journalEntriesRepo`, `journalPromptsRepo`) que mapean snake_case ↔ camelCase y serializan booleanos / JSON.
+
+### 🔒 Cifrado de la DB de usuario en reposo (opt-in)
+
+Activable y desactivable desde Control Center. AES-256-GCM con KDF scrypt, **sin dependencias nativas extra** (no requiere SQLCipher).
+
+- `electron/services/encryption.ts`: `encryptFile` / `decryptFile` / `isEncryptedFile` / `isPassphraseStrongEnough`. Layout `MAGIC(4) | VERSION(1) | SALT(16) | IV(12) | TAG(16) | CIPHERTEXT`.
+- Política de fortaleza: mínimo 12 caracteres y al menos 2 categorías (minúsculas, mayúsculas, dígitos, símbolos).
+- `DatabaseService` cifra el archivo del usuario activo en `clearActiveUser()` / `close()` y lo descifra en `setActiveUser(userId, passphrase)`. Si al login existe un `.enc` y todavía no se proveyó passphrase, la sesión queda **lockeada** (`isLocked()`) sin abrir conexión.
+- IPC `dbencryption:status | enable | disable | check-strength | unlock` en `electron/services/db-encryption-ipc.ts`. Bridge `window.dbEncryption` expuesto vía preload.
+- UI: nueva sección **Cifrado de base en reposo** en Control Center con prompt de passphrase + confirm + medidor de fortaleza, y nueva pantalla intermedia `UnlockScreen` que pide la passphrase tras el login cuando la DB está cifrada.
+- Si perdés la passphrase no hay recuperación. La passphrase nunca se persiste a disco; vive solo en memoria mientras la sesión está abierta.
+- Limitación documentada: mientras la app está corriendo, el archivo `.db` queda en claro en disco. La promesa es estrictamente "en reposo".
+
+### ⌨ Catálogo de atajos in-app
+
+- Nueva fuente única `src/core/ui/shortcuts.ts` con `SHORTCUT_GROUPS` (global, palette, modal, journal, kanban) — sincronizada con `docs/SHORTCUTS.md`.
+- Nueva página `/shortcuts` con búsqueda por tecla o acción y chips `<kbd>` por combinación.
+- Entradas en sidebar y Command Palette (`Atajos de teclado`).
+
+### ♿ Pasada de accesibilidad ARIA
+
+- `Shell` ahora expone `<main role="main" id="main-content" tabIndex={-1}>` y un **skip-link** "Saltar al contenido principal" visible al recibir foco.
+- `Sidebar` con `role="complementary"` + `aria-label`, `<nav aria-label>` y `aria-expanded` en el botón de colapsar.
+- **Command Palette** convertido a patrón **combobox + listbox** real: `aria-modal`, `aria-controls`, `aria-activedescendant`, `aria-selected` por opción y `aria-autocomplete="list"`.
+- **ToastProvider** distingue severidad: errores como `role="alert" aria-live="assertive"`, el resto `role="status" aria-live="polite"` con `aria-atomic`.
+- `OnboardingWizard` y `CardDetailModal` con `role="dialog" aria-modal="true"` y label.
+- `GamificationNotificationHub` como `region` con `aria-live="polite"`.
+- Iconos puramente decorativos marcados `aria-hidden`, botones de cierre con `aria-label` real.
+
+### 🛠 Cambios técnicos
+
+- `StorageAPI` allowlist ampliado con `habits_definitions`, `habits_logs`, `journal_entries`, `journal_prompts`.
+- `PLUGIN_IDS` y `PLUGIN_NAMES` actualizados con `habits` y `journal`.
+- `DbEncryptionBridge`, `DbEncryptionStatus` y `DbEncryptionResult` agregados a `src/core/types.ts` y a `window` en `src/global.d.ts`.
+- `messages.ts`: nuevas claves para `habits`, `journal`, `dbEncryption` y `shortcuts` siguiendo el tono rioplatense del resto de la app.
+
 ## [1.7.0] - 2026-05-01
 
 Wave 2: **plugin Finanzas v1.0** completo, **Daily Brief contextual**, **Smart Focus Nudge**, **extracción Note → Task con IA**, registry de proveedores de contexto IA y carga lazy + virtualización de listas largas.
