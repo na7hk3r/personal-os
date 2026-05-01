@@ -11,6 +11,7 @@ const ReviewPage = lazy(() => import('./core/ui/pages/ReviewPage').then((m) => (
 const ShortcutsPage = lazy(() => import('./core/ui/pages/ShortcutsPage').then((m) => ({ default: m.ShortcutsPage })))
 import { CommandPalette } from './core/ui/CommandPalette'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
+import { DailyScoreScreen } from './core/ui/DailyScoreScreen'
 import { pluginManager } from './core/plugins/PluginManager'
 import { getAvailablePlugins } from './core/plugins/PluginRegistry'
 import { useCoreStore } from './core/state/coreStore'
@@ -50,11 +51,39 @@ function RouteFallback() {
   )
 }
 
+const DAILY_SCORE_LAST_SHOWN_KEY = 'core:dailyScore:lastShownDate'
+
+function todayDateKey(): string {
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  return d.toISOString().slice(0, 10)
+}
+
+function shouldShowDailyScore(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    return window.localStorage?.getItem(DAILY_SCORE_LAST_SHOWN_KEY) !== todayDateKey()
+  } catch {
+    return false
+  }
+}
+
 export function App() {
   const [ready, setReady] = useState(false)
   const [safeMode] = useState(isSafeModeRequested)
   const [locked, setLocked] = useState(false)
   const [lockChecked, setLockChecked] = useState(false)
+  const [showDailyScore, setShowDailyScore] = useState<boolean>(shouldShowDailyScore)
+
+  const dismissDailyScore = () => {
+    try { window.localStorage?.setItem(DAILY_SCORE_LAST_SHOWN_KEY, todayDateKey()) } catch { /* ignore */ }
+    setShowDailyScore(false)
+  }
+
+  const openCopilotFromDailyScore = () => {
+    dismissDailyScore()
+    try { window.dispatchEvent(new CustomEvent('copilot:open')) } catch { /* ignore */ }
+  }
   const authStatus = useAuthStore((s) => s.status)
   const initializeSession = useAuthStore((s) => s.initializeSession)
   const currentUser = useAuthStore((s) => s.currentUser)
@@ -202,6 +231,12 @@ export function App() {
         <ErrorBoundary label="app-root">
           <HashRouter>
             {ready && !onboardingComplete && <OnboardingWizard />}
+            {ready && onboardingComplete && showDailyScore && (
+              <DailyScoreScreen
+                onDismiss={dismissDailyScore}
+                onOpenCopilot={openCopilotFromDailyScore}
+              />
+            )}
             <CommandPalette />
             {safeMode && (
               <div
