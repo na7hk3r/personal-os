@@ -57,7 +57,7 @@ function broadcast(status: AppUpdateStatus): void {
 function tryLoadUpdater(): UpdaterModule['autoUpdater'] | null {
   try {
     // Carga dinámica para no romper si el paquete no está instalado.
-     
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const mod = require('electron-updater') as UpdaterModule
     return mod.autoUpdater
   } catch {

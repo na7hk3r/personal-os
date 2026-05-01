@@ -109,7 +109,7 @@ export function AutomationsSection() {
 
       <div className="mt-4 space-y-2">
         {items.length === 0 ? (
-          <p className="text-xs text-muted">Aún no hay automatizaciones. Creá la primera con el botón "Nueva".</p>
+          <p className="text-xs text-muted">Aún no hay automatizaciones. Creá la primera con el botón &quot;Nueva&quot;.</p>
         ) : items.map((a) => (
           <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2">
             <div className="min-w-0">

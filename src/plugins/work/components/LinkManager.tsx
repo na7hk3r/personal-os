@@ -188,7 +188,7 @@ export function LinkManager() {
       )}
 
       {links.length > 0 && filteredLinks.length === 0 && (
-        <p className="text-muted text-sm text-center py-6">Sin resultados para "{search}"</p>
+        <p className="text-muted text-sm text-center py-6">Sin resultados para &quot;{search}&quot;</p>
       )}
 
       {/* Uncategorized */}
