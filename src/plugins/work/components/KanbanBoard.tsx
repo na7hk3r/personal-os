@@ -21,6 +21,8 @@ import {
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
 import { WORK_EVENTS } from '../events'
+import { useToast } from '@core/ui/components/ToastProvider'
+import { messages } from '@core/ui/messages'
 import { interruptWorkFocusSession, startWorkFocusSession, completeWorkFocusSession, completeWorkTask, stopWorkTask } from '../focus'
 import { isDoneColumn as isDoneColumnUtil } from '../utils/columnUtils'
 import { SortableCard } from './SortableCard'
@@ -48,6 +50,7 @@ function ColumnDropZone({ id, className, children }: ColumnDropZoneProps) {
 
 export function KanbanBoard() {
   const { columns, cards, focusSessions, addCard, reorderCards, deleteCard, currentFocusSession, setColumns } = useWorkStore()
+  const { toast } = useToast()
   const [newCardTitle, setNewCardTitle] = useState<Record<string, string>>({})
   const [activeCard, setActiveCard] = useState<Card | null>(null)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
@@ -229,6 +232,7 @@ export function KanbanBoard() {
 
   const handleDeleteCard = async (id: string) => {
     const target = cards.find((c) => c.id === id)
+    if (!target) return
     if (currentFocusSession?.taskId === id) {
       await interruptWorkFocusSession()
     }
@@ -237,7 +241,36 @@ export function KanbanBoard() {
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [id])
     }
-    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id, title: target?.title ?? null })
+    eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id, title: target.title ?? null })
+
+    toast.undo({
+      message: messages.confirm.deleteCard(target.title || 'Sin título'),
+      onUndo: async () => {
+        addCard(target)
+        if (window.storage) {
+          await window.storage.execute(
+            `INSERT INTO work_cards (id, column_id, title, description, content, labels, due_date, position, priority, estimate_minutes, checklist, archived, archived_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              target.id,
+              target.columnId,
+              target.title,
+              target.description ?? '',
+              target.content ?? '',
+              JSON.stringify(target.labels ?? []),
+              target.dueDate ?? null,
+              target.position ?? 0,
+              target.priority ?? null,
+              target.estimateMinutes ?? null,
+              JSON.stringify(target.checklist ?? []),
+              target.archived ? 1 : 0,
+              target.archivedAt ?? null,
+            ],
+          )
+        }
+        eventBus.emit(WORK_EVENTS.TASK_CREATED, { id: target.id, title: target.title, columnId: target.columnId })
+      },
+    })
   }
 
   const startEditColumn = (col: { id: string; name: string; wipLimit?: number | null }) => {

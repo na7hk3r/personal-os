@@ -1,8 +1,10 @@
 ﻿import { useMemo, useState } from 'react'
-import { Pin, PinOff, Plus, Search } from 'lucide-react'
+import { Pin, PinOff, Plus, Search, Trash2 } from 'lucide-react'
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
 import { WORK_EVENTS } from '../events'
+import { useToast } from '@core/ui/components/ToastProvider'
+import { messages } from '@core/ui/messages'
 
 type SortMode = 'recent' | 'alpha'
 
@@ -13,7 +15,7 @@ export function NoteEditor() {
   const [content, setContent] = useState('')
   const [search, setSearch] = useState('')
   const [sortMode, setSortMode] = useState<SortMode>('recent')
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const selected = notes.find((n) => n.id === selectedId)
 
@@ -74,20 +76,36 @@ export function NoteEditor() {
   }
 
   const handleDelete = (id: string) => {
-    if (confirmDeleteId !== id) {
-      setConfirmDeleteId(id)
-      window.setTimeout(() => setConfirmDeleteId((cur) => (cur === id ? null : cur)), 3000)
-      return
-    }
+    const note = notes.find((n) => n.id === id)
+    if (!note) return
 
     deleteNote(id)
-    window.storage.execute('DELETE FROM work_notes WHERE id = ?', [id])
-    setConfirmDeleteId(null)
+    void window.storage.execute('DELETE FROM work_notes WHERE id = ?', [id])
     if (selectedId === id) {
       setSelectedId(null)
       setTitle('')
       setContent('')
     }
+
+    toast.undo({
+      message: messages.confirm.deleteNote(note.title || 'Sin título'),
+      onUndo: async () => {
+        addNote(note)
+        await window.storage.execute(
+          `INSERT INTO work_notes (id, title, content, tags, created_at, updated_at, pinned)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            note.id,
+            note.title,
+            note.content,
+            JSON.stringify(note.tags ?? []),
+            note.createdAt,
+            note.updatedAt,
+            note.pinned ? 1 : 0,
+          ],
+        )
+      },
+    })
   }
 
   const handleTogglePin = (id: string, currentPinned: boolean) => {
@@ -152,7 +170,7 @@ export function NoteEditor() {
                   : 'border-border bg-surface text-muted hover:text-white'
               }`}
             >
-              Aâ€“Z
+              A–Z
             </button>
           </div>
         </div>
@@ -160,11 +178,10 @@ export function NoteEditor() {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredNotes.length === 0 && (
             <div className="text-center text-xs text-muted/60 py-6">
-              {search ? 'Sin resultados' : 'No hay notas todavÃ­a'}
+              {search ? 'Sin resultados' : 'No hay notas todavía'}
             </div>
           )}
           {filteredNotes.map((n) => {
-            const isConfirming = confirmDeleteId === n.id
             return (
               <div
                 key={n.id}
@@ -210,12 +227,10 @@ export function NoteEditor() {
                         e.stopPropagation()
                         handleDelete(n.id)
                       }}
-                      title={isConfirming ? 'Confirmar eliminaciÃ³n' : 'Eliminar nota'}
-                      className={`text-[10px] font-medium ${
-                        isConfirming ? 'text-red-300' : 'text-muted hover:text-red-400'
-                      }`}
+                      title={'Eliminar nota'}
+                      className="text-[10px] font-medium flex items-center justify-center w-5 h-5 rounded text-muted hover:text-red-400 hover:bg-red-500/10"
                     >
-                      {isConfirming ? 'Â¿?' : 'âœ•'}
+                      <Trash2 size={11} />
                     </button>
                   </div>
                 </div>
@@ -234,14 +249,14 @@ export function NoteEditor() {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSave}
               className="bg-transparent border-b border-border px-4 py-3 text-lg font-semibold outline-none"
-              placeholder="TÃ­tulo"
+              placeholder="Título"
             />
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               onBlur={handleSave}
               className="flex-1 bg-transparent px-4 py-3 text-sm resize-none outline-none leading-relaxed"
-              placeholder="Escribe aquÃ­..."
+              placeholder="Escribí la nota…"
             />
           </>
         ) : (
