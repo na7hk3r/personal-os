@@ -1,7 +1,8 @@
 import Database from 'better-sqlite3'
 import { app } from 'electron'
 import { join } from 'path'
-import { existsSync, mkdirSync, renameSync, copyFileSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, renameSync, copyFileSync, readFileSync, writeFileSync, unlinkSync } from 'fs'
+import { encryptFile, decryptFile, isEncryptedFile, isPassphraseStrongEnough, EncryptionError } from './encryption'
 
 const CORE_SCHEMA = `
   CREATE TABLE IF NOT EXISTS profile (
@@ -135,6 +136,8 @@ export class DatabaseService {
   private userDb: Database.Database | null = null
   private dataDir: string | null = null
   private activeUserId: string | null = null
+  /** Passphrase mantenida en memoria sólo mientras la sesión esté activa. */
+  private activePassphrase: string | null = null
 
   static getInstance(): DatabaseService {
     if (!DatabaseService.instance) {
@@ -170,6 +173,19 @@ export class DatabaseService {
     return join(this.dataDir, `personal-os-user-${userId}.db`)
   }
 
+  /** Path del archivo cifrado en reposo (si el usuario lo activó). */
+  getEncryptedDbPath(userId: string): string {
+    return `${this.getUserDbPath(userId)}.enc`
+  }
+
+  /**
+   * Devuelve true si el usuario tiene el archivo cifrado en reposo. Útil
+   * para que el frontend sepa que va a necesitar pedir passphrase.
+   */
+  hasEncryptedDb(userId: string): boolean {
+    return isEncryptedFile(this.getEncryptedDbPath(userId))
+  }
+
   hasLegacySingleUserDb(): boolean {
     return existsSync(this.getLegacyDbPath())
   }
@@ -184,19 +200,54 @@ export class DatabaseService {
     renameSync(legacyPath, userDbPath)
   }
 
-  setActiveUser(userId: string): void {
+  setActiveUser(userId: string, passphrase?: string): void {
     if (this.activeUserId === userId && this.userDb) {
       return
     }
 
+    // Si el usuario tiene cifrado activo y existe el .enc, hay que descifrarlo
+    // primero al path plano antes de abrir la conexión. Si no hay passphrase,
+    // marcamos al usuario como activo pero sin DB abierta: el frontend deberá
+    // llamar a `unlockEncryptedDb` antes de operar.
+    const plainPath = this.getUserDbPath(userId)
+    const encPath = this.getEncryptedDbPath(userId)
+    if (isEncryptedFile(encPath)) {
+      if (!passphrase) {
+        this.userDb?.close()
+        this.userDb = null
+        this.activeUserId = userId
+        this.activePassphrase = null
+        return
+      }
+      decryptFile(encPath, plainPath, passphrase)
+      this.activePassphrase = passphrase
+    } else {
+      this.activePassphrase = null
+    }
+
     this.userDb?.close()
-    this.userDb = new Database(this.getUserDbPath(userId))
+    this.userDb = new Database(plainPath)
     this.userDb.pragma('journal_mode = WAL')
     this.userDb.pragma('foreign_keys = ON')
     this.userDb.pragma('busy_timeout = 5000')
     this.userDb.exec(CORE_SCHEMA)
     this.activeUserId = userId
     this.purgeOldEvents()
+  }
+
+  /**
+   * Si el usuario activo quedó con .enc bloqueado, desbloquearlo con la
+   * passphrase. Idempotente: si ya está abierto, no hace nada.
+   */
+  unlockEncryptedDb(passphrase: string): void {
+    if (!this.activeUserId) throw new Error('No active user session')
+    if (this.userDb) return
+    this.setActiveUser(this.activeUserId, passphrase)
+  }
+
+  /** True si el usuario activo todavía no abrió su DB cifrada. */
+  isLocked(): boolean {
+    return this.activeUserId != null && this.userDb == null
   }
 
   /**
@@ -236,9 +287,30 @@ export class DatabaseService {
   }
 
   clearActiveUser(): void {
+    // Si había cifrado activo, re-cifrar antes de cerrar.
+    if (this.activeUserId && this.activePassphrase) {
+      try {
+        // WAL checkpoint para que el .db tenga todo flush antes de cifrar.
+        try {
+          this.userDb?.pragma('wal_checkpoint(TRUNCATE)')
+        } catch {
+          // ignore
+        }
+        this.userDb?.close()
+        this.userDb = null
+        const plainPath = this.getUserDbPath(this.activeUserId)
+        const encPath = this.getEncryptedDbPath(this.activeUserId)
+        encryptFile(plainPath, encPath, this.activePassphrase)
+      } catch (err) {
+        console.error('[DatabaseService] failed to re-encrypt on logout:', err)
+      } finally {
+        this.activePassphrase = null
+      }
+    }
     this.userDb?.close()
     this.userDb = null
     this.activeUserId = null
+    this.activePassphrase = null
   }
 
   getActiveUserId(): string | null {
@@ -337,7 +409,75 @@ export class DatabaseService {
   }
 
   close(): void {
+    // Replicar la lógica de re-cifrar antes de matar todo.
+    if (this.activeUserId && this.activePassphrase) {
+      try {
+        try {
+          this.userDb?.pragma('wal_checkpoint(TRUNCATE)')
+        } catch {
+          // ignore
+        }
+        this.userDb?.close()
+        this.userDb = null
+        const plainPath = this.getUserDbPath(this.activeUserId)
+        const encPath = this.getEncryptedDbPath(this.activeUserId)
+        encryptFile(plainPath, encPath, this.activePassphrase)
+      } catch (err) {
+        console.error('[DatabaseService] failed to re-encrypt on close:', err)
+      }
+    }
     this.userDb?.close()
     this.authDb?.close()
+    this.activePassphrase = null
+  }
+
+  // ─── Cifrado opt-in ────────────────────────────────────────────────
+
+  /**
+   * Activa el cifrado para el usuario activo: cifra inmediatamente la DB,
+   * borra el plano y guarda la passphrase en memoria para esta sesión.
+   * Lanza EncryptionError si la passphrase es débil.
+   */
+  enableEncryptionForActiveUser(passphrase: string): void {
+    if (!this.activeUserId || !this.userDb) throw new Error('No active user session')
+    if (!isPassphraseStrongEnough(passphrase)) {
+      throw new EncryptionError('passphrase too weak', 'WEAK_PASSPHRASE')
+    }
+    const userId = this.activeUserId
+    try {
+      this.userDb.pragma('wal_checkpoint(TRUNCATE)')
+    } catch {
+      // ignore
+    }
+    this.userDb.close()
+    this.userDb = null
+    const plainPath = this.getUserDbPath(userId)
+    const encPath = this.getEncryptedDbPath(userId)
+    encryptFile(plainPath, encPath, passphrase)
+    // Volvemos a abrir descifrando para que la sesión continúe.
+    decryptFile(encPath, plainPath, passphrase)
+    this.userDb = new Database(plainPath)
+    this.userDb.pragma('journal_mode = WAL')
+    this.userDb.pragma('foreign_keys = ON')
+    this.userDb.pragma('busy_timeout = 5000')
+    this.activePassphrase = passphrase
+  }
+
+  /**
+   * Desactiva el cifrado: borra el archivo .enc y deja el plano. Requiere
+   * que la sesión esté activa (es decir, ya con la passphrase válida).
+   */
+  disableEncryptionForActiveUser(): void {
+    if (!this.activeUserId) throw new Error('No active user session')
+    const encPath = this.getEncryptedDbPath(this.activeUserId)
+    if (existsSync(encPath)) {
+      unlinkSync(encPath)
+    }
+    this.activePassphrase = null
+  }
+
+  /** True si el usuario activo tiene el cifrado en uso esta sesión. */
+  isEncryptionEnabledForActiveUser(): boolean {
+    return Boolean(this.activeUserId && this.activePassphrase)
   }
 }

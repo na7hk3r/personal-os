@@ -7,6 +7,7 @@ import type {
   DiagnosticBridge,
   AppUpdateBridge,
   ScheduledBackupBridge,
+  DbEncryptionBridge,
 } from '@core/types'
 
 declare global {
@@ -19,6 +20,7 @@ declare global {
     diagnostic: DiagnosticBridge
     appUpdate: AppUpdateBridge
     scheduledBackup: ScheduledBackupBridge
+    dbEncryption: DbEncryptionBridge
   }
 
   // Inyectado por Vite (define) en build/dev. Ver electron.vite.config.ts.

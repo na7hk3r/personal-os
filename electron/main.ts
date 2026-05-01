@@ -10,6 +10,7 @@ import { registerOllamaIpc } from './services/ollama-ipc'
 import { registerNotificationsIpc } from './services/notifications-ipc'
 import { registerDiagnosticIpc } from './services/diagnostic-ipc'
 import { registerAppUpdateIpc } from './services/app-update-ipc'
+import { registerDbEncryptionIpc } from './services/db-encryption-ipc'
 import {
   registerScheduledBackupIpc,
   bootScheduledBackup,
@@ -126,6 +127,7 @@ app.whenReady().then(() => {
   registerDiagnosticIpc()
   registerScheduledBackupIpc(db)
   registerAppUpdateIpc(() => mainWindow)
+  registerDbEncryptionIpc()
   bootScheduledBackup(db)
 
   createWindow()

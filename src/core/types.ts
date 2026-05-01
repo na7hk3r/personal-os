@@ -196,6 +196,29 @@ export interface ScheduledBackupBridge {
   runNow: () => Promise<ScheduledBackupStatus>
 }
 
+export interface DbEncryptionStatus {
+  /** True si la sesión actual está cifrando en reposo (passphrase en memoria). */
+  enabled: boolean
+  /** True si existe un archivo .enc en disco para el usuario activo. */
+  hasEncryptedAtRest: boolean
+  /** True si el usuario está logueado pero la DB cifrada todavía no se desbloqueó. */
+  locked?: boolean
+}
+
+export interface DbEncryptionResult {
+  ok: boolean
+  code?: 'WEAK_PASSPHRASE' | 'BAD_PASSPHRASE' | 'CORRUPT_FILE' | 'IO'
+  message?: string
+}
+
+export interface DbEncryptionBridge {
+  status: () => Promise<DbEncryptionStatus>
+  enable: (passphrase: string) => Promise<DbEncryptionResult>
+  disable: () => Promise<{ ok: boolean; message?: string }>
+  checkStrength: (passphrase: string) => Promise<{ strong: boolean }>
+  unlock: (passphrase: string) => Promise<DbEncryptionResult>
+}
+
 // ─── UI Registration ───
 
 export interface WidgetDefinition {

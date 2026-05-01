@@ -7,6 +7,7 @@ import { THEMES } from '../config/themes'
 import { PluginIcon } from './components/PluginIcon'
 import { BackupSection } from './control/BackupSection'
 import { ScheduledBackupSection } from './control/ScheduledBackupSection'
+import { DbEncryptionSection } from './control/DbEncryptionSection'
 import { AutoUpdateSection } from './control/AutoUpdateSection'
 import { OllamaSection } from './control/OllamaSection'
 import { AutomationsSection } from './control/AutomationsSection'
@@ -663,6 +664,7 @@ export function ControlCenter() {
         <OllamaSection />
         <BackupSection />
         <ScheduledBackupSection />
+        <DbEncryptionSection />
         <AutoUpdateSection />
         <NotificationsSection />
         <TagsSection />

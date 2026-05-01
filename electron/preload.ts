@@ -10,6 +10,7 @@ import type {
   AppUpdateStatus,
   ScheduledBackupBridge,
   ScheduledBackupConfig,
+  DbEncryptionBridge,
 } from '../src/core/types'
 
 const storageBridge: StorageBridge = {
@@ -71,6 +72,14 @@ const scheduledBackupBridge: ScheduledBackupBridge = {
   runNow: () => ipcRenderer.invoke('scheduled-backup:run-now'),
 }
 
+const dbEncryptionBridge: DbEncryptionBridge = {
+  status: () => ipcRenderer.invoke('dbencryption:status'),
+  enable: (passphrase: string) => ipcRenderer.invoke('dbencryption:enable', passphrase),
+  disable: () => ipcRenderer.invoke('dbencryption:disable'),
+  checkStrength: (passphrase: string) => ipcRenderer.invoke('dbencryption:check-strength', passphrase),
+  unlock: (passphrase: string) => ipcRenderer.invoke('dbencryption:unlock', passphrase),
+}
+
 contextBridge.exposeInMainWorld('storage', storageBridge)
 contextBridge.exposeInMainWorld('auth', authBridge)
 contextBridge.exposeInMainWorld('backup', backupBridge)
@@ -79,3 +88,4 @@ contextBridge.exposeInMainWorld('notifications', notificationsBridge)
 contextBridge.exposeInMainWorld('diagnostic', diagnosticBridge)
 contextBridge.exposeInMainWorld('appUpdate', appUpdateBridge)
 contextBridge.exposeInMainWorld('scheduledBackup', scheduledBackupBridge)
+contextBridge.exposeInMainWorld('dbEncryption', dbEncryptionBridge)
