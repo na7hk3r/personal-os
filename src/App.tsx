@@ -9,6 +9,7 @@ const CorePlannerPage = lazy(() => import('./core/ui/pages/PlannerPage').then((m
 const CalendarPage = lazy(() => import('./core/ui/pages/CalendarPage').then((m) => ({ default: m.CalendarPage })))
 const ReviewPage = lazy(() => import('./core/ui/pages/ReviewPage').then((m) => ({ default: m.ReviewPage })))
 const ShortcutsPage = lazy(() => import('./core/ui/pages/ShortcutsPage').then((m) => ({ default: m.ShortcutsPage })))
+const ThemeGalleryPage = lazy(() => import('./core/ui/pages/ThemeGalleryPage').then((m) => ({ default: m.ThemeGalleryPage })))
 import { CommandPalette } from './core/ui/CommandPalette'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { DailyScoreScreen } from './core/ui/DailyScoreScreen'
@@ -257,6 +258,7 @@ export function App() {
                 <Route path="/calendar" element={<Suspense fallback={<RouteFallback />}><CalendarPage /></Suspense>} />
                 <Route path="/review" element={<Suspense fallback={<RouteFallback />}><ReviewPage /></Suspense>} />
                 <Route path="/shortcuts" element={<Suspense fallback={<RouteFallback />}><ShortcutsPage /></Suspense>} />
+                <Route path="/themes" element={<Suspense fallback={<RouteFallback />}><ThemeGalleryPage /></Suspense>} />
                 {pluginPages.map((page) => {
                   const PageComponent = page.component
                   return (

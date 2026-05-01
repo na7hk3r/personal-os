@@ -180,6 +180,90 @@
   --scrollbar-thumb-hover: #22c55e;
 }
 
+/* ========== TEMA: NORD (azul frío Arctic, paleta 60/30/10) ==========
+ *
+ * 60 % — base/superficies polar night (#2e3440 → #4c566a)
+ * 30 % — texto/muted snow storm (#d8dee9, #8fbcbb)
+ * 10 % — acento frost cyan (#88c0d0) + variante (#8fbcbb)
+ */
+[data-theme="nord"] {
+  --color-base:             36 41 51;      /* #242933 */
+  --color-surface:          46 52 64;      /* #2e3440 */
+  --color-surface-light:    59 66 82;      /* #3b4252 */
+  --color-surface-lighter:  76 86 106;     /* #4c566a */
+  --color-accent:           136 192 208;   /* #88c0d0 — frost cyan */
+  --color-accent-light:     143 188 187;   /* #8fbcbb */
+  --color-text:             236 239 244;   /* #eceff4 — snow storm */
+  --color-muted:            142 153 175;   /* #8e99af */
+  --color-border:           67 76 94;      /* #434c5e */
+
+  --bg-gradient: radial-gradient(circle at top left, #3b4252 0%, #2e3440 45%, #242933 100%);
+
+  --chart-grid:           #434c5e;
+  --chart-axis:           #8e99af;
+  --chart-tooltip-bg:     #2e3440;
+  --chart-tooltip-border: #434c5e;
+  --chart-weight:         #88c0d0;
+  --scrollbar-thumb:       #434c5e;
+  --scrollbar-thumb-hover: #88c0d0;
+}
+
+/* ========== TEMA: MOCHA (warm dark, Catppuccin-style) ==========
+ *
+ * 60 % — base/superficies mocha (#1e1e2e → #45475a)
+ * 30 % — texto subtext (#cdd6f4, #a6adc8)
+ * 10 % — acento mauve (#cba6f7) + variante peach (#fab387)
+ */
+[data-theme="mocha"] {
+  --color-base:             24 24 37;      /* #181825 */
+  --color-surface:          30 30 46;      /* #1e1e2e */
+  --color-surface-light:    49 50 68;      /* #313244 */
+  --color-surface-lighter:  69 71 90;      /* #45475a */
+  --color-accent:           203 166 247;   /* #cba6f7 — mauve */
+  --color-accent-light:     250 179 135;   /* #fab387 — peach */
+  --color-text:             205 214 244;   /* #cdd6f4 — text */
+  --color-muted:            166 173 200;   /* #a6adc8 — subtext */
+  --color-border:           69 71 90;      /* #45475a */
+
+  --bg-gradient: radial-gradient(circle at top left, #313244 0%, #1e1e2e 45%, #181825 100%);
+
+  --chart-grid:           #45475a;
+  --chart-axis:           #a6adc8;
+  --chart-tooltip-bg:     #1e1e2e;
+  --chart-tooltip-border: #45475a;
+  --chart-weight:         #cba6f7;
+  --scrollbar-thumb:       #45475a;
+  --scrollbar-thumb-hover: #cba6f7;
+}
+
+/* ========== TEMA: GRAPHITE (monocromático) ==========
+ *
+ * 60 % — base/superficies grafito (#1a1a1a → #3d3d3d)
+ * 30 % — texto y muted en grises claros
+ * 10 % — acento blanco roto sutil (#e5e5e5) — minimalismo total
+ */
+[data-theme="graphite"] {
+  --color-base:             18 18 18;      /* #121212 */
+  --color-surface:          26 26 26;      /* #1a1a1a */
+  --color-surface-light:    38 38 38;      /* #262626 */
+  --color-surface-lighter:  61 61 61;      /* #3d3d3d */
+  --color-accent:           229 229 229;   /* #e5e5e5 — off-white */
+  --color-accent-light:     245 245 245;   /* #f5f5f5 */
+  --color-text:             224 224 224;   /* #e0e0e0 */
+  --color-muted:            148 148 148;   /* #949494 */
+  --color-border:           58 58 58;      /* #3a3a3a */
+
+  --bg-gradient: radial-gradient(circle at top left, #2a2a2a 0%, #1a1a1a 45%, #0e0e0e 100%);
+
+  --chart-grid:           #3a3a3a;
+  --chart-axis:           #949494;
+  --chart-tooltip-bg:     #1a1a1a;
+  --chart-tooltip-border: #3a3a3a;
+  --chart-weight:         #e5e5e5;
+  --scrollbar-thumb:       #3a3a3a;
+  --scrollbar-thumb-hover: #e5e5e5;
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;
