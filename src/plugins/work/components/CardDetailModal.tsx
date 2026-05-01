@@ -118,6 +118,9 @@ export function CardDetailModal({ card, onClose }: Props) {
   return (
     <div
       ref={overlayRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Detalle de tarea"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
       onClick={(e) => e.target === overlayRef.current && onClose()}
     >
@@ -127,6 +130,7 @@ export function CardDetailModal({ card, onClose }: Props) {
           <span className="text-xs uppercase tracking-widest text-muted">Detalle de tarea</span>
           <button
             onClick={onClose}
+            aria-label="Cerrar detalle"
             className="rounded-lg p-1.5 text-muted hover:bg-surface-light hover:text-white transition-colors"
           >
             ✕

@@ -153,6 +153,8 @@ function ToastViewport({ toasts, onDismiss }: { toasts: Toast[]; onDismiss: (id:
     <div
       role="region"
       aria-label="Notificaciones"
+      aria-live="polite"
+      aria-atomic="false"
       className="pointer-events-none fixed bottom-6 right-6 z-[60] flex w-[min(380px,calc(100vw-2rem))] flex-col gap-2"
     >
       {toasts.map((t) => (
@@ -191,7 +193,9 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
 
   return (
     <div
-      role="status"
+      role={variant === 'error' ? 'alert' : 'status'}
+      aria-live={variant === 'error' ? 'assertive' : 'polite'}
+      aria-atomic="true"
       className={`pointer-events-auto flex items-start gap-3 rounded-xl border ${palette.border} ${palette.bg} px-3.5 py-2.5 text-sm text-white shadow-xl backdrop-blur-md animate-fade-in`}
     >
       <span className="mt-0.5 flex-shrink-0">{palette.icon}</span>

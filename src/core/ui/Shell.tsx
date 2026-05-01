@@ -19,10 +19,19 @@ export function Shell() {
       className="flex h-screen overflow-hidden text-white"
       style={{ background: 'var(--bg-gradient)' }}
     >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[100] focus:rounded-md focus:bg-accent focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+      >
+        Saltar al contenido principal
+      </a>
       <GamificationNotificationHub />
       <AppUpdateBanner />
       <Sidebar />
       <main
+        id="main-content"
+        role="main"
+        tabIndex={-1}
         className={`flex-1 overflow-y-auto transition-all duration-200 ${
           sidebarCollapsed ? 'ml-16' : 'ml-60'
         }`}

@@ -149,7 +149,12 @@ export function GamificationNotificationHub() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-0 z-50 overflow-hidden">
+      <div
+        role="region"
+        aria-label="Notificaciones de progreso"
+        aria-live="polite"
+        className="pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      >
         <div className="absolute right-5 top-5 flex w-[min(380px,90vw)] flex-col gap-2">
           {notifications
             .filter((item) => item.type === 'xp')
