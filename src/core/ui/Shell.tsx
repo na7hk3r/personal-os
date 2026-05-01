@@ -6,6 +6,7 @@ import { GamificationNotificationHub } from './GamificationNotificationHub'
 import { SystemSuggestions } from './SystemSuggestions'
 import { AppUpdateBanner } from './components/AppUpdateBanner'
 import { CopilotPanel } from './CopilotPanel'
+import { GlobalShortcuts } from './GlobalShortcuts'
 
 const COPILOT_COLLAPSED_KEY = 'core:copilotPanel:collapsed'
 
@@ -54,6 +55,7 @@ export function Shell() {
       </a>
       <GamificationNotificationHub />
       <AppUpdateBanner />
+      <GlobalShortcuts />
       <Sidebar />
       <main
         id="main-content"

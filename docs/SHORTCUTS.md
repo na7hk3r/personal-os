@@ -8,6 +8,10 @@ La fuente de verdad para la UI vive en `src/core/ui/shortcuts.ts`.
 | Atajo | Acción |
 | --- | --- |
 | `Ctrl/Cmd + K` | Abrir/cerrar Command Palette (búsqueda global) |
+| `Ctrl/Cmd + N` | Nueva nota (navega a Work › Notas y crea una nota) |
+| `Ctrl/Cmd + T` | Nueva tarea en la primera columna del tablero principal |
+| `Ctrl/Cmd + F` | Iniciar sesión de foco libre |
+| `Ctrl/Cmd + B` | Mostrar/ocultar sidebar (preferencia persistida) |
 
 ## Command Palette
 
@@ -38,7 +42,5 @@ La fuente de verdad para la UI vive en `src/core/ui/shortcuts.ts`.
 
 ## Próximos atajos planeados (roadmap)
 
-- `Ctrl + N`: Nueva nota
-- `Ctrl + T`: Nueva tarea en Kanban
-- `Ctrl + F`: Iniciar sesión de foco
-- `Ctrl + B`: Toggle sidebar
+- `Ctrl + Shift + F`: Buscar en todas las notas
+- `Ctrl + ,`: Abrir Centro de Control
