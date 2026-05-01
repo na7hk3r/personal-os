@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== DESIGN TOKENS — DARK (default) =====
+ * Replica de la paleta del app principal (src/index.css).
+ */
+:root,
+[data-theme='dark'] {
+  --color-base: 7 13 20; /* #070d14 */
+  --color-surface: 30 30 46; /* #1e1e2e */
+  --color-surface-light: 42 42 62; /* #2a2a3e */
+  --color-surface-lighter: 54 54 80; /* #363650 */
+  --color-accent: 124 58 237; /* #7c3aed */
+  --color-accent-light: 167 139 250; /* #a78bfa */
+  --color-text: 226 232 240; /* #e2e8f0 */
+  --color-muted: 148 163 184; /* #94a3b8 */
+  --color-border: 51 65 85; /* #334155 */
+  --bg-gradient: radial-gradient(circle at top left, #17314e 0%, #0e1723 42%, #070d14 100%);
+}
+
+/* ===== TEMA: LIGHT ===== */
+[data-theme='light'] {
+  --color-base: 251 247 238;
+  --color-surface: 255 252 245;
+  --color-surface-light: 243 236 221;
+  --color-surface-lighter: 232 222 200;
+  --color-accent: 217 119 87;
+  --color-accent-light: 232 161 134;
+  --color-text: 60 42 28;
+  --color-muted: 130 110 90;
+  --color-border: 222 210 188;
+  --bg-gradient: radial-gradient(circle at top left, #fff8ec 0%, #fbf7ee 60%, #f3ecdd 100%);
+}
+
+html,
+body {
+  @apply bg-base text-foreground antialiased;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-image: var(--bg-gradient);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Smooth focus ring para accesibilidad */
+:focus-visible {
+  @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-base;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-border));
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-accent));
+}
+
+/* Smooth scroll para anchors */
+html {
+  scroll-behavior: smooth;
+}

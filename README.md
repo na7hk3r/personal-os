@@ -8,7 +8,11 @@
 
 `v1.8.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
-[Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
+[![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-7c3aed?style=flat-square)](https://na7hk3r.github.io/personal-os/)
+[![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=7c3aed)](https://github.com/na7hk3r/personal-os/releases)
+[![License](https://img.shields.io/badge/license-ISC-7c3aed?style=flat-square)](LICENSE)
+
+[Sitio web](https://na7hk3r.github.io/personal-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
 </div>
 
@@ -168,7 +172,11 @@ Para distribuir tu propio fork, ver [docs/RELEASES.md](docs/RELEASES.md).
 
 ## Instalación
 
-### Requisitos
+### Descargar (usuarios)
+
+¿Solo querés usar la app? Bajala desde la **[página oficial](https://na7hk3r.github.io/personal-os/#download)** o directamente desde [GitHub Releases](https://github.com/na7hk3r/personal-os/releases). Disponible para Windows (NSIS y portable), Linux (AppImage / .deb) y macOS (.dmg).
+
+### Requisitos (build desde source)
 
 - **Node.js 20+** (recomendado: LTS — usá `nvm use` si tenés nvm).
 - **npm 9+**.
