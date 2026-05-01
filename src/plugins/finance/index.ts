@@ -34,7 +34,7 @@ const financePlugin: PluginManifest = {
   domainKeywords: ['money', 'budget', 'transactions', 'recurring'],
   iconography: {
     primary: 'Wallet',
-    gallery: ['Wallet', 'Receipt', 'Tag', 'Repeat', 'PiggyBank', 'Coins', 'TrendingUp', 'TrendingDown', 'BarChart3'],
+    gallery: ['Wallet', 'Receipt', 'Tag', 'Repeat', 'PiggyBank', 'Coins', 'TrendingUp', 'TrendingDown', 'BarChart3', 'LineChart'],
   },
 
   migrations: [
@@ -136,7 +136,7 @@ const financePlugin: PluginManifest = {
     { id: 'finance-cat', pluginId: 'finance', path: '/finance/categories', title: 'Categorías', icon: 'Tag', component: CategoriesPage },
     { id: 'finance-bud', pluginId: 'finance', path: '/finance/budgets', title: 'Presupuestos', icon: 'BarChart3', component: BudgetsPage },
     { id: 'finance-rec', pluginId: 'finance', path: '/finance/recurring', title: 'Recurrentes', icon: 'Repeat', component: RecurringPage },
-    { id: 'finance-ins', pluginId: 'finance', path: '/finance/insights', title: 'Insights', icon: 'Sparkles', component: InsightsPage },
+    { id: 'finance-ins', pluginId: 'finance', path: '/finance/insights', title: 'Insights', icon: 'LineChart', component: InsightsPage },
   ],
 
   navItems: [
@@ -145,7 +145,7 @@ const financePlugin: PluginManifest = {
     { id: 'finance-bud-nav', pluginId: 'finance', label: 'Presupuestos', icon: 'BarChart3', path: '/finance/budgets', order: 32, parentId: 'finance-nav' },
     { id: 'finance-rec-nav', pluginId: 'finance', label: 'Recurrentes', icon: 'Repeat', path: '/finance/recurring', order: 33, parentId: 'finance-nav' },
     { id: 'finance-cat-nav', pluginId: 'finance', label: 'Categorías', icon: 'Tag', path: '/finance/categories', order: 34, parentId: 'finance-nav' },
-    { id: 'finance-ins-nav', pluginId: 'finance', label: 'Insights', icon: 'Sparkles', path: '/finance/insights', order: 35, parentId: 'finance-nav' },
+    { id: 'finance-ins-nav', pluginId: 'finance', label: 'Insights', icon: 'LineChart', path: '/finance/insights', order: 35, parentId: 'finance-nav' },
   ],
 
   events: {
