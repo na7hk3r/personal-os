@@ -1,25 +1,53 @@
-import { Github, FileText, Heart } from 'lucide-react'
+import { Github, FileText, Heart, Sparkles } from 'lucide-react'
+import { useLatestRelease } from '../hooks/useLatestRelease'
 
 const REPO = 'https://github.com/na7hk3r/personal-os'
 
 export function Footer() {
   const year = new Date().getFullYear()
+  const { release } = useLatestRelease()
+
   return (
     <footer className="border-t border-border bg-surface/40 backdrop-blur mt-10">
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
         <div>
-          <p className="text-xl font-bold text-foreground">Personal OS</p>
-          <p className="mt-2 text-sm text-muted leading-relaxed">
-            Tu sistema operativo personal modular. 100% local, multiplataforma y open source.
+          <p className="text-xl font-bold text-foreground flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
+            Personal OS
           </p>
+          <p className="mt-3 text-base font-medium text-foreground/90">
+            Tu copiloto. Tu máquina. Tus datos.
+          </p>
+          <p className="mt-2 text-sm text-muted leading-relaxed">
+            Open source, multiplataforma y 100% local. Sin nube, sin cuenta, sin telemetría.
+          </p>
+          {release && (
+            <p className="mt-3 inline-flex items-center gap-1.5 text-xs text-muted">
+              <Sparkles className="w-3 h-3 text-accent" aria-hidden="true" />
+              Versión actual:{' '}
+              <a
+                href={release.htmlUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent hover:underline font-mono"
+              >
+                v{release.version}
+              </a>
+            </p>
+          )}
         </div>
 
         <nav aria-label="Recursos" className="text-sm">
           <h2 className="font-semibold text-foreground mb-3">Recursos</h2>
           <ul className="space-y-2 text-muted">
             <li>
+              <a href="#how-it-works" className="hover:text-accent transition-colors">
+                Cómo funciona
+              </a>
+            </li>
+            <li>
               <a href="#features" className="hover:text-accent transition-colors">
-                Características
+                Para vos
               </a>
             </li>
             <li>
@@ -65,20 +93,20 @@ export function Footer() {
             </li>
             <li>
               <a
-                href={`${REPO}/tree/main/docs`}
+                href={`${REPO}/blob/main/CHANGELOG.md`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 hover:text-accent transition-colors"
               >
-                <FileText className="w-4 h-4" aria-hidden="true" /> Documentación (GitHub)
+                <Sparkles className="w-4 h-4" aria-hidden="true" /> Novedades
               </a>
             </li>
             <li>
               <a
-                href="#docs"
+                href="#devs"
                 className="inline-flex items-center gap-2 hover:text-accent transition-colors"
               >
-                <FileText className="w-4 h-4" aria-hidden="true" /> Docs en la web
+                <FileText className="w-4 h-4" aria-hidden="true" /> Para devs
               </a>
             </li>
           </ul>

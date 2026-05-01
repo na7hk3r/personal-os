@@ -1,27 +1,35 @@
 import { Section } from '../components/Section'
-import { ImageOff } from 'lucide-react'
+import { ScreenshotTabs, type ScreenshotTab } from '../components/ScreenshotTabs'
 
-interface Shot {
-  src: string
-  alt: string
-  caption: string
-}
-
-const shots: Shot[] = [
+const tabs: ScreenshotTab[] = [
   {
+    id: 'dashboard',
+    label: 'Dashboard',
     src: 'screenshots/dashboard.png',
-    alt: 'Dashboard de Personal OS con misiones y stats',
-    caption: 'Dashboard',
+    alt: 'Dashboard de Personal OS con Daily Score y misiones',
+    caption: 'Daily Score, misiones del día y resumen de hábitos en una sola vista.',
   },
   {
-    src: 'screenshots/plugins.png',
-    alt: 'Listado de plugins en el Control Center',
-    caption: 'Plugins',
+    id: 'copilot',
+    label: 'Copiloto',
+    src: 'screenshots/copilot.png',
+    alt: 'Panel del copiloto IA local',
+    caption:
+      'Copiloto IA local. Respuestas en lenguaje natural sobre tus datos reales, sin enviar nada a la nube.',
   },
   {
-    src: 'screenshots/auditor.png',
-    alt: 'Panel de auditoría de consistencia',
-    caption: 'Consistency Auditor',
+    id: 'themes',
+    label: 'Temas',
+    src: 'screenshots/themes.png',
+    alt: 'Galería de temas dark y light',
+    caption: 'Galería de temas: dark y light cuidados al detalle, switch instantáneo.',
+  },
+  {
+    id: 'work',
+    label: 'Work',
+    src: 'screenshots/work.png',
+    alt: 'Plugin Work con kanban y Focus Engine',
+    caption: 'Plugin Work: kanban con WIP limit y Focus Engine 2.0 con Pomodoro nativo.',
   },
 ]
 
@@ -33,39 +41,7 @@ export function Screenshots() {
       title="Una interfaz pensada para que la uses todos los días"
       description="Atajos globales, palette de comandos y temas dark/light cuidados al detalle."
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {shots.map((s) => (
-          <figure
-            key={s.src}
-            className="rounded-2xl overflow-hidden border border-border bg-surface/60 hover:border-accent/50 transition-colors group"
-          >
-            <div className="aspect-[16/10] bg-surface-light flex items-center justify-center overflow-hidden relative">
-              <img
-                src={`${import.meta.env.BASE_URL}${s.src}`}
-                alt={s.alt}
-                loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={(e) => {
-                  // Si la imagen no existe aún, mostrar placeholder
-                  ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                  const sibling = (e.currentTarget as HTMLImageElement).nextElementSibling as HTMLElement | null
-                  if (sibling) sibling.style.display = 'flex'
-                }}
-              />
-              <div
-                className="absolute inset-0 hidden flex-col items-center justify-center text-muted gap-2"
-                aria-hidden="true"
-              >
-                <ImageOff className="w-8 h-8" />
-                <span className="text-sm">Captura próximamente</span>
-              </div>
-            </div>
-            <figcaption className="p-4 text-sm font-medium text-foreground">
-              {s.caption}
-            </figcaption>
-          </figure>
-        ))}
-      </div>
+      <ScreenshotTabs tabs={tabs} />
     </Section>
   )
 }

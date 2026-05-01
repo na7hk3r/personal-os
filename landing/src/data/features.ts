@@ -1,14 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import {
-  Boxes,
-  Trophy,
-  Database,
-  Radio,
-  ShieldCheck,
-  RefreshCw,
-  Laptop,
-  Lock,
-} from 'lucide-react'
+import { Sunrise, LayoutGrid, Lock, Bot, Trophy, Sliders } from 'lucide-react'
 
 export interface Feature {
   title: string
@@ -18,50 +9,39 @@ export interface Feature {
 
 export const features: Feature[] = [
   {
-    title: 'Modular por plugins',
+    title: 'Sabés qué hacer cada mañana',
     description:
-      'Activá solo lo que usás. Cada plugin (work, fitness, finance, journal, habits…) es independiente y se instala/desactiva en caliente.',
-    icon: Boxes,
+      'El copiloto analiza tus datos y te da un plan accionable al abrir la app. Sin decidir vos.',
+    icon: Sunrise,
   },
   {
-    title: 'Gamificación integrada',
+    title: 'Todo en un lugar',
     description:
-      'Logros, misiones diarias y XP que se conectan a eventos reales de tus plugins. Sin medallas vacías.',
+      'Trabajo, salud, hábitos, finanzas y journal. Sin pagar diez SaaS distintos.',
+    icon: LayoutGrid,
+  },
+  {
+    title: 'Tus datos son tuyos',
+    description:
+      'SQLite en tu disco. Sin cuenta, sin nube, sin telemetría. Ni siquiera nosotros podemos verlos.',
+    icon: Lock,
+  },
+  {
+    title: 'IA que no espía',
+    description:
+      'Ollama corre en tu máquina. El modelo nunca sale de tu equipo. Privacidad real, no marketing.',
+    icon: Bot,
+  },
+  {
+    title: 'Gamificado, no infantil',
+    description:
+      'XP real conectado a tus acciones. Rachas, logros y misiones diarias con consecuencias reales.',
     icon: Trophy,
   },
   {
-    title: 'SQLite local',
+    title: 'Se adapta a lo que usás',
     description:
-      'Tu información vive en tu disco — base SQLite cifrable por usuario, sin nube, sin cuenta requerida.',
-    icon: Database,
-  },
-  {
-    title: 'Eventos pub/sub',
-    description:
-      'EventBus interno: los plugins se comunican y reaccionan entre sí sin conocerse, con persistencia opcional.',
-    icon: Radio,
-  },
-  {
-    title: 'Auditor de consistencia',
-    description:
-      'Detecta plugins huérfanos, íconos incoherentes, notificaciones de plugins inactivos y más — antes de que se rompan.',
-    icon: ShieldCheck,
-  },
-  {
-    title: 'Auto-update',
-    description:
-      'Las nuevas versiones llegan solas desde GitHub Releases. Un clic y reiniciás con la versión nueva.',
-    icon: RefreshCw,
-  },
-  {
-    title: 'Multiplataforma',
-    description: 'Windows (NSIS + portable), Linux (AppImage / deb) y macOS (dmg). Mismo código, mismos datos.',
-    icon: Laptop,
-  },
-  {
-    title: '100 % local & privado',
-    description:
-      'Sin telemetría, sin tracking, sin servidores. IA opcional vía Ollama corriendo en tu propia máquina.',
-    icon: Lock,
+      'Activás solo los módulos que necesitás. La app no te impone estructura.',
+    icon: Sliders,
   },
 ]
