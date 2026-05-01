@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 import { GamificationNotificationHub } from './GamificationNotificationHub'
 import { SystemSuggestions } from './SystemSuggestions'
+import { AppUpdateBanner } from './components/AppUpdateBanner'
 
 export function Shell() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
@@ -19,6 +20,7 @@ export function Shell() {
       style={{ background: 'var(--bg-gradient)' }}
     >
       <GamificationNotificationHub />
+      <AppUpdateBanner />
       <Sidebar />
       <main
         className={`flex-1 overflow-y-auto transition-all duration-200 ${
