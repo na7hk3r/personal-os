@@ -50,8 +50,8 @@ export function useFocusNudge() {
         nudgeFiredThisAppSession = true
         const candidate = pickHighestPriorityCard(cards)
         toast.undo({
-          message: messages.success.focusNudgeHeading,
-          undoLabel: messages.success.focusNudgeStart,
+          message: messages.guidance.focusNudgeHeading,
+          undoLabel: messages.guidance.focusNudgeStart,
           onUndo: async () => { await startWorkFocusSession(candidate?.id ?? null) },
           timeoutMs: 12_000,
         })

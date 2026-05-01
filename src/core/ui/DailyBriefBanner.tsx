@@ -47,7 +47,7 @@ export function DailyBriefBanner() {
       <Sparkles className="mt-0.5 h-4 w-4 text-accent-light" />
       <div className="flex-1 min-w-0">
         <div className="text-[11px] uppercase tracking-wide text-muted">
-          {messages.success.dailyBriefHeading}
+          {messages.guidance.dailyBriefHeading}
           {brief?.source === 'fallback' ? <span className="ml-2 text-muted/70">sin IA</span> : null}
         </div>
         <p className="mt-0.5 text-sm text-accent-light">
@@ -67,7 +67,7 @@ export function DailyBriefBanner() {
         type="button"
         onClick={() => void dismiss()}
         className="rounded-md p-1.5 text-muted hover:text-accent-light hover:bg-surface-light"
-        title={messages.success.dailyBriefDismiss}
+        title={messages.guidance.dailyBriefDismiss}
       >
         <X className="h-3.5 w-3.5" />
       </button>
