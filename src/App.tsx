@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Shell } from './core/ui/Shell'
 import { Dashboard } from './core/ui/Dashboard'
-import { ControlCenter } from './core/ui/ControlCenter'
-import { CoreNotesPage } from './core/ui/pages/NotesPage'
-import { CoreLinksPage } from './core/ui/pages/LinksPage'
-import { CorePlannerPage } from './core/ui/pages/PlannerPage'
-import { CalendarPage } from './core/ui/pages/CalendarPage'
-import { ReviewPage } from './core/ui/pages/ReviewPage'
+const ControlCenter = lazy(() => import('./core/ui/ControlCenter').then((m) => ({ default: m.ControlCenter })))
+const CoreNotesPage = lazy(() => import('./core/ui/pages/NotesPage').then((m) => ({ default: m.CoreNotesPage })))
+const CoreLinksPage = lazy(() => import('./core/ui/pages/LinksPage').then((m) => ({ default: m.CoreLinksPage })))
+const CorePlannerPage = lazy(() => import('./core/ui/pages/PlannerPage').then((m) => ({ default: m.CorePlannerPage })))
+const CalendarPage = lazy(() => import('./core/ui/pages/CalendarPage').then((m) => ({ default: m.CalendarPage })))
+const ReviewPage = lazy(() => import('./core/ui/pages/ReviewPage').then((m) => ({ default: m.ReviewPage })))
 import { CommandPalette } from './core/ui/CommandPalette'
 import { OnboardingWizard } from './core/ui/onboarding/OnboardingWizard'
 import { pluginManager } from './core/plugins/PluginManager'
@@ -26,6 +26,7 @@ import { notificationsService } from './core/services/notificationsService'
 // Import and register plugins
 import './plugins/fitness'
 import './plugins/work'
+import './plugins/finance'
 
 /**
  * Safe mode skips plugin initialization so the shell can boot even if a plugin
@@ -35,6 +36,14 @@ import './plugins/work'
 function isSafeModeRequested(): boolean {
   if (typeof window === 'undefined') return false
   return window.location.hash.includes('safe')
+}
+
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center px-6 py-10 text-sm text-muted">
+      Cargando…
+    </div>
+  )
 }
 
 export function App() {
@@ -153,12 +162,12 @@ export function App() {
             <Routes>
               <Route element={<Shell />}>
                 <Route index element={<Dashboard />} />
-                <Route path="/control" element={<ControlCenter />} />
-                <Route path="/notes" element={<CoreNotesPage />} />
-                <Route path="/links" element={<CoreLinksPage />} />
-                <Route path="/planner" element={<CorePlannerPage />} />
-                <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/review" element={<ReviewPage />} />
+                <Route path="/control" element={<Suspense fallback={<RouteFallback />}><ControlCenter /></Suspense>} />
+                <Route path="/notes" element={<Suspense fallback={<RouteFallback />}><CoreNotesPage /></Suspense>} />
+                <Route path="/links" element={<Suspense fallback={<RouteFallback />}><CoreLinksPage /></Suspense>} />
+                <Route path="/planner" element={<Suspense fallback={<RouteFallback />}><CorePlannerPage /></Suspense>} />
+                <Route path="/calendar" element={<Suspense fallback={<RouteFallback />}><CalendarPage /></Suspense>} />
+                <Route path="/review" element={<Suspense fallback={<RouteFallback />}><ReviewPage /></Suspense>} />
                 {pluginPages.map((page) => {
                   const PageComponent = page.component
                   return (
@@ -167,7 +176,9 @@ export function App() {
                       path={page.path}
                       element={
                         <ErrorBoundary label={`plugin:${page.pluginId}`}>
-                          <PageComponent />
+                          <Suspense fallback={<RouteFallback />}>
+                            <PageComponent />
+                          </Suspense>
                         </ErrorBoundary>
                       }
                     />
