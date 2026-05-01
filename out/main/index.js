@@ -5,7 +5,7 @@ const url = require("url");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const crypto = require("crypto");
-const CHANNELS$4 = {
+const CHANNELS$5 = {
   query: "storage:query",
   execute: "storage:execute",
   migrate: "storage:migrate"
@@ -123,25 +123,25 @@ function withStorageErrorHandling(fn) {
   }
 }
 function registerStorageIpc(db) {
-  electron.ipcMain.handle(CHANNELS$4.query, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$5.query, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$4.query);
+      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$5.query);
       return db.query(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$4.execute, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$5.execute, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$4.execute);
+      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$5.execute);
       return db.execute(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$4.migrate, (_event, pluginId, migrations) => {
+  electron.ipcMain.handle(CHANNELS$5.migrate, (_event, pluginId, migrations) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId);
       assertMigrations(migrations, pluginId);
@@ -173,6 +173,9 @@ const CORE_SCHEMA = `
     payload TEXT,
     created_at TEXT DEFAULT (datetime('now'))
   );
+
+  CREATE INDEX IF NOT EXISTS idx_events_log_created_at ON events_log(created_at);
+  CREATE INDEX IF NOT EXISTS idx_events_log_type_created ON events_log(event_type, created_at);
 
   CREATE TABLE IF NOT EXISTS plugin_state (
     plugin_id TEXT NOT NULL,
@@ -326,6 +329,32 @@ class DatabaseService {
     this.userDb.pragma("busy_timeout = 5000");
     this.userDb.exec(CORE_SCHEMA);
     this.activeUserId = userId;
+    this.purgeOldEvents();
+  }
+  /**
+   * Política de retención del log de eventos.
+   * Sin esto, `events_log` crece sin tope y degrada inserts/queries con el
+   * tiempo. Llamado al activar usuario (≈ una vez por arranque); barato gracias
+   * al índice por `created_at` implícito en SQLite.
+   */
+  static EVENT_RETENTION_DAYS = 90;
+  static EVENT_HARD_CAP_ROWS = 5e4;
+  purgeOldEvents() {
+    if (!this.userDb) return;
+    try {
+      this.userDb.prepare(
+        `DELETE FROM events_log WHERE created_at < datetime('now', ?)`
+      ).run(`-${DatabaseService.EVENT_RETENTION_DAYS} days`);
+      const row = this.userDb.prepare(`SELECT COUNT(*) as c FROM events_log`).get();
+      if (row.c > DatabaseService.EVENT_HARD_CAP_ROWS) {
+        const excess = row.c - DatabaseService.EVENT_HARD_CAP_ROWS;
+        this.userDb.prepare(
+          `DELETE FROM events_log WHERE id IN (SELECT id FROM events_log ORDER BY id ASC LIMIT ?)`
+        ).run(excess);
+      }
+    } catch (err) {
+      console.warn("[DatabaseService] purgeOldEvents failed:", err);
+    }
   }
   clearActiveUser() {
     this.userDb?.close();
@@ -674,7 +703,7 @@ class AuthService {
     }
   }
 }
-const CHANNELS$3 = {
+const CHANNELS$4 = {
   register: "auth:register",
   login: "auth:login",
   logout: "auth:logout",
@@ -696,7 +725,7 @@ function withAuthErrorHandling(fn) {
   });
 }
 function registerAuthIpc(authService) {
-  electron.ipcMain.handle(CHANNELS$3.register, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$4.register, (_event, payload) => {
     return withAuthErrorHandling(async () => {
       if (typeof payload !== "object" || payload === null) {
         throw new Error("payload is required");
@@ -714,29 +743,29 @@ function registerAuthIpc(authService) {
       });
     });
   });
-  electron.ipcMain.handle(CHANNELS$3.login, (_event, username, password) => {
+  electron.ipcMain.handle(CHANNELS$4.login, (_event, username, password) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       assertString(password, "password");
       return authService.login(username, password);
     });
   });
-  electron.ipcMain.handle(CHANNELS$3.logout, () => {
+  electron.ipcMain.handle(CHANNELS$4.logout, () => {
     return withAuthErrorHandling(async () => {
       await authService.logout();
     });
   });
-  electron.ipcMain.handle(CHANNELS$3.me, () => {
+  electron.ipcMain.handle(CHANNELS$4.me, () => {
     return withAuthErrorHandling(async () => authService.getCurrentUser());
   });
-  electron.ipcMain.handle(CHANNELS$3.getRecoveryQuestion, (_event, username) => {
+  electron.ipcMain.handle(CHANNELS$4.getRecoveryQuestion, (_event, username) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       return authService.getRecoveryQuestion(username);
     });
   });
   electron.ipcMain.handle(
-    CHANNELS$3.resetPasswordWithRecovery,
+    CHANNELS$4.resetPasswordWithRecovery,
     (_event, payload) => {
       return withAuthErrorHandling(async () => {
         if (typeof payload !== "object" || payload === null) {
@@ -755,48 +784,48 @@ function registerAuthIpc(authService) {
     }
   );
 }
-const CHANNELS$2 = {
+const CHANNELS$3 = {
   exportPlain: "backup:export-plain",
   exportEncrypted: "backup:export-encrypted",
   importPlain: "backup:import-plain",
   importEncrypted: "backup:import-encrypted"
 };
-const MAGIC = Buffer.from("POS-BAK1");
-const ALGO = "aes-256-gcm";
-const KEY_LEN = 32;
-const SALT_LEN = 16;
-const IV_LEN = 12;
+const MAGIC$1 = Buffer.from("POS-BAK1");
+const ALGO$1 = "aes-256-gcm";
+const KEY_LEN$1 = 32;
+const SALT_LEN$1 = 16;
+const IV_LEN$1 = 12;
 const TAG_LEN = 16;
-function deriveKey(passphrase, salt) {
-  return crypto.scryptSync(passphrase, salt, KEY_LEN, { N: 16384, r: 8, p: 1 });
+function deriveKey$1(passphrase, salt) {
+  return crypto.scryptSync(passphrase, salt, KEY_LEN$1, { N: 16384, r: 8, p: 1 });
 }
-function encrypt(payload, passphrase) {
-  const salt = crypto.randomBytes(SALT_LEN);
-  const iv = crypto.randomBytes(IV_LEN);
-  const key = deriveKey(passphrase, salt);
-  const cipher = crypto.createCipheriv(ALGO, key, iv);
+function encrypt$1(payload, passphrase) {
+  const salt = crypto.randomBytes(SALT_LEN$1);
+  const iv = crypto.randomBytes(IV_LEN$1);
+  const key = deriveKey$1(passphrase, salt);
+  const cipher = crypto.createCipheriv(ALGO$1, key, iv);
   const encrypted = Buffer.concat([cipher.update(payload), cipher.final()]);
   const tag = cipher.getAuthTag();
-  return Buffer.concat([MAGIC, salt, iv, tag, encrypted]);
+  return Buffer.concat([MAGIC$1, salt, iv, tag, encrypted]);
 }
 function decrypt(blob, passphrase) {
-  if (blob.length < MAGIC.length + SALT_LEN + IV_LEN + TAG_LEN) {
+  if (blob.length < MAGIC$1.length + SALT_LEN$1 + IV_LEN$1 + TAG_LEN) {
     throw new Error("Backup file is too small or corrupted");
   }
-  const magic = blob.subarray(0, MAGIC.length);
-  if (!magic.equals(MAGIC)) {
+  const magic = blob.subarray(0, MAGIC$1.length);
+  if (!magic.equals(MAGIC$1)) {
     throw new Error("Invalid backup format");
   }
-  let offset = MAGIC.length;
-  const salt = blob.subarray(offset, offset + SALT_LEN);
-  offset += SALT_LEN;
-  const iv = blob.subarray(offset, offset + IV_LEN);
-  offset += IV_LEN;
+  let offset = MAGIC$1.length;
+  const salt = blob.subarray(offset, offset + SALT_LEN$1);
+  offset += SALT_LEN$1;
+  const iv = blob.subarray(offset, offset + IV_LEN$1);
+  offset += IV_LEN$1;
   const tag = blob.subarray(offset, offset + TAG_LEN);
   offset += TAG_LEN;
   const encrypted = blob.subarray(offset);
-  const key = deriveKey(passphrase, salt);
-  const decipher = crypto.createDecipheriv(ALGO, key, iv);
+  const key = deriveKey$1(passphrase, salt);
+  const decipher = crypto.createDecipheriv(ALGO$1, key, iv);
   decipher.setAuthTag(tag);
   return Buffer.concat([decipher.update(encrypted), decipher.final()]);
 }
@@ -817,14 +846,14 @@ async function pickOpenPath() {
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
 }
 function registerBackupIpc(db) {
-  electron.ipcMain.handle(CHANNELS$2.exportPlain, async () => {
+  electron.ipcMain.handle(CHANNELS$3.exportPlain, async () => {
     const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const dest = await pickSavePath(`personal-os-backup-${stamp}.db`);
     if (!dest) return { ok: false, canceled: true };
     db.exportActiveUserDb(dest);
     return { ok: true, path: dest };
   });
-  electron.ipcMain.handle(CHANNELS$2.exportEncrypted, async (_event, passphrase) => {
+  electron.ipcMain.handle(CHANNELS$3.exportEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 8) {
       throw new Error("La passphrase debe tener al menos 8 caracteres");
     }
@@ -835,7 +864,7 @@ function registerBackupIpc(db) {
     db.exportActiveUserDb(tmp);
     try {
       const data = fs.readFileSync(tmp);
-      const blob = encrypt(data, passphrase);
+      const blob = encrypt$1(data, passphrase);
       fs.writeFileSync(dest, blob);
     } finally {
       try {
@@ -847,13 +876,13 @@ function registerBackupIpc(db) {
     }
     return { ok: true, path: dest };
   });
-  electron.ipcMain.handle(CHANNELS$2.importPlain, async () => {
+  electron.ipcMain.handle(CHANNELS$3.importPlain, async () => {
     const src = await pickOpenPath();
     if (!src) return { ok: false, canceled: true };
     db.importActiveUserDb(src);
     return { ok: true };
   });
-  electron.ipcMain.handle(CHANNELS$2.importEncrypted, async (_event, passphrase) => {
+  electron.ipcMain.handle(CHANNELS$3.importEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 1) {
       throw new Error("Ingresá la passphrase usada al exportar");
     }
@@ -871,7 +900,7 @@ function registerBackupIpc(db) {
     return { ok: true };
   });
 }
-const CHANNELS$1 = {
+const CHANNELS$2 = {
   health: "ollama:health",
   generate: "ollama:generate",
   listModels: "ollama:list-models"
@@ -888,7 +917,7 @@ function postJson(path2, body, timeoutMs = 6e4) {
     });
     req.setHeader("Content-Type", "application/json");
     const chunks = [];
-    const timer = setTimeout(() => {
+    const timer2 = setTimeout(() => {
       try {
         req.abort();
       } catch {
@@ -898,7 +927,7 @@ function postJson(path2, body, timeoutMs = 6e4) {
     req.on("response", (response) => {
       response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       response.on("end", () => {
-        clearTimeout(timer);
+        clearTimeout(timer2);
         const text = Buffer.concat(chunks).toString("utf-8");
         if (response.statusCode && response.statusCode >= 400) {
           reject(new Error(`Ollama HTTP ${response.statusCode}: ${text}`));
@@ -911,12 +940,12 @@ function postJson(path2, body, timeoutMs = 6e4) {
         }
       });
       response.on("error", (err) => {
-        clearTimeout(timer);
+        clearTimeout(timer2);
         reject(err);
       });
     });
     req.on("error", (err) => {
-      clearTimeout(timer);
+      clearTimeout(timer2);
       reject(err);
     });
     req.write(JSON.stringify(body));
@@ -927,7 +956,7 @@ function getJson(path2, timeoutMs = 5e3) {
   return new Promise((resolve, reject) => {
     const req = electron.net.request({ method: "GET", url: `${getBase()}${path2}` });
     const chunks = [];
-    const timer = setTimeout(() => {
+    const timer2 = setTimeout(() => {
       try {
         req.abort();
       } catch {
@@ -937,7 +966,7 @@ function getJson(path2, timeoutMs = 5e3) {
     req.on("response", (response) => {
       response.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
       response.on("end", () => {
-        clearTimeout(timer);
+        clearTimeout(timer2);
         const text = Buffer.concat(chunks).toString("utf-8");
         if (response.statusCode && response.statusCode >= 400) {
           reject(new Error(`Ollama HTTP ${response.statusCode}: ${text}`));
@@ -950,19 +979,19 @@ function getJson(path2, timeoutMs = 5e3) {
         }
       });
       response.on("error", (err) => {
-        clearTimeout(timer);
+        clearTimeout(timer2);
         reject(err);
       });
     });
     req.on("error", (err) => {
-      clearTimeout(timer);
+      clearTimeout(timer2);
       reject(err);
     });
     req.end();
   });
 }
 function registerOllamaIpc() {
-  electron.ipcMain.handle(CHANNELS$1.health, async () => {
+  electron.ipcMain.handle(CHANNELS$2.health, async () => {
     try {
       await getJson("/api/tags", 3e3);
       return { ok: true, baseUrl: getBase() };
@@ -970,11 +999,11 @@ function registerOllamaIpc() {
       return { ok: false, baseUrl: getBase(), error: err.message };
     }
   });
-  electron.ipcMain.handle(CHANNELS$1.listModels, async () => {
+  electron.ipcMain.handle(CHANNELS$2.listModels, async () => {
     const data = await getJson("/api/tags", 5e3);
     return data.models?.map((m) => ({ name: m.name, size: m.size, modifiedAt: m.modified_at })) ?? [];
   });
-  electron.ipcMain.handle(CHANNELS$1.generate, async (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$2.generate, async (_event, payload) => {
     if (!payload || typeof payload !== "object") {
       throw new Error("Payload inválido");
     }
@@ -1000,13 +1029,13 @@ function registerOllamaIpc() {
     return { text: result.response, durationMs: result.total_duration ? Math.round(result.total_duration / 1e6) : void 0 };
   });
 }
-const CHANNELS = {
+const CHANNELS$1 = {
   show: "notifications:show",
   isSupported: "notifications:supported"
 };
 function registerNotificationsIpc() {
-  electron.ipcMain.handle(CHANNELS.isSupported, () => electron.Notification.isSupported());
-  electron.ipcMain.handle(CHANNELS.show, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$1.isSupported, () => electron.Notification.isSupported());
+  electron.ipcMain.handle(CHANNELS$1.show, (_event, payload) => {
     if (!electron.Notification.isSupported()) return { ok: false, reason: "not-supported" };
     if (!payload || typeof payload !== "object") {
       throw new Error("Payload inválido");
@@ -1023,6 +1052,371 @@ function registerNotificationsIpc() {
     n.show();
     return { ok: true };
   });
+}
+const CHANNEL = "diagnostic:export";
+function buildReport(input) {
+  return {
+    ...input,
+    appVersion: input.appVersion ?? electron.app.getVersion(),
+    generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    electronVersion: process.versions.electron ?? "unknown",
+    chromeVersion: process.versions.chrome ?? "unknown",
+    nodeVersion: process.versions.node ?? "unknown",
+    platform: process.platform,
+    arch: process.arch,
+    locale: electron.app.getLocale()
+  };
+}
+function registerDiagnosticIpc() {
+  electron.ipcMain.handle(CHANNEL, async (_event, raw) => {
+    const payload = typeof raw === "object" && raw !== null ? raw : {};
+    const report = buildReport(payload);
+    const focused = electron.BrowserWindow.getFocusedWindow();
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const defaultName = `personal-os-diagnostic-${stamp}.json`;
+    const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+      title: "Exportar diagnóstico de Personal OS",
+      defaultPath: path.join(electron.app.getPath("downloads"), defaultName),
+      filters: [{ name: "JSON", extensions: ["json"] }]
+    });
+    if (result.canceled || !result.filePath) {
+      return { ok: false, canceled: true };
+    }
+    try {
+      fs.writeFileSync(result.filePath, JSON.stringify(report, null, 2), "utf-8");
+      return { ok: true, path: result.filePath };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : "No se pudo escribir el archivo"
+      };
+    }
+  });
+}
+const CHANNELS = {
+  getStatus: "app-update:get-status",
+  check: "app-update:check",
+  download: "app-update:download",
+  quitAndInstall: "app-update:quit-and-install",
+  status: "app-update:status"
+};
+let currentStatus = { state: "idle" };
+let updater = null;
+let mainWindowGetter = null;
+function broadcast(status) {
+  currentStatus = status;
+  const win = mainWindowGetter?.();
+  if (win && !win.isDestroyed()) {
+    win.webContents.send(CHANNELS.status, status);
+  }
+}
+function tryLoadUpdater() {
+  try {
+    const mod = require("electron-updater");
+    return mod.autoUpdater;
+  } catch {
+    return null;
+  }
+}
+function registerAppUpdateIpc(getMainWindow) {
+  mainWindowGetter = getMainWindow;
+  if (!electron.app.isPackaged) {
+    currentStatus = { state: "disabled", reason: "No disponible en modo desarrollo." };
+  } else {
+    updater = tryLoadUpdater();
+    if (!updater) {
+      currentStatus = {
+        state: "disabled",
+        reason: "electron-updater no está instalado. Instalá la dependencia para activar auto-update."
+      };
+    } else {
+      updater.autoDownload = false;
+      updater.autoInstallOnAppQuit = true;
+      updater.on("checking-for-update", () => broadcast({ state: "checking" }));
+      updater.on("update-not-available", (info) => {
+        const version = info?.version ?? electron.app.getVersion();
+        broadcast({ state: "no-update", currentVersion: version });
+      });
+      updater.on("update-available", (info) => {
+        const data = info;
+        broadcast({
+          state: "available",
+          version: data?.version ?? "desconocida",
+          releaseNotes: typeof data?.releaseNotes === "string" ? data.releaseNotes : void 0
+        });
+      });
+      updater.on("download-progress", (progress) => {
+        const p = progress;
+        broadcast({
+          state: "downloading",
+          percent: Math.round(p?.percent ?? 0),
+          transferredBytes: p?.transferred ?? 0,
+          totalBytes: p?.total ?? 0
+        });
+      });
+      updater.on("update-downloaded", (info) => {
+        const version = info?.version ?? "desconocida";
+        broadcast({ state: "downloaded", version });
+      });
+      updater.on("error", (err) => {
+        broadcast({ state: "error", message: err instanceof Error ? err.message : String(err) });
+      });
+    }
+  }
+  electron.ipcMain.handle(CHANNELS.getStatus, () => currentStatus);
+  electron.ipcMain.handle(CHANNELS.check, async () => {
+    if (!updater) return currentStatus;
+    try {
+      await updater.checkForUpdates();
+    } catch (err) {
+      broadcast({ state: "error", message: err instanceof Error ? err.message : "Error al chequear updates" });
+    }
+    return currentStatus;
+  });
+  electron.ipcMain.handle(CHANNELS.download, async () => {
+    if (!updater) return currentStatus;
+    try {
+      await updater.downloadUpdate();
+    } catch (err) {
+      broadcast({ state: "error", message: err instanceof Error ? err.message : "Error al descargar update" });
+    }
+    return currentStatus;
+  });
+  electron.ipcMain.handle(CHANNELS.quitAndInstall, () => {
+    if (!updater) return;
+    updater.quitAndInstall();
+  });
+}
+const SETTINGS_KEY = "scheduledBackup";
+const STATUS_KEY = "scheduledBackupStatus";
+const DEFAULT_CONFIG = {
+  enabled: false,
+  frequencyDays: 7,
+  destinationDir: null,
+  encrypt: true,
+  retainCount: 5
+};
+const MAGIC = Buffer.from("POS-BAK1");
+const ALGO = "aes-256-gcm";
+const KEY_LEN = 32;
+const SALT_LEN = 16;
+const IV_LEN = 12;
+let timer = null;
+let sessionPassphrase = null;
+function deriveKey(passphrase, salt) {
+  return crypto.scryptSync(passphrase, salt, KEY_LEN, { N: 16384, r: 8, p: 1 });
+}
+function encrypt(payload, passphrase) {
+  const salt = crypto.randomBytes(SALT_LEN);
+  const iv = crypto.randomBytes(IV_LEN);
+  const key = deriveKey(passphrase, salt);
+  const cipher = crypto.createCipheriv(ALGO, key, iv);
+  const encrypted = Buffer.concat([cipher.update(payload), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([MAGIC, salt, iv, tag, encrypted]);
+}
+function loadConfig(db) {
+  try {
+    const rows = db.query(
+      `SELECT value FROM settings WHERE key = ?`,
+      [SETTINGS_KEY]
+    );
+    if (rows.length === 0) return { ...DEFAULT_CONFIG };
+    const parsed = JSON.parse(rows[0].value);
+    return { ...DEFAULT_CONFIG, ...parsed };
+  } catch {
+    return { ...DEFAULT_CONFIG };
+  }
+}
+function saveConfig(db, config) {
+  db.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+    [SETTINGS_KEY, JSON.stringify(config)]
+  );
+}
+function loadStatus(db) {
+  try {
+    const rows = db.query(
+      `SELECT value FROM settings WHERE key = ?`,
+      [STATUS_KEY]
+    );
+    if (rows.length === 0) return { lastRunAt: null, lastResultPath: null, lastError: null };
+    return JSON.parse(rows[0].value);
+  } catch {
+    return { lastRunAt: null, lastResultPath: null, lastError: null };
+  }
+}
+function saveStatus(db, status) {
+  db.execute(
+    `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+    [STATUS_KEY, JSON.stringify(status)]
+  );
+}
+function computeNextRunAt(config, lastRunAt) {
+  if (!config.enabled) return null;
+  const baseMs = lastRunAt ? Date.parse(lastRunAt) : Date.now() - config.frequencyDays * 24 * 60 * 60 * 1e3;
+  return new Date(baseMs + config.frequencyDays * 24 * 60 * 60 * 1e3).toISOString();
+}
+function buildStatus(db) {
+  const config = loadConfig(db);
+  const persisted = loadStatus(db);
+  return {
+    config,
+    ...persisted,
+    nextRunAt: computeNextRunAt(config, persisted.lastRunAt),
+    passphraseLoaded: sessionPassphrase !== null
+  };
+}
+function pruneOldBackups(dir, retainCount) {
+  if (retainCount <= 0) return;
+  if (!fs.existsSync(dir)) return;
+  try {
+    const entries = fs.readdirSync(dir).filter((f) => f.startsWith("personal-os-auto-") && (f.endsWith(".db") || f.endsWith(".posbak"))).map((f) => {
+      const full = path.join(dir, f);
+      return { full, mtime: fs.statSync(full).mtimeMs };
+    }).sort((a, b) => b.mtime - a.mtime);
+    const toDelete = entries.slice(retainCount);
+    for (const entry of toDelete) {
+      try {
+        fs.unlinkSync(entry.full);
+      } catch (err) {
+        console.warn("[ScheduledBackup] failed to prune", entry.full, err);
+      }
+    }
+  } catch (err) {
+    console.warn("[ScheduledBackup] pruning failed", err);
+  }
+}
+async function performBackup(db) {
+  const config = loadConfig(db);
+  if (!config.destinationDir) {
+    return { ok: false, error: "Sin carpeta destino configurada." };
+  }
+  if (!fs.existsSync(config.destinationDir)) {
+    try {
+      fs.mkdirSync(config.destinationDir, { recursive: true });
+    } catch (err) {
+      return { ok: false, error: `No se pudo crear la carpeta: ${err.message}` };
+    }
+  }
+  if (config.encrypt && !sessionPassphrase) {
+    return { ok: false, error: "Backup cifrado requiere passphrase. Definila en Control Center." };
+  }
+  const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+  const ext = config.encrypt ? "posbak" : "db";
+  const dest = path.join(config.destinationDir, `personal-os-auto-${stamp}.${ext}`);
+  const tmp = `${dest}.tmp.db`;
+  try {
+    db.exportActiveUserDb(tmp);
+    if (config.encrypt && sessionPassphrase) {
+      const data = fs.readFileSync(tmp);
+      const blob = encrypt(data, sessionPassphrase);
+      fs.writeFileSync(dest, blob);
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+      }
+    } else {
+      const data = fs.readFileSync(tmp);
+      fs.writeFileSync(dest, data);
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+      }
+    }
+    pruneOldBackups(config.destinationDir, config.retainCount);
+    return { ok: true, path: dest };
+  } catch (err) {
+    try {
+      if (fs.existsSync(tmp)) fs.unlinkSync(tmp);
+    } catch {
+    }
+    return { ok: false, error: err.message };
+  }
+}
+async function tickIfDue(db) {
+  const config = loadConfig(db);
+  if (!config.enabled || !config.destinationDir) return;
+  const persisted = loadStatus(db);
+  const dueAt = computeNextRunAt(config, persisted.lastRunAt);
+  if (!dueAt) return;
+  if (Date.parse(dueAt) > Date.now()) return;
+  const result = await performBackup(db);
+  saveStatus(db, {
+    lastRunAt: (/* @__PURE__ */ new Date()).toISOString(),
+    lastResultPath: result.ok ? result.path ?? null : persisted.lastResultPath,
+    lastError: result.ok ? null : result.error ?? "Error desconocido"
+  });
+}
+function startTimer(db) {
+  if (timer) clearInterval(timer);
+  timer = setInterval(() => {
+    void tickIfDue(db);
+  }, 60 * 60 * 1e3);
+  setTimeout(() => void tickIfDue(db), 3e4);
+}
+function registerScheduledBackupIpc(db) {
+  electron.ipcMain.handle("scheduled-backup:get-status", () => buildStatus(db));
+  electron.ipcMain.handle("scheduled-backup:set-config", (_event, raw) => {
+    if (typeof raw !== "object" || raw === null) {
+      throw new Error("config debe ser un objeto");
+    }
+    const current = loadConfig(db);
+    const next = {
+      ...current,
+      ...raw
+    };
+    if (!Number.isInteger(next.frequencyDays) || next.frequencyDays < 1 || next.frequencyDays > 30) {
+      throw new Error("frequencyDays debe estar entre 1 y 30");
+    }
+    if (!Number.isInteger(next.retainCount) || next.retainCount < 1 || next.retainCount > 50) {
+      throw new Error("retainCount debe estar entre 1 y 50");
+    }
+    saveConfig(db, next);
+    startTimer(db);
+    return buildStatus(db);
+  });
+  electron.ipcMain.handle("scheduled-backup:pick-destination", async () => {
+    const focused = electron.BrowserWindow.getFocusedWindow();
+    const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+      title: "Carpeta para backups automáticos",
+      defaultPath: electron.app.getPath("documents"),
+      properties: ["openDirectory", "createDirectory"]
+    });
+    if (result.canceled || result.filePaths.length === 0) return { path: null };
+    return { path: result.filePaths[0] };
+  });
+  electron.ipcMain.handle("scheduled-backup:set-passphrase", (_event, passphrase) => {
+    if (passphrase === null) {
+      sessionPassphrase = null;
+      return { ok: true };
+    }
+    if (typeof passphrase !== "string" || passphrase.length < 8) {
+      throw new Error("Passphrase muy corta. Mínimo 8 caracteres.");
+    }
+    sessionPassphrase = passphrase;
+    return { ok: true };
+  });
+  electron.ipcMain.handle("scheduled-backup:run-now", async () => {
+    const result = await performBackup(db);
+    const persisted = loadStatus(db);
+    saveStatus(db, {
+      lastRunAt: (/* @__PURE__ */ new Date()).toISOString(),
+      lastResultPath: result.ok ? result.path ?? null : persisted.lastResultPath,
+      lastError: result.ok ? null : result.error ?? "Error desconocido"
+    });
+    return buildStatus(db);
+  });
+}
+function bootScheduledBackup(db) {
+  startTimer(db);
+}
+function shutdownScheduledBackup() {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+  sessionPassphrase = null;
 }
 let mainWindow = null;
 const rendererUrl = process.env.ELECTRON_RENDERER_URL;
@@ -1104,6 +1498,10 @@ electron.app.whenReady().then(() => {
   registerBackupIpc(db);
   registerOllamaIpc();
   registerNotificationsIpc();
+  registerDiagnosticIpc();
+  registerScheduledBackupIpc(db);
+  registerAppUpdateIpc(() => mainWindow);
+  bootScheduledBackup(db);
   createWindow();
   electron.app.on("activate", () => {
     if (electron.BrowserWindow.getAllWindows().length === 0) {
@@ -1112,6 +1510,7 @@ electron.app.whenReady().then(() => {
   });
 });
 electron.app.on("window-all-closed", () => {
+  shutdownScheduledBackup();
   if (process.platform !== "darwin") {
     electron.app.quit();
   }

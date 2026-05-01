@@ -28,8 +28,32 @@ const notificationsBridge = {
   isSupported: () => electron.ipcRenderer.invoke("notifications:supported"),
   show: (payload) => electron.ipcRenderer.invoke("notifications:show", payload)
 };
+const diagnosticBridge = {
+  export: (payload) => electron.ipcRenderer.invoke("diagnostic:export", payload)
+};
+const appUpdateBridge = {
+  getStatus: () => electron.ipcRenderer.invoke("app-update:get-status"),
+  checkForUpdates: () => electron.ipcRenderer.invoke("app-update:check"),
+  downloadUpdate: () => electron.ipcRenderer.invoke("app-update:download"),
+  quitAndInstall: () => electron.ipcRenderer.invoke("app-update:quit-and-install"),
+  onStatus: (cb) => {
+    const handler = (_event, status) => cb(status);
+    electron.ipcRenderer.on("app-update:status", handler);
+    return () => electron.ipcRenderer.removeListener("app-update:status", handler);
+  }
+};
+const scheduledBackupBridge = {
+  getStatus: () => electron.ipcRenderer.invoke("scheduled-backup:get-status"),
+  setConfig: (config) => electron.ipcRenderer.invoke("scheduled-backup:set-config", config),
+  pickDestination: () => electron.ipcRenderer.invoke("scheduled-backup:pick-destination"),
+  setPassphrase: (passphrase) => electron.ipcRenderer.invoke("scheduled-backup:set-passphrase", passphrase),
+  runNow: () => electron.ipcRenderer.invoke("scheduled-backup:run-now")
+};
 electron.contextBridge.exposeInMainWorld("storage", storageBridge);
 electron.contextBridge.exposeInMainWorld("auth", authBridge);
 electron.contextBridge.exposeInMainWorld("backup", backupBridge);
 electron.contextBridge.exposeInMainWorld("ollama", ollamaBridge);
 electron.contextBridge.exposeInMainWorld("notifications", notificationsBridge);
+electron.contextBridge.exposeInMainWorld("diagnostic", diagnosticBridge);
+electron.contextBridge.exposeInMainWorld("appUpdate", appUpdateBridge);
+electron.contextBridge.exposeInMainWorld("scheduledBackup", scheduledBackupBridge);

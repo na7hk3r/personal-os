@@ -1,5 +1,71 @@
 # Changelog - Personal OS
 
+## [1.6.0] - 2026-05-01
+
+Wave 1 de pulido **enterprise**: backups programados, auto-update integrado, exportación de diagnósticos, onboarding con primera acción, undo en operaciones destructivas, retención de eventos y endurecimiento general de la UI.
+
+### ✨ Nuevas características — core
+
+#### Backup programado
+- Servicio `scheduled-backup` en main process: corre en intervalos configurables (diario / semanal / mensual) hacia un destino elegido por el usuario.
+- Cifrado opcional con passphrase persistido en safeStorage del SO (`safeStorage.encryptString`).
+- Sección dedicada en Control Center: estado, próximo run, último run, ejecutar ahora, configurar destino y passphrase.
+
+#### Auto-update integrado (electron-updater)
+- IPC `app-update` con `checkForUpdates`, `downloadUpdate`, `quitAndInstall` y stream de status (`available`, `downloading`, `downloaded`, `error`).
+- **Banner global** en Shell que aparece cuando hay update disponible o ya descargado, con acción para descargar o reiniciar e instalar.
+- Sección de Control Center con estado actual, versión disponible y controles manuales.
+- Fallback transparente cuando `electron-updater` no está instalado o la app no está empaquetada.
+
+#### Diagnóstico exportable
+- IPC `diagnostic:export` empaqueta info de versión, plataforma, perfil activo, conteos de tablas y últimos eventos a un JSON local (sin datos sensibles).
+- Pensado para troubleshooting asistido sin exponer la base completa.
+
+#### Onboarding con primera acción
+- Nuevo paso `StepFirstAction` después de la configuración: el usuario crea su primera tarea de Work o registra su primer peso de Fitness antes de entrar al Dashboard.
+- Si elige saltear, el wizard lo permite. La primera acción se persiste y se muestra en el Step de resumen.
+
+### 🛡️ Robustez
+
+#### Retención del log de eventos
+- `events_log` ahora se purga al activar usuario: descarta filas > 90 días y aplica un cap duro de 50.000 filas.
+- Índices nuevos sobre `created_at` y `(event_type, created_at)` para queries rápidas en feed reciente y agregados.
+
+#### Toast undo en operaciones destructivas
+- Eliminar nota o card del Kanban dispara un toast con acción **Deshacer** (5 s): el snapshot completo se reinserta en SQLite y el evento de creación se re-emite.
+- Glosario de mensajes centralizado en `src/core/ui/messages.ts` (`messages.confirm.deleteNote(...)`, `deleteCard(...)`, `deleteTag(...)`, etc.).
+
+#### Global Error Boundary
+- Captura excepciones de React en cualquier vista del Shell y muestra una pantalla de recuperación con stack y botón de recarga, evitando que un plugin tire toda la app.
+
+#### Toast Provider unificado
+- Provider `ToastProvider` montado en `App.tsx`. API: `toast.success`, `toast.error`, `toast.info`, `toast.undo`, `toast.dismiss`.
+- Variante `undo` con timeout extendido (5 s) y action button.
+
+### 🎨 UI
+
+#### Componente compartido `PluginIcon`
+- Mapa único de strings de manifest (`"BriefcaseBusiness"`, `"NotebookPen"`, etc.) a componentes de `lucide-react`.
+- Refactor de Sidebar y del **Module Manager** del Control Center: antes mostraban literalmente el nombre del icono como texto, ahora renderizan el icono real.
+
+#### Mojibake en Notas — corregido
+- Strings doble-codificados de UTF-8 (`Aâ€"Z`, `TÃ­tulo`, `âœ•`) reemplazados por su forma correcta y por íconos `lucide-react` cuando aplica.
+
+#### Inyección de versión vía Vite
+- `__APP_VERSION__` se inyecta en build/dev a partir de `package.json`. Ya no hace falta mantenerla a mano en strings.
+
+### 🐛 Fixes
+
+- Stubs de `window.*` en `test/setup.ts` ahora usan un cast tipado en vez de `@ts-expect-error`, eliminando warnings al sumar bridges.
+- Botones de eliminar en `NoteEditor` perdieron el patrón "doble click para confirmar" en favor del nuevo undo, más rápido y reversible.
+
+### 🔧 Operativo
+
+- Bump a `1.6.0`.
+- README, CHANGELOG y versión en pantalla actualizados.
+
+---
+
 ## [1.5.0] - 2026-04-30
 
 Salto cualitativo del **core**: IA local con Ollama, backups cifrados, calendario unificado, automatizaciones por evento, Command Palette, review semanal y plantillas.

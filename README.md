@@ -6,7 +6,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.5.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.6.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
@@ -70,8 +70,23 @@ Cola persistente con processor cada 30 s, horas de silencio configurables (con w
 - **Multiusuario local** con autenticación scrypt + salt + `timingSafeEqual`.
 - **Aislamiento total**: `auth.db` global + `personal-os-user-{userId}.db` por usuario.
 - **Backup cifrado** AES-256-GCM con derivación scrypt (passphrase ≥ 8 chars).
+- **Backup programado** (diario / semanal / mensual) hacia destino local elegido por el usuario, con passphrase persistido en `safeStorage` del SO.
 - **Context Isolation** + **sandbox** + preload script + allowlist de tablas/columnas en SQL IPC.
-- Sin `eval`, sin `innerHTML`, sin red salvo Ollama (opt-in).
+- Sin `eval`, sin `innerHTML`, sin red salvo Ollama (opt-in) y verificación de updates (opt-in vía `electron-updater`).
+
+### ⬆️ Auto-update integrado
+
+- IPC `app-update` con check, download y quit-and-install controlados desde Control Center.
+- Banner global no intrusivo aparece sólo cuando hay update disponible o ya descargado.
+- Fallback transparente cuando `electron-updater` no está disponible o la app no está empaquetada.
+
+### 🩺 Diagnóstico exportable
+
+- Un click en Control Center genera un JSON local con versión, plataforma, perfil activo, conteos de tablas y últimos eventos. Sin datos sensibles, listo para troubleshooting.
+
+### ↩️ Undo en operaciones destructivas
+
+- Eliminar nota o card del Kanban dispara un toast con acción **Deshacer** (5 s). El snapshot completo se reinserta en SQLite y el evento de creación se re-emite.
 
 ### 🏷 Tags, plantillas y notificaciones
 
