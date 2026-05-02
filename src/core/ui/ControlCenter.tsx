@@ -223,7 +223,8 @@ export function ControlCenter() {
         <BrandIcon
           name="Tools"
           size={180}
-          className="pointer-events-none absolute -right-8 -bottom-10 text-accent/10 select-none"
+          tile={false}
+          className="pointer-events-none absolute -right-8 -bottom-10 select-none opacity-15"
         />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
@@ -251,7 +252,7 @@ export function ControlCenter() {
       {/* KPIs */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="Chip" size={40} className="text-accent" />
+          <BrandIcon name="Chip" size={40} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Módulos activos</p>
             <p className="mt-1 text-3xl font-semibold">{activePlugins}</p>
@@ -259,7 +260,7 @@ export function ControlCenter() {
           </div>
         </article>
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="Cards" size={40} className="text-accent" />
+          <BrandIcon name="Cards" size={40} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Widgets en dashboard</p>
             <p className="mt-1 text-3xl font-semibold">{metrics.widgets}</p>
@@ -267,7 +268,7 @@ export function ControlCenter() {
           </div>
         </article>
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="TomeAtlas" size={40} className="text-accent" />
+          <BrandIcon name="TomeAtlas" size={40} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Rutas de operación</p>
             <p className="mt-1 text-3xl font-semibold">{metrics.pages}</p>
