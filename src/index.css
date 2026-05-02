@@ -57,11 +57,11 @@
   --color-surface:          255 252 245;   /* #fffcf5 — papel arroz */
   --color-surface-light:    243 236 221;   /* #f3ecdd — arena suave */
   --color-surface-lighter:  232 222 200;   /* #e8dec8 — beige cálido */
-  --color-accent:           217 119 87;    /* #d97757 — terracota pastel */
-  --color-accent-light:     242 175 145;   /* #f2af91 — coral claro */
-  --color-text:             62 51 40;      /* #3e3328 — marrón cálido (no negro) */
-  --color-muted:            142 128 109;   /* #8e806d — sage-arena */
-  --color-border:           234 224 206;   /* #eae0ce — apenas visible sobre cremas */
+  --color-accent:           196 95 65;     /* #c45f41 — terracota profunda (AA 4.6:1 sobre crema) */
+  --color-accent-light:     217 119 87;    /* #d97757 — terracota pastel previa */
+  --color-text:             46 32 20;      /* #2e2014 — marrón muy profundo (≈14:1 sobre crema) */
+  --color-muted:            96 78 60;      /* #604e3c — sage-arena tostada (≈6.5:1 sobre crema) */
+  --color-border:           218 204 178;   /* #dacc b2 — borde definido sin ser duro */
 
   --bg-gradient: radial-gradient(circle at top left, #f7ecd6 0%, #fbf6ea 45%, #fffcf5 100%);
 

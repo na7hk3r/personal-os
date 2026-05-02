@@ -12,14 +12,22 @@ export function Plugins() {
       description="Cada plugin es independiente y se puede activar o desactivar en caliente desde el Control Center."
     >
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {plugins.map(({ id, name, description, domainLabel, icon: Icon, accent }) => (
+        {plugins.map(({ id, name, description, domainLabel, icon: Icon, accent, brandArt }) => (
           <article
             key={id}
-            className="relative overflow-hidden p-6 rounded-2xl bg-surface/70 border border-border hover:border-accent/50 transition-all duration-300"
+            className="group relative overflow-hidden p-6 rounded-2xl bg-surface/70 border border-border hover:border-accent/50 transition-all duration-300"
           >
             <div
               aria-hidden="true"
               className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${accent} blur-2xl opacity-70 pointer-events-none`}
+            />
+            {/* Brand artwork — refuerza identidad gráfica del producto */}
+            <img
+              src={`${import.meta.env.BASE_URL}${brandArt}`}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              className="pointer-events-none absolute -right-3 -bottom-3 w-28 h-28 opacity-25 group-hover:opacity-60 group-hover:rotate-3 transition-all duration-300 select-none"
             />
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">
@@ -43,10 +51,9 @@ export function Plugins() {
 
       <div className="mt-10 rounded-2xl border border-dashed border-border bg-surface/30 p-6 text-center">
         <p className="text-sm text-muted">
-          En desarrollo:{' '}
-          <span className="text-foreground font-medium">Knowledge</span>,{' '}
-          <span className="text-foreground font-medium">Time Tracking</span>,{' '}
-          <span className="text-foreground font-medium">Goals &amp; OKRs</span>
+          Próximamente:{' '}
+          <span className="text-foreground font-medium">Goals &amp; OKRs</span>,{' '}
+          <span className="text-foreground font-medium">Calendario externo (.ics, Google)</span>
         </p>
         <a
           href={`${REPO_URL}/blob/main/docs/PLUGIN_IDEAS.md`}
