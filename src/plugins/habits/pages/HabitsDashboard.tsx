@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, History, Repeat } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useHabitsStore } from '../store'
 import { HabitCard } from '../components/HabitCard'
 import { HabitQuickAdd } from '../components/HabitQuickAdd'
@@ -31,14 +32,17 @@ export function HabitsDashboard() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
-          <h1 className="text-2xl font-semibold text-white">
-            {active.length === 0 ? '—' : `${overall.completed}/${overall.total}`}
-          </h1>
-          <p className="text-xs text-muted">
-            {active.length === 0 ? messages.empty.habitsAll : 'Cumplidos en el período actual'}
-          </p>
+        <div className="flex items-center gap-4">
+          <BrandIcon name="Cards" size={44} className="text-accent" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
+            <h1 className="text-2xl font-semibold text-white">
+              {active.length === 0 ? '—' : `${overall.completed}/${overall.total}`}
+            </h1>
+            <p className="text-xs text-muted">
+              {active.length === 0 ? messages.empty.habitsAll : 'Cumplidos en el período actual'}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <button

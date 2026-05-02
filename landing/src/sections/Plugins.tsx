@@ -1,4 +1,5 @@
 import { Section } from '../components/Section'
+import { BrandIcon } from '../components/BrandIcon'
 import { plugins } from '../data/plugins'
 
 const REPO_URL = 'https://github.com/na7hk3r/personal-os'
@@ -22,12 +23,10 @@ export function Plugins() {
               className={`absolute -top-12 -right-12 w-40 h-40 rounded-full bg-gradient-to-br ${accent} blur-2xl opacity-70 pointer-events-none`}
             />
             {/* Brand artwork — refuerza identidad gráfica del producto */}
-            <img
-              src={`${import.meta.env.BASE_URL}${brandArt}`}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              className="pointer-events-none absolute -right-3 -bottom-3 w-28 h-28 opacity-25 group-hover:opacity-60 group-hover:rotate-3 transition-all duration-300 select-none"
+            <BrandIcon
+              name={brandArt}
+              size={112}
+              className="pointer-events-none absolute -right-3 -bottom-3 text-foreground/30 group-hover:text-accent group-hover:rotate-3 transition-all duration-300 opacity-60 group-hover:opacity-100"
             />
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">

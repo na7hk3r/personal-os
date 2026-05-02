@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import { Wallet, Dumbbell, Briefcase, Repeat, BookOpen, GraduationCap, Timer } from 'lucide-react'
+import type { BrandIconName } from '../components/BrandIcon'
 
 export type PluginDomain =
   | 'finance'
@@ -21,7 +22,7 @@ export interface PluginCard {
   /** Texto humano del dominio. */
   domainLabel: string
   /** Ilustración decorativa (SVG en /icons) que refuerza la identidad visual del plugin. */
-  brandArt: string
+  brandArt: BrandIconName
 }
 
 export const plugins: PluginCard[] = [
@@ -34,7 +35,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Productividad',
     icon: Briefcase,
     accent: 'from-indigo-500/30 to-purple-500/10',
-    brandArt: 'icons/LaptopShell.svg',
+    brandArt: 'LaptopShell',
   },
   {
     id: 'fitness',
@@ -45,7 +46,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Fitness',
     icon: Dumbbell,
     accent: 'from-emerald-500/30 to-teal-500/10',
-    brandArt: 'icons/Magic.svg',
+    brandArt: 'Magic',
   },
   {
     id: 'finance',
@@ -56,7 +57,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Finanzas',
     icon: Wallet,
     accent: 'from-amber-500/30 to-orange-500/10',
-    brandArt: 'icons/TreasureChest.svg',
+    brandArt: 'TreasureChest',
   },
   {
     id: 'habits',
@@ -67,7 +68,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Hábitos',
     icon: Repeat,
     accent: 'from-rose-500/30 to-pink-500/10',
-    brandArt: 'icons/Cards.svg',
+    brandArt: 'Cards',
   },
   {
     id: 'journal',
@@ -78,7 +79,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Conocimiento',
     icon: BookOpen,
     accent: 'from-sky-500/30 to-blue-500/10',
-    brandArt: 'icons/BookJournal.svg',
+    brandArt: 'BookJournal',
   },
   {
     id: 'knowledge',
@@ -89,7 +90,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Conocimiento',
     icon: GraduationCap,
     accent: 'from-cyan-500/30 to-teal-500/10',
-    brandArt: 'icons/TomeIdea.svg',
+    brandArt: 'TomeIdea',
   },
   {
     id: 'time',
@@ -100,7 +101,7 @@ export const plugins: PluginCard[] = [
     domainLabel: 'Tiempo',
     icon: Timer,
     accent: 'from-violet-500/30 to-fuchsia-500/10',
-    brandArt: 'icons/HourGlass.svg',
+    brandArt: 'HourGlass',
   },
 ]
 
