@@ -11,6 +11,7 @@ import type {
   ScheduledBackupBridge,
   ScheduledBackupConfig,
   DbEncryptionBridge,
+  ProfileBridge,
 } from '../src/core/types'
 
 const storageBridge: StorageBridge = {
@@ -33,6 +34,13 @@ const backupBridge: BackupBridge = {
   exportEncrypted: (passphrase) => ipcRenderer.invoke('backup:export-encrypted', passphrase),
   importPlain: () => ipcRenderer.invoke('backup:import-plain'),
   importEncrypted: (passphrase) => ipcRenderer.invoke('backup:import-encrypted', passphrase),
+}
+
+const profileBridge: ProfileBridge = {
+  exportPlain: () => ipcRenderer.invoke('profile:export-plain'),
+  exportEncrypted: (passphrase) => ipcRenderer.invoke('profile:export-encrypted', passphrase),
+  importPlain: () => ipcRenderer.invoke('profile:import-plain'),
+  importEncrypted: (passphrase) => ipcRenderer.invoke('profile:import-encrypted', passphrase),
 }
 
 const ollamaBridge: OllamaBridge = {
@@ -83,6 +91,7 @@ const dbEncryptionBridge: DbEncryptionBridge = {
 contextBridge.exposeInMainWorld('storage', storageBridge)
 contextBridge.exposeInMainWorld('auth', authBridge)
 contextBridge.exposeInMainWorld('backup', backupBridge)
+contextBridge.exposeInMainWorld('profile', profileBridge)
 contextBridge.exposeInMainWorld('ollama', ollamaBridge)
 contextBridge.exposeInMainWorld('notifications', notificationsBridge)
 contextBridge.exposeInMainWorld('diagnostic', diagnosticBridge)

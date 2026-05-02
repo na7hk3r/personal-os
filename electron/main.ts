@@ -6,6 +6,7 @@ import { DatabaseService } from './services/database'
 import { AuthService } from './services/auth'
 import { registerAuthIpc } from './services/auth-ipc'
 import { registerBackupIpc } from './services/backup-ipc'
+import { registerProfileIpc } from './services/profile-ipc'
 import { registerOllamaIpc } from './services/ollama-ipc'
 import { registerNotificationsIpc } from './services/notifications-ipc'
 import { registerDiagnosticIpc } from './services/diagnostic-ipc'
@@ -122,6 +123,7 @@ app.whenReady().then(() => {
   registerStorageIpc(db)
   registerAuthIpc(authService)
   registerBackupIpc(db)
+  registerProfileIpc(db)
   registerOllamaIpc()
   registerNotificationsIpc()
   registerDiagnosticIpc()

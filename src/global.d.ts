@@ -8,6 +8,7 @@ import type {
   AppUpdateBridge,
   ScheduledBackupBridge,
   DbEncryptionBridge,
+  ProfileBridge,
 } from '@core/types'
 
 declare global {
@@ -15,6 +16,7 @@ declare global {
     storage: StorageBridge
     auth: AuthBridge
     backup: BackupBridge
+    profile: ProfileBridge
     ollama: OllamaBridge
     notifications: NotificationsBridge
     diagnostic: DiagnosticBridge

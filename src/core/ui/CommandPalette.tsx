@@ -20,6 +20,7 @@ const NAV_RESULTS: CommandResult[] = [
   { id: 'nav:planner', kind: 'nav', title: 'Planner', ctaPath: '/planner' },
   { id: 'nav:calendar', kind: 'nav', title: 'Calendario unificado', ctaPath: '/calendar' },
   { id: 'nav:review', kind: 'nav', title: 'Review semanal/mensual', ctaPath: '/review' },
+  { id: 'nav:profile', kind: 'nav', title: 'Perfil (export/import)', ctaPath: '/profile' },
   { id: 'nav:shortcuts', kind: 'nav', title: 'Atajos de teclado', ctaPath: '/shortcuts' },
 ]
 

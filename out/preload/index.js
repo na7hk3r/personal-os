@@ -19,6 +19,12 @@ const backupBridge = {
   importPlain: () => electron.ipcRenderer.invoke("backup:import-plain"),
   importEncrypted: (passphrase) => electron.ipcRenderer.invoke("backup:import-encrypted", passphrase)
 };
+const profileBridge = {
+  exportPlain: () => electron.ipcRenderer.invoke("profile:export-plain"),
+  exportEncrypted: (passphrase) => electron.ipcRenderer.invoke("profile:export-encrypted", passphrase),
+  importPlain: () => electron.ipcRenderer.invoke("profile:import-plain"),
+  importEncrypted: (passphrase) => electron.ipcRenderer.invoke("profile:import-encrypted", passphrase)
+};
 const ollamaBridge = {
   health: () => electron.ipcRenderer.invoke("ollama:health"),
   listModels: () => electron.ipcRenderer.invoke("ollama:list-models"),
@@ -59,6 +65,7 @@ const dbEncryptionBridge = {
 electron.contextBridge.exposeInMainWorld("storage", storageBridge);
 electron.contextBridge.exposeInMainWorld("auth", authBridge);
 electron.contextBridge.exposeInMainWorld("backup", backupBridge);
+electron.contextBridge.exposeInMainWorld("profile", profileBridge);
 electron.contextBridge.exposeInMainWorld("ollama", ollamaBridge);
 electron.contextBridge.exposeInMainWorld("notifications", notificationsBridge);
 electron.contextBridge.exposeInMainWorld("diagnostic", diagnosticBridge);

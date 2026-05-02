@@ -5,7 +5,7 @@ const url = require("url");
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const crypto = require("crypto");
-const CHANNELS$6 = {
+const CHANNELS$7 = {
   query: "storage:query",
   execute: "storage:execute",
   migrate: "storage:migrate"
@@ -123,25 +123,25 @@ function withStorageErrorHandling(fn) {
   }
 }
 function registerStorageIpc(db) {
-  electron.ipcMain.handle(CHANNELS$6.query, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$7.query, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$6.query);
+      assertAllowedOperation(sql, QUERY_OPERATIONS, CHANNELS$7.query);
       return db.query(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$6.execute, (_event, sql, params) => {
+  electron.ipcMain.handle(CHANNELS$7.execute, (_event, sql, params) => {
     return withStorageErrorHandling(() => {
       assertSqlString(sql);
       assertParamsArray(params);
       assertSingleStatement(sql);
-      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$6.execute);
+      assertAllowedOperation(sql, EXECUTE_OPERATIONS, CHANNELS$7.execute);
       return db.execute(sql, params ?? []);
     });
   });
-  electron.ipcMain.handle(CHANNELS$6.migrate, (_event, pluginId, migrations) => {
+  electron.ipcMain.handle(CHANNELS$7.migrate, (_event, pluginId, migrations) => {
     return withStorageErrorHandling(() => {
       assertPluginId(pluginId);
       assertMigrations(migrations, pluginId);
@@ -149,7 +149,7 @@ function registerStorageIpc(db) {
     });
   });
 }
-const MAGIC$2 = Buffer.from("POS1", "utf8");
+const MAGIC$3 = Buffer.from("POS1", "utf8");
 const VERSION = 1;
 const KEY_LENGTH = 32;
 const IV_LENGTH = 12;
@@ -167,7 +167,7 @@ class EncryptionError extends Error {
   }
   code;
 }
-function deriveKey$2(passphrase, salt) {
+function deriveKey$3(passphrase, salt) {
   return crypto.scryptSync(passphrase.normalize("NFKC"), salt, KEY_LENGTH, {
     N: SCRYPT_N,
     r: SCRYPT_R,
@@ -193,13 +193,13 @@ function encryptFile(plainPath, encryptedPath, passphrase) {
   }
   const salt = crypto.randomBytes(SALT_LENGTH);
   const iv = crypto.randomBytes(IV_LENGTH);
-  const key = deriveKey$2(passphrase, salt);
+  const key = deriveKey$3(passphrase, salt);
   const plaintext = fs.readFileSync(plainPath);
   const cipher = crypto.createCipheriv("aes-256-gcm", key, iv);
   const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()]);
   const tag = cipher.getAuthTag();
   const versionByte = Buffer.from([VERSION]);
-  const out = Buffer.concat([MAGIC$2, versionByte, salt, iv, tag, ciphertext]);
+  const out = Buffer.concat([MAGIC$3, versionByte, salt, iv, tag, ciphertext]);
   fs.writeFileSync(encryptedPath, out);
   try {
     fs.unlinkSync(plainPath);
@@ -212,19 +212,19 @@ function decryptFile(encryptedPath, plainPath, passphrase) {
     throw new EncryptionError(`encrypted file not found: ${encryptedPath}`, "IO");
   }
   const blob = fs.readFileSync(encryptedPath);
-  const headerSize = MAGIC$2.length + 1 + SALT_LENGTH + IV_LENGTH + TAG_LENGTH;
+  const headerSize = MAGIC$3.length + 1 + SALT_LENGTH + IV_LENGTH + TAG_LENGTH;
   if (blob.length < headerSize) {
     throw new EncryptionError("file too small to be a valid POS1 blob", "CORRUPT_FILE");
   }
-  const magic = blob.subarray(0, MAGIC$2.length);
-  if (!magic.equals(MAGIC$2)) {
+  const magic = blob.subarray(0, MAGIC$3.length);
+  if (!magic.equals(MAGIC$3)) {
     throw new EncryptionError("invalid magic header", "CORRUPT_FILE");
   }
-  const version = blob[MAGIC$2.length];
+  const version = blob[MAGIC$3.length];
   if (version !== VERSION) {
     throw new EncryptionError(`unsupported version ${version}`, "CORRUPT_FILE");
   }
-  let offset = MAGIC$2.length + 1;
+  let offset = MAGIC$3.length + 1;
   const salt = blob.subarray(offset, offset + SALT_LENGTH);
   offset += SALT_LENGTH;
   const iv = blob.subarray(offset, offset + IV_LENGTH);
@@ -232,7 +232,7 @@ function decryptFile(encryptedPath, plainPath, passphrase) {
   const tag = blob.subarray(offset, offset + TAG_LENGTH);
   offset += TAG_LENGTH;
   const ciphertext = blob.subarray(offset);
-  const key = deriveKey$2(passphrase, salt);
+  const key = deriveKey$3(passphrase, salt);
   const decipher = crypto.createDecipheriv("aes-256-gcm", key, iv);
   decipher.setAuthTag(tag);
   let plaintext;
@@ -246,8 +246,8 @@ function decryptFile(encryptedPath, plainPath, passphrase) {
 function isEncryptedFile(path2) {
   if (!fs.existsSync(path2)) return false;
   try {
-    const fd = fs.readFileSync(path2).subarray(0, MAGIC$2.length);
-    return fd.equals(MAGIC$2);
+    const fd = fs.readFileSync(path2).subarray(0, MAGIC$3.length);
+    return fd.equals(MAGIC$3);
   } catch {
     return false;
   }
@@ -925,7 +925,7 @@ class AuthService {
     }
   }
 }
-const CHANNELS$5 = {
+const CHANNELS$6 = {
   register: "auth:register",
   login: "auth:login",
   logout: "auth:logout",
@@ -947,7 +947,7 @@ function withAuthErrorHandling(fn) {
   });
 }
 function registerAuthIpc(authService) {
-  electron.ipcMain.handle(CHANNELS$5.register, (_event, payload) => {
+  electron.ipcMain.handle(CHANNELS$6.register, (_event, payload) => {
     return withAuthErrorHandling(async () => {
       if (typeof payload !== "object" || payload === null) {
         throw new Error("payload is required");
@@ -965,29 +965,29 @@ function registerAuthIpc(authService) {
       });
     });
   });
-  electron.ipcMain.handle(CHANNELS$5.login, (_event, username, password) => {
+  electron.ipcMain.handle(CHANNELS$6.login, (_event, username, password) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       assertString(password, "password");
       return authService.login(username, password);
     });
   });
-  electron.ipcMain.handle(CHANNELS$5.logout, () => {
+  electron.ipcMain.handle(CHANNELS$6.logout, () => {
     return withAuthErrorHandling(async () => {
       await authService.logout();
     });
   });
-  electron.ipcMain.handle(CHANNELS$5.me, () => {
+  electron.ipcMain.handle(CHANNELS$6.me, () => {
     return withAuthErrorHandling(async () => authService.getCurrentUser());
   });
-  electron.ipcMain.handle(CHANNELS$5.getRecoveryQuestion, (_event, username) => {
+  electron.ipcMain.handle(CHANNELS$6.getRecoveryQuestion, (_event, username) => {
     return withAuthErrorHandling(async () => {
       assertString(username, "username");
       return authService.getRecoveryQuestion(username);
     });
   });
   electron.ipcMain.handle(
-    CHANNELS$5.resetPasswordWithRecovery,
+    CHANNELS$6.resetPasswordWithRecovery,
     (_event, payload) => {
       return withAuthErrorHandling(async () => {
         if (typeof payload !== "object" || payload === null) {
@@ -1006,18 +1006,141 @@ function registerAuthIpc(authService) {
     }
   );
 }
-const CHANNELS$4 = {
+const CHANNELS$5 = {
   exportPlain: "backup:export-plain",
   exportEncrypted: "backup:export-encrypted",
   importPlain: "backup:import-plain",
   importEncrypted: "backup:import-encrypted"
 };
-const MAGIC$1 = Buffer.from("POS-BAK1");
+const MAGIC$2 = Buffer.from("POS-BAK1");
+const ALGO$2 = "aes-256-gcm";
+const KEY_LEN$2 = 32;
+const SALT_LEN$2 = 16;
+const IV_LEN$2 = 12;
+const TAG_LEN$1 = 16;
+function deriveKey$2(passphrase, salt) {
+  return crypto.scryptSync(passphrase, salt, KEY_LEN$2, { N: 16384, r: 8, p: 1 });
+}
+function encrypt$2(payload, passphrase) {
+  const salt = crypto.randomBytes(SALT_LEN$2);
+  const iv = crypto.randomBytes(IV_LEN$2);
+  const key = deriveKey$2(passphrase, salt);
+  const cipher = crypto.createCipheriv(ALGO$2, key, iv);
+  const encrypted = Buffer.concat([cipher.update(payload), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([MAGIC$2, salt, iv, tag, encrypted]);
+}
+function decrypt$1(blob, passphrase) {
+  if (blob.length < MAGIC$2.length + SALT_LEN$2 + IV_LEN$2 + TAG_LEN$1) {
+    throw new Error("Backup file is too small or corrupted");
+  }
+  const magic = blob.subarray(0, MAGIC$2.length);
+  if (!magic.equals(MAGIC$2)) {
+    throw new Error("Invalid backup format");
+  }
+  let offset = MAGIC$2.length;
+  const salt = blob.subarray(offset, offset + SALT_LEN$2);
+  offset += SALT_LEN$2;
+  const iv = blob.subarray(offset, offset + IV_LEN$2);
+  offset += IV_LEN$2;
+  const tag = blob.subarray(offset, offset + TAG_LEN$1);
+  offset += TAG_LEN$1;
+  const encrypted = blob.subarray(offset);
+  const key = deriveKey$2(passphrase, salt);
+  const decipher = crypto.createDecipheriv(ALGO$2, key, iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+}
+async function pickSavePath$1(defaultName) {
+  const focused = electron.BrowserWindow.getFocusedWindow();
+  const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+    title: "Guardar backup de Personal OS",
+    defaultPath: defaultName
+  });
+  return result.canceled || !result.filePath ? null : result.filePath;
+}
+async function pickOpenPath$1() {
+  const focused = electron.BrowserWindow.getFocusedWindow();
+  const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
+    title: "Restaurar backup de Personal OS",
+    properties: ["openFile"]
+  });
+  return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
+}
+function registerBackupIpc(db) {
+  electron.ipcMain.handle(CHANNELS$5.exportPlain, async () => {
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const dest = await pickSavePath$1(`personal-os-backup-${stamp}.db`);
+    if (!dest) return { ok: false, canceled: true };
+    db.exportActiveUserDb(dest);
+    return { ok: true, path: dest };
+  });
+  electron.ipcMain.handle(CHANNELS$5.exportEncrypted, async (_event, passphrase) => {
+    if (typeof passphrase !== "string" || passphrase.length < 8) {
+      throw new Error("La passphrase debe tener al menos 8 caracteres");
+    }
+    const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
+    const dest = await pickSavePath$1(`personal-os-backup-${stamp}.posbak`);
+    if (!dest) return { ok: false, canceled: true };
+    const tmp = `${dest}.tmp.db`;
+    db.exportActiveUserDb(tmp);
+    try {
+      const data = fs.readFileSync(tmp);
+      const blob = encrypt$2(data, passphrase);
+      fs.writeFileSync(dest, blob);
+    } finally {
+      try {
+        if (fs.existsSync(tmp)) {
+          fs.writeFileSync(tmp, "");
+        }
+      } catch {
+      }
+    }
+    return { ok: true, path: dest };
+  });
+  electron.ipcMain.handle(CHANNELS$5.importPlain, async () => {
+    const src = await pickOpenPath$1();
+    if (!src) return { ok: false, canceled: true };
+    db.importActiveUserDb(src);
+    return { ok: true };
+  });
+  electron.ipcMain.handle(CHANNELS$5.importEncrypted, async (_event, passphrase) => {
+    if (typeof passphrase !== "string" || passphrase.length < 1) {
+      throw new Error("Ingresá la passphrase usada al exportar");
+    }
+    const src = await pickOpenPath$1();
+    if (!src) return { ok: false, canceled: true };
+    const blob = fs.readFileSync(src);
+    const data = decrypt$1(blob, passphrase);
+    const tmp = `${src}.decrypted.tmp.db`;
+    fs.writeFileSync(tmp, data);
+    db.importActiveUserDb(tmp);
+    try {
+      fs.writeFileSync(tmp, "");
+    } catch {
+    }
+    return { ok: true };
+  });
+}
+const CHANNELS$4 = {
+  exportPlain: "profile:export-plain",
+  exportEncrypted: "profile:export-encrypted",
+  importPlain: "profile:import-plain",
+  importEncrypted: "profile:import-encrypted"
+};
+const MAGIC$1 = Buffer.from("POS-PRF1");
 const ALGO$1 = "aes-256-gcm";
 const KEY_LEN$1 = 32;
 const SALT_LEN$1 = 16;
 const IV_LEN$1 = 12;
 const TAG_LEN = 16;
+const PROFILE_SCHEMA_VERSION = 1;
+const ALLOWED_SETTING_KEYS = /* @__PURE__ */ new Set([
+  "theme",
+  "sidebarCollapsed",
+  "activePlugins",
+  "profile.bigGoal"
+]);
 function deriveKey$1(passphrase, salt) {
   return crypto.scryptSync(passphrase, salt, KEY_LEN$1, { N: 16384, r: 8, p: 1 });
 }
@@ -1032,11 +1155,10 @@ function encrypt$1(payload, passphrase) {
 }
 function decrypt(blob, passphrase) {
   if (blob.length < MAGIC$1.length + SALT_LEN$1 + IV_LEN$1 + TAG_LEN) {
-    throw new Error("Backup file is too small or corrupted");
+    throw new Error("Archivo de perfil corrupto o demasiado chico");
   }
-  const magic = blob.subarray(0, MAGIC$1.length);
-  if (!magic.equals(MAGIC$1)) {
-    throw new Error("Invalid backup format");
+  if (!blob.subarray(0, MAGIC$1.length).equals(MAGIC$1)) {
+    throw new Error("Formato inválido: el archivo no es un perfil cifrado de Personal OS");
   }
   let offset = MAGIC$1.length;
   const salt = blob.subarray(offset, offset + SALT_LEN$1);
@@ -1045,16 +1167,16 @@ function decrypt(blob, passphrase) {
   offset += IV_LEN$1;
   const tag = blob.subarray(offset, offset + TAG_LEN);
   offset += TAG_LEN;
-  const encrypted = blob.subarray(offset);
+  const ciphertext = blob.subarray(offset);
   const key = deriveKey$1(passphrase, salt);
   const decipher = crypto.createDecipheriv(ALGO$1, key, iv);
   decipher.setAuthTag(tag);
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 async function pickSavePath(defaultName) {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Guardar backup de Personal OS",
+    title: "Exportar perfil de Personal OS",
     defaultPath: defaultName
   });
   return result.canceled || !result.filePath ? null : result.filePath;
@@ -1062,47 +1184,129 @@ async function pickSavePath(defaultName) {
 async function pickOpenPath() {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Restaurar backup de Personal OS",
+    title: "Importar perfil de Personal OS",
     properties: ["openFile"]
   });
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
 }
-function registerBackupIpc(db) {
+function buildSnapshot(db) {
+  const profileRow = db.query(
+    "SELECT name, height, age, start_date as startDate, weight_goal as weightGoal FROM profile WHERE id = 1"
+  )[0];
+  const settingsRows = db.query("SELECT key, value FROM settings");
+  const settings = {};
+  for (const row of settingsRows) {
+    if (ALLOWED_SETTING_KEYS.has(row.key)) {
+      settings[row.key] = row.value;
+    }
+  }
+  let activePlugins = [];
+  if (settings.activePlugins) {
+    try {
+      const parsed = JSON.parse(settings.activePlugins);
+      if (Array.isArray(parsed)) activePlugins = parsed.filter((id) => typeof id === "string");
+    } catch {
+    }
+  }
+  let gamification = null;
+  try {
+    const gRow = db.query(
+      "SELECT total_xp as totalXp, level FROM gamification_stats WHERE id = 1"
+    )[0];
+    if (gRow) gamification = { totalXp: gRow.totalXp ?? 0, level: gRow.level ?? 1 };
+  } catch {
+  }
+  return {
+    schemaVersion: PROFILE_SCHEMA_VERSION,
+    exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    app: { name: "personal-os", ref: "profile-export" },
+    profile: profileRow ? {
+      ...profileRow,
+      bigGoal: settings["profile.bigGoal"] || void 0
+    } : null,
+    settings,
+    activePlugins,
+    gamification
+  };
+}
+function applySnapshot(db, snapshot) {
+  if (!snapshot || typeof snapshot !== "object") {
+    throw new Error("Snapshot inválido");
+  }
+  if (snapshot.schemaVersion !== PROFILE_SCHEMA_VERSION) {
+    throw new Error(`Versión de perfil no soportada: ${snapshot.schemaVersion}`);
+  }
+  if (snapshot.profile) {
+    const p = snapshot.profile;
+    db.execute(
+      `INSERT OR REPLACE INTO profile (id, name, height, age, start_date, weight_goal, updated_at)
+       VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`,
+      [p.name ?? "", p.height ?? 0, p.age ?? 0, p.startDate ?? "", p.weightGoal ?? 0]
+    );
+  }
+  if (snapshot.settings) {
+    for (const [key, value] of Object.entries(snapshot.settings)) {
+      if (ALLOWED_SETTING_KEYS.has(key) && typeof value === "string") {
+        db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", [key, value]);
+      }
+    }
+  }
+  if (snapshot.profile?.bigGoal) {
+    db.execute("INSERT OR REPLACE INTO settings (key, value) VALUES ('profile.bigGoal', ?)", [
+      snapshot.profile.bigGoal
+    ]);
+  }
+}
+function parseSnapshot(text) {
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("El archivo no es un JSON válido");
+  }
+  if (!parsed || typeof parsed !== "object") throw new Error("Snapshot inválido");
+  const snap = parsed;
+  if (snap.app?.name !== "personal-os") {
+    throw new Error("El archivo no parece ser un perfil de Personal OS");
+  }
+  return snap;
+}
+function summarize(snapshot) {
+  return {
+    schemaVersion: snapshot.schemaVersion,
+    exportedAt: snapshot.exportedAt,
+    hadProfile: Boolean(snapshot.profile),
+    activePlugins: snapshot.activePlugins ?? []
+  };
+}
+function registerProfileIpc(db) {
   electron.ipcMain.handle(CHANNELS$4.exportPlain, async () => {
+    const snapshot = buildSnapshot(db);
     const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-    const dest = await pickSavePath(`personal-os-backup-${stamp}.db`);
+    const dest = await pickSavePath(`personal-os-profile-${stamp}.posprof.json`);
     if (!dest) return { ok: false, canceled: true };
-    db.exportActiveUserDb(dest);
+    fs.writeFileSync(dest, JSON.stringify(snapshot, null, 2), "utf8");
     return { ok: true, path: dest };
   });
   electron.ipcMain.handle(CHANNELS$4.exportEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 8) {
       throw new Error("La passphrase debe tener al menos 8 caracteres");
     }
+    const snapshot = buildSnapshot(db);
     const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
-    const dest = await pickSavePath(`personal-os-backup-${stamp}.posbak`);
+    const dest = await pickSavePath(`personal-os-profile-${stamp}.posprof`);
     if (!dest) return { ok: false, canceled: true };
-    const tmp = `${dest}.tmp.db`;
-    db.exportActiveUserDb(tmp);
-    try {
-      const data = fs.readFileSync(tmp);
-      const blob = encrypt$1(data, passphrase);
-      fs.writeFileSync(dest, blob);
-    } finally {
-      try {
-        if (fs.existsSync(tmp)) {
-          fs.writeFileSync(tmp, "");
-        }
-      } catch {
-      }
-    }
+    const blob = encrypt$1(Buffer.from(JSON.stringify(snapshot), "utf8"), passphrase);
+    fs.writeFileSync(dest, blob);
     return { ok: true, path: dest };
   });
   electron.ipcMain.handle(CHANNELS$4.importPlain, async () => {
     const src = await pickOpenPath();
     if (!src) return { ok: false, canceled: true };
-    db.importActiveUserDb(src);
-    return { ok: true };
+    const text = fs.readFileSync(src, "utf8");
+    const snapshot = parseSnapshot(text);
+    applySnapshot(db, snapshot);
+    return { ok: true, summary: summarize(snapshot) };
   });
   electron.ipcMain.handle(CHANNELS$4.importEncrypted, async (_event, passphrase) => {
     if (typeof passphrase !== "string" || passphrase.length < 1) {
@@ -1111,15 +1315,10 @@ function registerBackupIpc(db) {
     const src = await pickOpenPath();
     if (!src) return { ok: false, canceled: true };
     const blob = fs.readFileSync(src);
-    const data = decrypt(blob, passphrase);
-    const tmp = `${src}.decrypted.tmp.db`;
-    fs.writeFileSync(tmp, data);
-    db.importActiveUserDb(tmp);
-    try {
-      fs.writeFileSync(tmp, "");
-    } catch {
-    }
-    return { ok: true };
+    const plain = decrypt(blob, passphrase);
+    const snapshot = parseSnapshot(plain.toString("utf8"));
+    applySnapshot(db, snapshot);
+    return { ok: true, summary: summarize(snapshot) };
   });
 }
 const CHANNELS$3 = {
@@ -1821,6 +2020,7 @@ electron.app.whenReady().then(() => {
   registerStorageIpc(db);
   registerAuthIpc(authService);
   registerBackupIpc(db);
+  registerProfileIpc(db);
   registerOllamaIpc();
   registerNotificationsIpc();
   registerDiagnosticIpc();
