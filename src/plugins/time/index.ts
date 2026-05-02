@@ -149,7 +149,8 @@ const timePlugin: PluginManifest = {
     api.events.on(TIME_EVENTS.PROJECT_DELETED, publishMetrics)
 
     // Auto-entries desde sesiones de Focus de Work.
-    api.events.on(WORK_EVENTS.FOCUS_COMPLETED, (payload: FocusCompletedPayload) => {
+    api.events.on(WORK_EVENTS.FOCUS_COMPLETED, (raw) => {
+      const payload = raw as FocusCompletedPayload
       const minutes =
         payload.durationMin ?? (payload.duration ? Math.floor(payload.duration / 60_000) : 0)
       if (!minutes || minutes <= 0) return
@@ -161,7 +162,8 @@ const timePlugin: PluginManifest = {
     })
 
     // Gamificación: pequeño refuerzo al detener una entrada larga (≥5 min).
-    api.events.on(TIME_EVENTS.ENTRY_STOPPED, (payload: { id: string; durationSec: number }) => {
+    api.events.on(TIME_EVENTS.ENTRY_STOPPED, (raw) => {
+      const payload = raw as { id: string; durationSec: number }
       if (payload.durationSec >= 5 * 60) {
         api.gamification.addPoints(2, 'Time entry registrada')
       }
