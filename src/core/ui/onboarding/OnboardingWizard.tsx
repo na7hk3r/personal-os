@@ -8,6 +8,7 @@ import { StepPlugins, type PluginSelection } from './steps/StepPlugins'
 import { StepFitnessConfig, type FitnessConfig } from './steps/StepFitnessConfig'
 import { StepFirstAction, type FirstActionResult } from './steps/StepFirstAction'
 import { StepSummary } from './steps/StepSummary'
+import { seedDemoData } from './seedDemoData'
 
 type Step = 'welcome' | 'name' | 'plugins' | 'fitness' | 'first-action' | 'summary'
 
@@ -23,6 +24,7 @@ export function OnboardingWizard() {
 
   const [step, setStep] = useState<Step>('welcome')
   const [name, setName] = useState('')
+  const [bigGoal, setBigGoal] = useState('')
   const [plugins, setPlugins] = useState<PluginSelection>({ fitness: true, work: true })
   const [fitnessConfig, setFitnessConfig] = useState<FitnessConfig>({
     goal: 'consistency',
@@ -34,9 +36,10 @@ export function OnboardingWizard() {
 
   const goTo = (s: Step) => setStep(s)
 
-  const handleName = (n: string) => {
-    setName(n)
-    updateProfile({ name: n })
+  const handleName = (data: { name: string; bigGoal: string }) => {
+    setName(data.name)
+    setBigGoal(data.bigGoal)
+    updateProfile({ name: data.name, bigGoal: data.bigGoal || undefined })
     goTo('plugins')
   }
 
@@ -113,7 +116,7 @@ export function OnboardingWizard() {
     goTo('summary')
   }
 
-  const handleFinish = async () => {
+  const handleFinish = async (opts: { loadDemo?: boolean } = {}) => {
     const activeIds = Object.entries(plugins)
       .filter(([, v]) => v)
       .map(([k]) => k)
@@ -141,6 +144,15 @@ export function OnboardingWizard() {
         if (plugin.status === 'active') {
           pluginManager.deactivatePlugin(plugin.manifest.id)
         }
+      }
+    }
+
+    // Seed demo data si el usuario lo eligió (best-effort, no bloqueante).
+    if (opts.loadDemo) {
+      try {
+        await seedDemoData(activeIds)
+      } catch (err) {
+        console.warn('[Onboarding] seedDemoData failed', err)
       }
     }
 
@@ -175,7 +187,7 @@ export function OnboardingWizard() {
       {/* Step content */}
       <div className="w-full max-w-xl">
         {step === 'welcome' && <StepWelcome onNext={() => goTo('name')} />}
-        {step === 'name' && <StepName initialName={name} onNext={handleName} />}
+        {step === 'name' && <StepName initialName={name} initialBigGoal={bigGoal} onNext={handleName} />}
         {step === 'plugins' && (
           <StepPlugins initial={plugins} onNext={handlePlugins} />
         )}
@@ -188,6 +200,7 @@ export function OnboardingWizard() {
         {step === 'summary' && (
           <StepSummary
             name={name}
+            bigGoal={bigGoal}
             plugins={plugins}
             fitnessGoal={plugins.fitness ? fitnessConfig.goal : undefined}
             firstAction={firstAction}

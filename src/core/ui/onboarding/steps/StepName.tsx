@@ -3,14 +3,16 @@ import { messages } from '../../messages'
 
 interface Props {
   initialName: string
-  onNext: (name: string) => void
+  initialBigGoal?: string
+  onNext: (data: { name: string; bigGoal: string }) => void
 }
 
-export function StepName({ initialName, onNext }: Props) {
+export function StepName({ initialName, initialBigGoal = '', onNext }: Props) {
   const [name, setName] = useState(initialName)
+  const [bigGoal, setBigGoal] = useState(initialBigGoal)
 
   const submit = () => {
-    if (name.trim()) onNext(name.trim())
+    if (name.trim()) onNext({ name: name.trim(), bigGoal: bigGoal.trim() })
   }
 
   return (
@@ -31,6 +33,25 @@ export function StepName({ initialName, onNext }: Props) {
           placeholder="Tu nombre"
           className="w-full rounded-xl border border-border bg-surface/80 px-5 py-3.5 text-lg text-center placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all"
         />
+
+        <div className="text-left space-y-1">
+          <label className="text-xs uppercase tracking-[0.18em] text-muted">
+            ¿Cuál es tu gran objetivo este año? <span className="text-muted/60 normal-case tracking-normal">(opcional)</span>
+          </label>
+          <textarea
+            value={bigGoal}
+            onChange={(e) => setBigGoal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) submit()
+            }}
+            placeholder="Ej: terminar la carrera, sostener foco profundo cada mañana…"
+            rows={2}
+            className="w-full rounded-xl border border-border bg-surface/80 px-4 py-3 text-sm placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all resize-none"
+          />
+          <p className="text-[11px] text-muted/70">
+            Tu copiloto lo va a recordar y te lo va a devolver cuando te disperses.
+          </p>
+        </div>
 
         <button
           onClick={submit}
