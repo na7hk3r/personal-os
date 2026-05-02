@@ -1,6 +1,6 @@
 # Changelog - Personal OS
 
-## [Unreleased]
+## [1.10.0] - 2026-05-01
 
 ### 🛡 Consistency Auditor
 
