@@ -126,6 +126,15 @@ export function Footer() {
             >
               na7hk3r
             </a>
+            . Iconos por{' '}
+            <a
+              href="https://github.com/xero/svg-icons"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline"
+            >
+              xero/svg-icons
+            </a>
             .
           </p>
           <p>Sin telemetría · sin tracking · 100% local</p>
