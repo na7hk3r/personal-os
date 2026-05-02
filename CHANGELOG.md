@@ -15,6 +15,62 @@ Sistema de validación cruzada entre el core y los plugins. Detecta logros y mis
 - Documentación: [docs/CONSISTENCY_AUDITOR.md](docs/CONSISTENCY_AUDITOR.md), update en [docs/PLUGIN_BASE_STRUCTURE.md](docs/PLUGIN_BASE_STRUCTURE.md), template `scripts/create-plugin.mjs` actualizado.
 - 24 tests unitarios cubriendo cada regla + catálogo + autofix.
 
+## [1.9.0] - 2026-05-01
+
+Wave 4 (Sprints 6–10): **plugin Knowledge** (PKM con SM-2), **plugin Tiempo** (time tracking con auto-entries desde Focus), **onboarding mejorado** con objetivo personal y datos demo opcionales, y **export/import de perfil** con cifrado opcional.
+
+### ✨ Nuevo plugin — Knowledge (Sprint 6)
+
+PKM ligero local-first: recursos, highlights y flashcards con algoritmo SM-2.
+
+- Esquema v1: `knowledge_resources` (book/course/paper/article/video con status y progress 0–100), `knowledge_highlights` (FK a recursos, soft-delete por cascade), `knowledge_flashcards` (ease, interval, repetitions, next_review) y `knowledge_reviews` (auditoría de cada repaso con quality 0–5).
+- **Algoritmo SM-2** completo: `sm2Schedule` calcula nuevo `(ease, interval, repetitions, nextReview)` para cada quality; floor de ease en 1.3, secuencia 1d → 6d → ease·interval. Reset a 0 con quality < 3.
+- `dueFlashcards` filtra archivadas y trae sólo las que vencen hoy o antes; `isMastered` marca tarjetas con repeticiones ≥4 e interval ≥21 días.
+- Páginas: `KnowledgeDashboard`, `KnowledgeResourcesPage` (biblioteca con quick-add), `KnowledgeHighlightsPage` y `KnowledgeReviewPage` (sesión de repaso con quality buttons 0–5).
+- Widget `KnowledgeSummaryWidget` 1x1 con due hoy + recursos en progreso.
+- `knowledgeAIProvider`: total recursos, terminados, en progreso, due hoy, tarjetas mastered, top tags.
+- Eventos: `RESOURCE_CREATED|UPDATED|FINISHED|DELETED`, `HIGHLIGHT_ADDED|DELETED`, `FLASHCARD_CREATED|REVIEWED|DELETED`.
+- Métricas publicadas: `knowledge.resources_finished`, `resources_finished_month`, `resources_in_progress`, `flashcards_due`, `flashcards_mastered`, `highlights_total`.
+- Gamificación: +3 XP por highlight, +2 XP por flashcard repasada, +15 XP por recurso terminado.
+- 10 tests unitarios cubriendo SM-2, due window, mastered detection y serialización de tags.
+
+### ✨ Nuevo plugin — Tiempo (Sprint 10)
+
+Cronómetro y timesheet local con auto-entries desde sesiones de Focus.
+
+- Esquema v1: `time_projects` (cliente, hourly_rate, color) y `time_entries` (FK a proyecto con `ON DELETE SET NULL`, `source` = 'manual' | 'focus', `billable`).
+- **Single-running guard**: `startEntry` detiene cualquier entrada en curso antes de crear una nueva — nunca hay dos cronómetros simultáneos.
+- Páginas: `TimeDashboard` (timer en vivo + entradas recientes + entrada manual), `TimeProjectsPage` (CRUD con tarifa por hora) y `TimesheetPage` (grid lun–dom con totales por proyecto / día / total).
+- Widget `TimeSummaryWidget` 1x1 con total de hoy + botón start/stop in-place.
+- **Auto-entries desde Focus**: el plugin escucha `WORK_FOCUS_COMPLETED` y crea automáticamente una `time_entry` con `source='focus'` usando `durationMin` del payload.
+- `timeAIProvider`: horas hoy, horas semana, facturable semana e ingresos proyectados (suma `hourlyRate × horas` de entradas billable).
+- Eventos: `PROJECT_CREATED|UPDATED|DELETED`, `ENTRY_STARTED|STOPPED|CREATED|UPDATED|DELETED`.
+- Métricas publicadas: `time.tracked_today_sec`, `tracked_week_sec`, `billable_week_sec`, `billable_week_revenue`, `active_running`.
+- Gamificación: +2 XP al detener una entrada de ≥5 min.
+- Eliminar un proyecto desvincula sus entries (`projectId → null`) en vez de borrarlas — la historia se preserva.
+
+### 🚀 Onboarding mejorado (Sprint 8)
+
+- **Objetivo personal del año**: nuevo textarea en `StepName` ("¿Cuál es tu gran objetivo este año?"). Se persiste como `settings.profile.bigGoal` para evitar migración de la tabla `profile`. El payload de `PROFILE_UPDATED` incluye `hasBigGoal`.
+- **Datos de ejemplo opcionales** desde `StepSummary`: toggle "Cargar datos de ejemplo" que invoca `seedDemoData(activeIds)` para los plugins Work, Habits, Journal y Knowledge. Cada seeder está guardeado por `tableIsEmpty(table)` — nunca pisa data del usuario.
+- El objetivo se muestra en `StepSummary` como un item destacado antes de finalizar.
+
+### 🔄 Export / Import de perfil (Sprint 9)
+
+Transferí tu perfil entre máquinas o respaldalo en un archivo aparte del backup completo.
+
+- Nuevo IPC `profile-ipc.ts` con 4 canales: `profile:export-plain` (`.posprof.json`), `profile:export-encrypted` (`.posprof`, AES-256-GCM con scrypt y passphrase ≥8), `profile:import-plain` y `profile:import-encrypted`.
+- Formato del snapshot: `{ schemaVersion, exportedAt, app: { name: 'personal-os' }, profile, settings (whitelist), activePlugins, gamification }`. **Nunca se exportan** `password_hash`, sesiones, recovery ni datos de plugins.
+- `MAGIC` header `POS-PRF1` (8 bytes) + salt(16) + iv(12) + tag(16) + ciphertext.
+- Allowlist explícita de settings: `theme`, `sidebarCollapsed`, `activePlugins`, `profile.bigGoal`.
+- Validación al importar: `app.name === 'personal-os'` y `schemaVersion === 1`. Datos inválidos → error tipado, no upsert parcial.
+- Nueva página `/profile` (`ProfilePage`) con secciones Datos personales, Exportar (plain / encrypted) e Importar (plain / encrypted) con banner de estado idle/busy/success/error.
+- Acceso rápido vía Command Palette: "Perfil (export/import)".
+
+### 🧱 Capa Repository — extensión
+
+- Allowlist de `StorageAPI` extendida para los nuevos plugins: `time_projects`, `time_entries`, `knowledge_resources`, `knowledge_highlights`, `knowledge_flashcards`, `knowledge_reviews`.
+
 ## [1.8.0] - 2026-05-01
 
 Wave 3: **plugin Hábitos**, **plugin Journal**, **capa Repository** sobre `StorageAPI`, **cifrado de la DB de usuario en reposo opt-in**, **catálogo de atajos in-app** y **pasada de accesibilidad ARIA** sobre los componentes core.

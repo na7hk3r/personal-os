@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { Wallet, Dumbbell, Briefcase, Repeat, BookOpen } from 'lucide-react'
+import { Wallet, Dumbbell, Briefcase, Repeat, BookOpen, GraduationCap, Timer } from 'lucide-react'
 
 export type PluginDomain =
   | 'finance'
@@ -8,6 +8,7 @@ export type PluginDomain =
   | 'habits'
   | 'knowledge'
   | 'health'
+  | 'time'
 
 export interface PluginCard {
   id: string
@@ -72,4 +73,25 @@ export const plugins: PluginCard[] = [
     icon: BookOpen,
     accent: 'from-sky-500/30 to-blue-500/10',
   },
+  {
+    id: 'knowledge',
+    name: 'Conocimiento',
+    description:
+      'PKM ligero: recursos, highlights y flashcards con algoritmo SM-2. Repaso espaciado para retener lo que estás aprendiendo.',
+    domain: 'knowledge',
+    domainLabel: 'Conocimiento',
+    icon: GraduationCap,
+    accent: 'from-cyan-500/30 to-teal-500/10',
+  },
+  {
+    id: 'time',
+    name: 'Tiempo',
+    description:
+      'Cronómetro y timesheet con un único timer activo, proyectos con tarifa por hora y auto-entries desde sesiones de Focus.',
+    domain: 'time',
+    domainLabel: 'Tiempo',
+    icon: Timer,
+    accent: 'from-violet-500/30 to-fuchsia-500/10',
+  },
 ]
+
