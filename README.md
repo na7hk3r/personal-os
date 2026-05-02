@@ -25,7 +25,7 @@
   <img src="public/icons/CrystalBallEye.svg" alt="Copiloto IA" width="56" height="56" />
 </p>
 
-<sub>Identidad gráfica — set de iconos ilustrativos en `public/icons/` reutilizables en app, landing y docs.</sub>
+<sub>Identidad gráfica — set de iconos ilustrativos en <code>public/icons/</code> reutilizables en app, landing y docs.<br />Iconos por <a href="https://github.com/xero/svg-icons">xero/svg-icons</a> (CC0 / dominio público).</sub>
 
 </div>
 
