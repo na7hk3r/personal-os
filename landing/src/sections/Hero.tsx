@@ -97,6 +97,41 @@ export function Hero() {
       <p className="mt-6 text-sm text-muted">
         Windows · Linux · macOS · Licencia ISC · Sin cuenta requerida
       </p>
+
+      {/* Brand strip — identidad gráfica de Personal OS */}
+      <div className="mt-12 md:mt-16 relative">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent"
+        />
+        <div className="relative flex items-center justify-center gap-4 md:gap-7 flex-wrap">
+          {[
+            { src: 'icons/LaptopShell.svg', label: 'Productividad' },
+            { src: 'icons/Magic.svg', label: 'Hábitos & salud' },
+            { src: 'icons/TreasureChest.svg', label: 'Finanzas' },
+            { src: 'icons/HourGlass.svg', label: 'Tiempo' },
+            { src: 'icons/TomeIdea.svg', label: 'Conocimiento' },
+            { src: 'icons/CrystalBallEye.svg', label: 'Copiloto IA' },
+          ].map(({ src, label }) => (
+            <div
+              key={src}
+              className="group flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl bg-surface/60 border border-border/60 backdrop-blur transition-all hover:border-accent/40 hover:-translate-y-0.5"
+              title={label}
+            >
+              <img
+                src={`${import.meta.env.BASE_URL}${src}`}
+                alt=""
+                aria-hidden="true"
+                loading="lazy"
+                className="w-9 h-9 md:w-11 md:h-11 select-none transition-transform group-hover:scale-110"
+              />
+              <span className="text-[10px] uppercase tracking-widest text-muted group-hover:text-foreground transition-colors">
+                {label}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }

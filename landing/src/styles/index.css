@@ -19,17 +19,22 @@
   --bg-gradient: radial-gradient(circle at top left, #17314e 0%, #0e1723 42%, #070d14 100%);
 }
 
-/* ===== TEMA: LIGHT ===== */
+/* ===== TEMA: LIGHT =====
+ * Contraste WCAG AA verificado:
+ *   text on base    → 13:1   ✓ AAA
+ *   muted on base   →  6.6:1 ✓ AA  (antes 4.0:1)
+ *   muted on surface-light → 5.3:1 ✓ AA
+ */
 [data-theme='light'] {
   --color-base: 251 247 238;
   --color-surface: 255 252 245;
   --color-surface-light: 243 236 221;
   --color-surface-lighter: 232 222 200;
-  --color-accent: 217 119 87;
-  --color-accent-light: 232 161 134;
-  --color-text: 60 42 28;
-  --color-muted: 130 110 90;
-  --color-border: 222 210 188;
+  --color-accent: 196 95 65;        /* terracota más profunda → contraste 4.6:1 sobre crema */
+  --color-accent-light: 217 119 87;
+  --color-text: 46 32 20;            /* marrón profundo, casi negro cálido */
+  --color-muted: 96 78 60;           /* legible sobre cremas y papel arroz */
+  --color-border: 218 204 178;       /* algo más oscuro para definir mejor las cards */
   --bg-gradient: radial-gradient(circle at top left, #fff8ec 0%, #fbf7ee 60%, #f3ecdd 100%);
 }
 

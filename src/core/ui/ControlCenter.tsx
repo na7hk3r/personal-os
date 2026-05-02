@@ -13,9 +13,19 @@ import { OllamaSection } from './control/OllamaSection'
 import { AutomationsSection } from './control/AutomationsSection'
 import { NotificationsSection } from './control/NotificationsSection'
 import { TagsSection } from './control/TagsSection'
+import { CollapsibleSection } from './control/CollapsibleSection'
 import { AuditPanel } from './AuditPanel'
 import { useAuditStore } from '@core/audit/store'
-import { ShieldAlert } from 'lucide-react'
+import {
+  ShieldAlert,
+  User,
+  SlidersHorizontal,
+  Puzzle,
+  Wrench,
+  Bot,
+  ClipboardList,
+  Zap,
+} from 'lucide-react'
 
 interface FitnessPluginSettings {
   workoutTargetPerWeek: number
@@ -252,11 +262,14 @@ export function ControlCenter() {
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {/* Perfil */}
-        <article className="rounded-2xl border border-border bg-surface-light/85 p-6">
-          <h2 className="text-lg font-semibold">Perfil principal</h2>
-          <p className="mt-1 text-sm text-muted">Configura la identidad base de tus métricas.</p>
-
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <CollapsibleSection
+          id="profile"
+          title="Perfil principal"
+          description="Configura la identidad base de tus métricas."
+          icon={<User size={18} aria-hidden />}
+          summary={profile.name ? `${profile.name}` : 'Sin nombre'}
+        >
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="space-y-1">
               <span className="text-xs text-muted">Nombre</span>
               <input
@@ -314,14 +327,17 @@ export function ControlCenter() {
             </button>
             {profileMessage && <span className="text-xs text-muted">{profileMessage}</span>}
           </div>
-        </article>
+        </CollapsibleSection>
 
         {/* Preferencias */}
-        <article className="rounded-2xl border border-border bg-surface-light/85 p-6">
-          <h2 className="text-lg font-semibold">Preferencias y ajustes</h2>
-          <p className="mt-1 text-sm text-muted">Control de interfaz y estado operacional.</p>
-
-          <div className="mt-5 space-y-4">
+        <CollapsibleSection
+          id="preferences"
+          title="Preferencias y ajustes"
+          description="Control de interfaz y estado operacional."
+          icon={<SlidersHorizontal size={18} aria-hidden />}
+          summary={`Tema: ${settings.theme || 'default'}`}
+        >
+          <div className="space-y-4">
             {/* Sidebar */}
             <div className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3">
               <div className="min-w-0 pr-4">
@@ -396,16 +412,20 @@ export function ControlCenter() {
             </button>
             {settingsMessage && <span className="text-xs text-muted">{settingsMessage}</span>}
           </div>
-        </article>
+        </CollapsibleSection>
       </section>
 
-      {/* Configuración por plugin */}
+      {/* Configuración por plugin — sólo se muestra si hay plugins relevantes activos */}
       {hasActivePluginSettings && (
-        <section className="rounded-2xl border border-border bg-surface-light/85 p-6">
-          <h2 className="text-lg font-semibold">Configuración por plugin</h2>
-          <p className="mt-1 text-sm text-muted">Ajustes operativos para módulos activos.</p>
-
-          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <CollapsibleSection
+          id="plugin-settings"
+          title="Configuración por plugin"
+          description="Ajustes operativos para módulos activos."
+          icon={<Wrench size={18} aria-hidden />}
+          defaultOpen={false}
+          summary={[isFitnessActive && 'Fitness', isWorkActive && 'Work'].filter(Boolean).join(' · ')}
+        >
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {isFitnessActive && (
               <article className="rounded-xl border border-border bg-surface p-4">
             <h3 className="text-sm font-semibold text-white">Fitness</h3>
@@ -612,21 +632,24 @@ export function ControlCenter() {
             </button>
             {pluginSettingsMessage && <span className="text-xs text-muted">{pluginSettingsMessage}</span>}
           </div>
-        </section>
+        </CollapsibleSection>
       )}
 
       {/* Gestor de plugins */}
-      <section className="rounded-2xl border border-border bg-surface-light/85 p-6">
-        <h2 className="text-lg font-semibold">Gestor de módulos</h2>
-        <p className="mt-1 text-sm text-muted">Activá o desactivá plugins para personalizar el flujo operativo.</p>
-
+      <CollapsibleSection
+        id="plugin-manager"
+        title="Gestor de módulos"
+        description="Activá o desactivá plugins para personalizar el flujo operativo."
+        icon={<Puzzle size={18} aria-hidden />}
+        summary={`${activePlugins} de ${plugins.length} activos`}
+      >
         {pluginMessage && (
-          <div className="mt-3 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted">
+          <div className="mb-3 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted">
             {pluginMessage}
           </div>
         )}
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2">
           {plugins.map((plugin) => {
             const isActive = plugin.status === 'active'
             const isBusy = busyPluginId === plugin.manifest.id
@@ -688,22 +711,48 @@ export function ControlCenter() {
           <p className="font-medium text-white">¿Cómo agregar nuevos plugins?</p>
           <p className="mt-1">En esta versión, los plugins se incluyen en el build y se activan/desactivan sin fricción desde aquí.</p>
         </div>
-      </section>
+      </CollapsibleSection>
 
-      {/* Nuevas secciones core */}
-      <section className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <OllamaSection />
-        <BackupSection />
-        <ScheduledBackupSection />
-        <DbEncryptionSection />
-        <AutoUpdateSection />
-        <NotificationsSection />
-        <TagsSection />
-      </section>
+      {/* Servicios y mantenimiento — agrupado y plegado por defecto */}
+      <CollapsibleSection
+        id="services"
+        title="Servicios y mantenimiento"
+        description="IA local, backups, cifrado, actualizaciones, notificaciones y etiquetas."
+        icon={<Bot size={18} aria-hidden />}
+        defaultOpen={false}
+        summary="7 servicios"
+      >
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          <OllamaSection />
+          <BackupSection />
+          <ScheduledBackupSection />
+          <DbEncryptionSection />
+          <AutoUpdateSection />
+          <NotificationsSection />
+          <TagsSection />
+        </div>
+      </CollapsibleSection>
 
-      <AuditPanel />
+      {/* Auditoría y automatizaciones */}
+      <CollapsibleSection
+        id="audit"
+        title="Auditoría del sistema"
+        description="Validación de consistencia entre tablas, índices y datos."
+        icon={<ClipboardList size={18} aria-hidden />}
+        defaultOpen={false}
+      >
+        <AuditPanel />
+      </CollapsibleSection>
 
-      <AutomationsSection />
+      <CollapsibleSection
+        id="automations"
+        title="Automatizaciones"
+        description="Reglas que conectan eventos de plugins con acciones del sistema."
+        icon={<Zap size={18} aria-hidden />}
+        defaultOpen={false}
+      >
+        <AutomationsSection />
+      </CollapsibleSection>
     </div>
   )
 }

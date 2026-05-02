@@ -14,6 +14,19 @@
 
 [Sitio web](https://na7hk3r.github.io/personal-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
 
+<br />
+
+<p>
+  <img src="public/icons/LaptopShell.svg"   alt="Productividad" width="56" height="56" />
+  <img src="public/icons/Magic.svg"         alt="Hábitos & salud" width="56" height="56" />
+  <img src="public/icons/TreasureChest.svg" alt="Finanzas" width="56" height="56" />
+  <img src="public/icons/HourGlass.svg"     alt="Tiempo" width="56" height="56" />
+  <img src="public/icons/TomeIdea.svg"      alt="Conocimiento" width="56" height="56" />
+  <img src="public/icons/CrystalBallEye.svg" alt="Copiloto IA" width="56" height="56" />
+</p>
+
+<sub>Identidad gráfica — set de iconos ilustrativos en `public/icons/` reutilizables en app, landing y docs.</sub>
+
 </div>
 
 ---
