@@ -256,6 +256,8 @@ export interface UserProfile {
   age: number
   startDate: string
   weightGoal: number
+  /** Objetivo personal en una frase (north star). Opcional. */
+  bigGoal?: string
 }
 
 // ─── Core API (injected into plugins) ───

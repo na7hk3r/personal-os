@@ -55,9 +55,17 @@ export const useCoreStore = create<CoreState>((set, get) => ({
        VALUES (1, ?, ?, ?, ?, ?, datetime('now'))`,
       [profile.name, profile.height, profile.age, profile.startDate, profile.weightGoal],
     )
+    // bigGoal se persiste en settings (no requiere migración del schema profile)
+    if (profile.bigGoal !== undefined) {
+      await window.storage.execute(
+        `INSERT OR REPLACE INTO settings (key, value) VALUES ('profile.bigGoal', ?)`,
+        [profile.bigGoal],
+      )
+    }
     eventBus.emit(CORE_EVENTS.PROFILE_UPDATED, {
       name: profile.name,
       hasGoal: Boolean(profile.weightGoal),
+      hasBigGoal: Boolean(profile.bigGoal),
     }, { source: 'core', persist: true })
   },
 
@@ -176,7 +184,7 @@ export const useCoreStore = create<CoreState>((set, get) => ({
     if (!window.storage) return
     try {
       const rows = await window.storage.query(
-        `SELECT key, value FROM settings WHERE key IN ('onboardingComplete', 'theme', 'sidebarCollapsed', 'activePlugins')`,
+        `SELECT key, value FROM settings WHERE key IN ('onboardingComplete', 'theme', 'sidebarCollapsed', 'activePlugins', 'profile.bigGoal')`,
         [],
       ) as { key: string; value: string }[]
       const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
@@ -202,6 +210,7 @@ export const useCoreStore = create<CoreState>((set, get) => ({
               age: profileRows[0].age ?? 0,
               startDate: profileRows[0].start_date ?? '',
               weightGoal: profileRows[0].weight_goal ?? 0,
+              bigGoal: map['profile.bigGoal'] ?? undefined,
             }
           : get().profile,
       })
