@@ -76,6 +76,29 @@ export interface BackupBridge {
   importEncrypted: (passphrase: string) => Promise<BackupResult>
 }
 
+// ─── Profile export/import (Sprint 9) ───
+
+export interface ProfileImportSummary {
+  schemaVersion: number
+  exportedAt: string
+  hadProfile: boolean
+  activePlugins: string[]
+}
+
+export interface ProfileTransferResult {
+  ok: boolean
+  canceled?: boolean
+  path?: string
+  summary?: ProfileImportSummary
+}
+
+export interface ProfileBridge {
+  exportPlain: () => Promise<ProfileTransferResult>
+  exportEncrypted: (passphrase: string) => Promise<ProfileTransferResult>
+  importPlain: () => Promise<ProfileTransferResult>
+  importEncrypted: (passphrase: string) => Promise<ProfileTransferResult>
+}
+
 // ─── Ollama (AI local) ───
 
 export interface OllamaHealth {
