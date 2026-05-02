@@ -1,6 +1,7 @@
 import { Github, ExternalLink } from 'lucide-react'
 import { Button } from '../components/Button'
 import { DownloadButton } from '../components/DownloadButton'
+import { BrandIcon } from '../components/BrandIcon'
 import { useTypewriter } from '../hooks/useTypewriter'
 
 const REPO_URL = 'https://github.com/na7hk3r/personal-os'
@@ -105,25 +106,25 @@ export function Hero() {
           className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent"
         />
         <div className="relative flex items-center justify-center gap-4 md:gap-7 flex-wrap">
-          {[
-            { src: 'icons/LaptopShell.svg', label: 'Productividad' },
-            { src: 'icons/Magic.svg', label: 'Hábitos & salud' },
-            { src: 'icons/TreasureChest.svg', label: 'Finanzas' },
-            { src: 'icons/HourGlass.svg', label: 'Tiempo' },
-            { src: 'icons/TomeIdea.svg', label: 'Conocimiento' },
-            { src: 'icons/CrystalBallEye.svg', label: 'Copiloto IA' },
-          ].map(({ src, label }) => (
+          {(
+            [
+              { name: 'LaptopShell', label: 'Productividad' },
+              { name: 'Magic', label: 'Hábitos & salud' },
+              { name: 'TreasureChest', label: 'Finanzas' },
+              { name: 'HourGlass', label: 'Tiempo' },
+              { name: 'TomeIdea', label: 'Conocimiento' },
+              { name: 'CrystalBallEye', label: 'Copiloto IA' },
+            ] as const
+          ).map(({ name, label }) => (
             <div
-              key={src}
+              key={name}
               className="group flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl bg-surface/60 border border-border/60 backdrop-blur transition-all hover:border-accent/40 hover:-translate-y-0.5"
               title={label}
             >
-              <img
-                src={`${import.meta.env.BASE_URL}${src}`}
-                alt=""
-                aria-hidden="true"
-                loading="lazy"
-                className="w-9 h-9 md:w-11 md:h-11 select-none transition-transform group-hover:scale-110"
+              <BrandIcon
+                name={name}
+                size={40}
+                className="text-foreground/80 group-hover:text-accent transition-colors group-hover:scale-110"
               />
               <span className="text-[10px] uppercase tracking-widest text-muted group-hover:text-foreground transition-colors">
                 {label}

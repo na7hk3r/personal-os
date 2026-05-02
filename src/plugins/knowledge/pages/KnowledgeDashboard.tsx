@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { BookOpen, Brain, Highlighter, Library, PlayCircle } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useKnowledgeStore } from '../store'
 import { dueFlashcards, isMastered } from '../utils'
 
@@ -22,14 +23,17 @@ export function KnowledgeDashboard() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Conocimiento</p>
-          <h1 className="text-2xl font-semibold text-white">
-            {summary.inProgress.length} en progreso · {summary.due.length} para repasar
-          </h1>
-          <p className="text-xs text-muted">
-            {summary.finished.length} recursos terminados · {summary.mastered} flashcards dominadas
-          </p>
+        <div className="flex items-center gap-4">
+          <BrandIcon name="TomeIdea" size={44} className="text-accent" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Conocimiento</p>
+            <h1 className="text-2xl font-semibold text-white">
+              {summary.inProgress.length} en progreso · {summary.due.length} para repasar
+            </h1>
+            <p className="text-xs text-muted">
+              {summary.finished.length} recursos terminados · {summary.mastered} flashcards dominadas
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <button

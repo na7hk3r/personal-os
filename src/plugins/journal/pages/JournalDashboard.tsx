@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { History, BookOpen } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useJournalStore } from '../store'
 import { JournalEditor } from '../components/JournalEditor'
 import { todayISO, moodLabel } from '../utils'
@@ -33,12 +34,15 @@ export function JournalDashboard() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Journal</p>
-          <h1 className="text-2xl font-semibold text-white">{stats.last30} entradas en 30 días</h1>
-          {stats.moodAvg != null && (
-            <p className="text-xs text-muted">Mood promedio: {stats.moodAvg.toFixed(1)}/5</p>
-          )}
+        <div className="flex items-center gap-4">
+          <BrandIcon name="BookJournal" size={44} className="text-accent" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Journal</p>
+            <h1 className="text-2xl font-semibold text-white">{stats.last30} entradas en 30 días</h1>
+            {stats.moodAvg != null && (
+              <p className="text-xs text-muted">Mood promedio: {stats.moodAvg.toFixed(1)}/5</p>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <input

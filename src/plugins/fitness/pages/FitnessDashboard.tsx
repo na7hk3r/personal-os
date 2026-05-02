@@ -4,11 +4,13 @@ import { MealChart } from '../components/MealChart'
 import { SmokingChart } from '../components/SmokingChart'
 import { MonthlySummary } from '../components/MonthlySummary'
 import { Dumbbell } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 
 export function FitnessDashboard() {
   return (
     <div className="plugin-shell plugin-shell-fitness space-y-6">
-      <h1 className="text-2xl font-bold flex items-center gap-2">
+      <h1 className="text-2xl font-bold flex items-center gap-3">
+        <BrandIcon name="Magic" size={32} className="text-accent" />
         <Dumbbell size={22} />
         Fitness
       </h1>

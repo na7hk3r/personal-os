@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowDownRight, ArrowUpRight, Receipt, Repeat, Tag, BarChart3, Sparkles } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useFinanceStore } from '../store'
 import { QuickAddTransaction } from '../components/QuickAddTransaction'
 import { AccountsManager } from '../components/AccountsManager'
@@ -63,12 +64,15 @@ export function FinanceDashboard() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Finanzas</p>
-          <h1 className="text-2xl font-semibold text-white">{formatCents(stats.totalBalance, stats.currency)}</h1>
-          <p className="text-xs text-muted">
-            Balance total · {accounts.length} {accounts.length === 1 ? 'cuenta' : 'cuentas'}
-          </p>
+        <div className="flex items-center gap-4">
+          <BrandIcon name="TreasureChest" size={44} className="text-accent" />
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Finanzas</p>
+            <h1 className="text-2xl font-semibold text-white">{formatCents(stats.totalBalance, stats.currency)}</h1>
+            <p className="text-xs text-muted">
+              Balance total · {accounts.length} {accounts.length === 1 ? 'cuenta' : 'cuentas'}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <NavChip icon={<Receipt size={12} />} label="Movimientos" onClick={() => navigate('/finance/transactions')} />

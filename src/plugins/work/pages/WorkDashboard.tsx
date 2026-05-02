@@ -17,6 +17,7 @@ import { WORK_EVENTS } from '../events'
 import { KanbanBoard } from '../components/KanbanBoard'
 import { useFocusNudge } from '../components/useFocusNudge'
 import { CheckCircle2, ClipboardList, History, KanbanSquare, ListChecks, NotebookPen, Sparkles, TimerReset, Play, Pause, Square, XCircle } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 
 const WORK_ACTIVITY_EVENTS: Set<string> = new Set([
   WORK_EVENTS.TASK_CREATED,
@@ -357,18 +358,21 @@ export function WorkDashboard() {
     <div className="plugin-shell plugin-shell-work space-y-6">
       <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-accent/70 shadow-[inset_1px_0_0_0_rgba(249,115,22,0.18)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-accent-light flex items-center gap-2"><Sparkles size={12} /> Now Panel</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">
-              {currentTask?.title ?? (currentFocusSession ? 'Foco libre en curso' : 'Sin foco activo')}
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted">
-              {!currentFocusSession
-                ? 'Elegí una tarea desde el tablero o iniciá una sesión libre para activar el motor de ejecución.'
-                : isPaused
-                  ? 'Sesión pausada. Reanudá para seguir sumando tiempo efectivo.'
-                  : `Corriendo desde ${new Date(currentFocusSession.startTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`}
-            </p>
+          <div className="flex items-start gap-4">
+            <BrandIcon name="LaptopShell" size={40} className="text-accent shrink-0 mt-1" />
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-accent-light flex items-center gap-2"><Sparkles size={12} /> Now Panel</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">
+                {currentTask?.title ?? (currentFocusSession ? 'Foco libre en curso' : 'Sin foco activo')}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-muted">
+                {!currentFocusSession
+                  ? 'Elegí una tarea desde el tablero o iniciá una sesión libre para activar el motor de ejecución.'
+                  : isPaused
+                    ? 'Sesión pausada. Reanudá para seguir sumando tiempo efectivo.'
+                    : `Corriendo desde ${new Date(currentFocusSession.startTime).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}.`}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col items-start gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 lg:min-w-[320px]">
