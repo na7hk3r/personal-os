@@ -11,6 +11,7 @@ export const PLUGIN_IDS = {
   JOURNAL: 'journal',
   GOALS: 'goals',
   KNOWLEDGE: 'knowledge',
+  TIME: 'time',
 } as const
 
 export type PluginId = typeof PLUGIN_IDS[keyof typeof PLUGIN_IDS]
@@ -23,6 +24,7 @@ export const PLUGIN_NAMES: Record<PluginId, string> = {
   [PLUGIN_IDS.JOURNAL]: 'Journal',
   [PLUGIN_IDS.GOALS]: 'Goals & OKRs',
   [PLUGIN_IDS.KNOWLEDGE]: 'Conocimiento',
+  [PLUGIN_IDS.TIME]: 'Tiempo',
 }
 
 export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
@@ -33,6 +35,7 @@ export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
   [PLUGIN_IDS.JOURNAL]: 'Diario personal con mood tracking, prompts y búsqueda rápida.',
   [PLUGIN_IDS.GOALS]: 'Objetivos trimestrales/anuales con Key Results auto-actualizados desde otros plugins.',
   [PLUGIN_IDS.KNOWLEDGE]: 'Recursos, highlights y flashcards con SM-2 para retener lo que estás aprendiendo.',
+  [PLUGIN_IDS.TIME]: 'Cronómetro y timesheet con auto-entries desde sesiones de Focus.',
 }
 
 /**
