@@ -49,7 +49,8 @@ export function sumDurationSec(entries: TimeEntry[], fromISO: string, now = new 
   for (const e of entries) {
     const startMs = Date.parse(e.start)
     if (Number.isNaN(startMs)) continue
-    const endMs = e.end ? Date.parse(e.end) : now.getTime()
+    const parsedEnd = e.end ? Date.parse(e.end) : NaN
+    const endMs = Number.isNaN(parsedEnd) ? now.getTime() : parsedEnd
     if (endMs <= fromMs) continue
     const slice = Math.max(0, Math.floor((endMs - Math.max(startMs, fromMs)) / 1000))
     total += slice
