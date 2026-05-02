@@ -10,6 +10,7 @@ export const PLUGIN_IDS = {
   HABITS: 'habits',
   JOURNAL: 'journal',
   GOALS: 'goals',
+  KNOWLEDGE: 'knowledge',
 } as const
 
 export type PluginId = typeof PLUGIN_IDS[keyof typeof PLUGIN_IDS]
@@ -21,6 +22,7 @@ export const PLUGIN_NAMES: Record<PluginId, string> = {
   [PLUGIN_IDS.HABITS]: 'Hábitos',
   [PLUGIN_IDS.JOURNAL]: 'Journal',
   [PLUGIN_IDS.GOALS]: 'Goals & OKRs',
+  [PLUGIN_IDS.KNOWLEDGE]: 'Conocimiento',
 }
 
 export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
@@ -30,6 +32,7 @@ export const PLUGIN_DESCRIPTIONS: Record<PluginId, string> = {
   [PLUGIN_IDS.HABITS]: 'Hábitos diarios y semanales con racha, heatmap y toggle rápido del día.',
   [PLUGIN_IDS.JOURNAL]: 'Diario personal con mood tracking, prompts y búsqueda rápida.',
   [PLUGIN_IDS.GOALS]: 'Objetivos trimestrales/anuales con Key Results auto-actualizados desde otros plugins.',
+  [PLUGIN_IDS.KNOWLEDGE]: 'Recursos, highlights y flashcards con SM-2 para retener lo que estás aprendiendo.',
 }
 
 /**
