@@ -6,7 +6,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.8.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.9.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 [![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-7c3aed?style=flat-square)](https://na7hk3r.github.io/personal-os/)
 [![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=7c3aed)](https://github.com/na7hk3r/personal-os/releases)
@@ -121,6 +121,8 @@ Cola persistente con processor cada 30 s, horas de silencio configurables (con w
 | Misión Planner (baja / media / alta) | +5 / +10 / +16 |
 | Hábito loggeado / meta cumplida | +2 / +5 |
 | Entrada de Journal nueva / update / mood | +5 / +2 / +1 |
+| Highlight capturado / flashcard repasada / recurso terminado | +3 / +2 / +15 |
+| Time entry registrada (≥5 min) | +2 |
 
 Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 
@@ -297,10 +299,9 @@ Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md]
 
 ### Próximas releases
 
-- **Galería de temas** con preview en vivo y theme builder.
-- **Plugin Hábitos** (rachas, recordatorios, heatmap anual).
-- **Plugin Journal** con búsqueda full-text.
-- **Plugin Knowledge** (notas conectadas estilo Zettelkasten).
+- **Plugin Goals & OKRs** con Key Results auto-actualizados desde otros plugins.
+- **Calendario externo** (import .ics, Google Calendar opcional) integrado al plugin Tiempo.
+- **Galería de temas** ampliada con theme builder visual.
 - **Mejoras de accesibilidad** (foco visible, ARIA completo, navegación por teclado en todo).
 
 ### Lejano
