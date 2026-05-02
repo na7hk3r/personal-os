@@ -46,7 +46,7 @@ export function TimeDashboard() {
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <header className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
-          <BrandIcon name="HourGlass" size={44} className="text-accent" />
+          <BrandIcon name="HourGlass" size={44} />
           <div>
             <h1 className="text-2xl font-bold">Tiempo</h1>
             <p className="text-sm text-muted">Time tracking manual y automático desde sesiones de Focus.</p>

@@ -26,7 +26,8 @@ export function Plugins() {
             <BrandIcon
               name={brandArt}
               size={112}
-              className="pointer-events-none absolute -right-3 -bottom-3 text-foreground/30 group-hover:text-accent group-hover:rotate-3 transition-all duration-300 opacity-60 group-hover:opacity-100"
+              tile={false}
+              className="pointer-events-none absolute -right-3 -bottom-3 group-hover:rotate-3 transition-all duration-300 opacity-40 group-hover:opacity-90"
             />
             <div className="relative">
               <div className="flex items-center gap-3 mb-3">

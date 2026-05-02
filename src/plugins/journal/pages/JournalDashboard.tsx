@@ -35,7 +35,7 @@ export function JournalDashboard() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <BrandIcon name="BookJournal" size={44} className="text-accent" />
+          <BrandIcon name="BookJournal" size={44} />
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Journal</p>
             <h1 className="text-2xl font-semibold text-white">{stats.last30} entradas en 30 días</h1>

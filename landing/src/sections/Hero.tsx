@@ -118,15 +118,16 @@ export function Hero() {
           ).map(({ name, label }) => (
             <div
               key={name}
-              className="group flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl bg-surface/60 border border-border/60 backdrop-blur transition-all hover:border-accent/40 hover:-translate-y-0.5"
+              className="group flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl bg-[#fbf7ee] border border-border/60 shadow-sm backdrop-blur transition-all hover:border-accent/50 hover:-translate-y-0.5"
               title={label}
             >
               <BrandIcon
                 name={name}
                 size={40}
-                className="text-foreground/80 group-hover:text-accent transition-colors group-hover:scale-110"
+                tile={false}
+                className="transition-transform group-hover:scale-110"
               />
-              <span className="text-[10px] uppercase tracking-widest text-muted group-hover:text-foreground transition-colors">
+              <span className="text-[10px] uppercase tracking-widest text-[#604c3c] group-hover:text-[#2e2014] transition-colors">
                 {label}
               </span>
             </div>

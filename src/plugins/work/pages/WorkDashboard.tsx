@@ -359,7 +359,7 @@ export function WorkDashboard() {
       <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-accent/70 shadow-[inset_1px_0_0_0_rgba(249,115,22,0.18)]">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-start gap-4">
-            <BrandIcon name="LaptopShell" size={40} className="text-accent shrink-0 mt-1" />
+            <BrandIcon name="LaptopShell" size={40} className="shrink-0 mt-1" />
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-accent-light flex items-center gap-2"><Sparkles size={12} /> Now Panel</p>
               <h2 className="mt-2 text-2xl font-semibold text-white">
