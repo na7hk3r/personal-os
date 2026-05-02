@@ -36,6 +36,7 @@ import './plugins/habits'
 import './plugins/journal'
 import './plugins/goals'
 import './plugins/knowledge'
+import './plugins/time'
 
 /**
  * Safe mode skips plugin initialization so the shell can boot even if a plugin

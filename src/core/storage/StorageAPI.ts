@@ -252,6 +252,27 @@ const ALLOWED_TABLE_COLUMNS: Record<string, Set<string>> = {
     'reviewed_at',
     'quality',
   ]),
+  time_projects: new Set([
+    'id',
+    'name',
+    'color',
+    'client',
+    'hourly_rate',
+    'archived',
+    'created_at',
+  ]),
+  time_entries: new Set([
+    'id',
+    'project_id',
+    'task_id',
+    'start',
+    'end',
+    'duration_sec',
+    'billable',
+    'source',
+    'note',
+    'created_at',
+  ]),
 }
 
 function assertTableName(table: string): void {
