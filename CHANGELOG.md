@@ -1,4 +1,17 @@
-# Changelog - Personal OS
+# Changelog - Nora OS
+
+## [1.11.0] - 2026-05-03
+
+### 🎨 Rebrand a Nora OS + refactor UX completo
+
+Reescritura visual del producto: nuevo nombre **Nora OS**, identidad de marca unificada y refactor profundo del shell, dashboard y plugins hacia una arquitectura UX consistente.
+
+- **Rebrand**: `Personal OS` → `Nora OS` en toda la app, procesos Electron, instalador y landing.
+- **Shell + Dashboard**: unificación de layout (`Sidebar` + `main` con `min-w-0` + `CopilotPanel` con auto-collapse ≤1024px), nuevos widgets reorganizados y panel "sin módulos activos" con iconografía correcta de plugins.
+- **Identidad visual**: tokens de color, gradientes, scrollbars tema-aware (6px), tipografía `text-caption`/`text-micro`, `tracking-eyebrow` y `BrandIcon` consistente en headers de plugins.
+- **CopilotPanel**: tipografía bajada a `text-xs`/`text-[10-11px]` para mejor densidad en panel angosto, bubbles con `break-words`, quick actions con `truncate` + `title`, anti-overflow en input y contenedor de mensajes.
+- **Anti-overflow global**: `html/body/#root` con `overflow-x:hidden` + `max-width:100vw`; `overflow-wrap:anywhere` y `word-break:break-word` en `p/li/span/headings`; `img/video` con `max-width:100%`.
+- **Documentación**: actualizado `ARCHITECTURE.md` con la nueva arquitectura UX y plan de iconografía.
 
 ## [1.10.0] - 2026-05-01
 
