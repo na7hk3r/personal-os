@@ -7,6 +7,7 @@ import { QuickActionsBar } from './QuickActionsBar'
 import { TodayFocus } from './TodayFocus'
 import { RecentActivityFeed } from './RecentActivityFeed'
 import { DashboardFooter } from './DashboardFooter'
+import { PluginIcon } from './components/PluginIcon'
 
 const DASHBOARD_LAYOUT_SETTINGS_KEY = 'dashboardLayoutState'
 const PROGRESS_MOVED_NOTICE_KEY = 'core:progressMoved:notified:v1'
@@ -334,7 +335,13 @@ export function Dashboard() {
                   key={plugin.manifest.id}
                   className="flex items-start gap-3 rounded-xl border border-border bg-surface p-4"
                 >
-                  <span className="mt-0.5 text-xl shrink-0">{plugin.manifest.icon}</span>
+                  <span
+                    className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/70 ${
+                      plugin.status === 'active' ? 'text-accent-light' : 'text-muted'
+                    }`}
+                  >
+                    <PluginIcon name={plugin.manifest.icon} size={18} />
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-white">{plugin.manifest.name}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-muted">{plugin.manifest.description}</p>
