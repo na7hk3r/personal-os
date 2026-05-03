@@ -1,6 +1,6 @@
 # Catálogo de eventos
 
-Los eventos se emiten a través del `EventBus` singleton. Cada evento se persiste en la tabla `events_log` automáticamente cuando tiene `source` explícito o cuando el `EventBus` puede inferirlo por prefijo (`FITNESS_`, `WORK_`, `CORE_`, `GAMIFICATION_`).
+Los eventos se emiten a través del `EventBus` singleton. Cada evento se persiste en la tabla `events_log` automáticamente cuando tiene `source` explícito o cuando el `EventBus` puede inferirlo por prefijo (`FITNESS_`, `WORK_`, `FINANCE_`, `HABITS_`, `JOURNAL_`, `GOALS_`, `KNOWLEDGE_`, `TIME_`, `CORE_`, `GAMIFICATION_`).
 
 ## Eventos del sistema core
 
@@ -129,6 +129,168 @@ KanbanBoard.handleDragEnd()
   └─ [si toColumn es done]
         WORK_TASK_COMPLETED     { taskId, title, columnId } ────► gamification: +10 XP
 ```
+
+---
+
+## Eventos del plugin Finance
+
+Definidos en `src/plugins/finance/events.ts`. Prefijo: `FINANCE_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `FINANCE_EVENTS.ACCOUNT_CREATED` | Cuenta creada | `{ accountId, name, type, currency }` |
+| `FINANCE_EVENTS.ACCOUNT_UPDATED` | Cuenta actualizada | `{ accountId }` |
+| `FINANCE_EVENTS.ACCOUNT_ARCHIVED` | Cuenta archivada | `{ accountId }` |
+| `FINANCE_EVENTS.CATEGORY_CREATED` | Categoría creada | `{ categoryId, name, kind }` |
+| `FINANCE_EVENTS.CATEGORY_UPDATED` | Categoría actualizada | `{ categoryId }` |
+| `FINANCE_EVENTS.CATEGORY_DELETED` | Categoría eliminada | `{ categoryId }` |
+| `FINANCE_EVENTS.TRANSACTION_CREATED` | Transacción registrada | `{ transactionId, amount, currency, kind }` |
+| `FINANCE_EVENTS.TRANSACTION_UPDATED` | Transacción editada | `{ transactionId }` |
+| `FINANCE_EVENTS.TRANSACTION_DELETED` | Transacción eliminada | `{ transactionId }` |
+| `FINANCE_EVENTS.TRANSFER_CREATED` | Transferencia entre cuentas | `{ fromAccountId, toAccountId, amount }` |
+| `FINANCE_EVENTS.RECURRING_CREATED` | Recurrente creada | `{ recurringId, cadence }` |
+| `FINANCE_EVENTS.RECURRING_UPDATED` | Recurrente editada | `{ recurringId }` |
+| `FINANCE_EVENTS.RECURRING_RUN` | Motor RRULE-light ejecutó una ocurrencia | `{ recurringId, transactionId }` |
+| `FINANCE_EVENTS.RECURRING_DELETED` | Recurrente eliminada | `{ recurringId }` |
+| `FINANCE_EVENTS.BUDGET_CREATED` | Presupuesto creado | `{ budgetId, categoryId, amount }` |
+| `FINANCE_EVENTS.BUDGET_UPDATED` | Presupuesto actualizado | `{ budgetId }` |
+| `FINANCE_EVENTS.ANOMALY_DETECTED` | `detectAnomaly` flagueó una transacción | `{ transactionId, reason }` |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `FINANCE_TRANSACTION_CREATED` | +2 |
+| `FINANCE_RECURRING_CREATED` | +5 |
+| `FINANCE_BUDGET_CREATED` | +5 |
+
+---
+
+## Eventos del plugin Habits
+
+Definidos en `src/plugins/habits/events.ts`. Prefijo: `HABITS_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `HABITS_EVENTS.HABIT_CREATED` | Hábito creado | `{ habitId, name, frequencyType }` |
+| `HABITS_EVENTS.HABIT_UPDATED` | Hábito editado | `{ habitId }` |
+| `HABITS_EVENTS.HABIT_ARCHIVED` | Hábito archivado | `{ habitId }` |
+| `HABITS_EVENTS.HABIT_LOGGED` | Log diario registrado | `{ habitId, date, value }` |
+| `HABITS_EVENTS.HABIT_UNLOGGED` | Log diario revertido | `{ habitId, date }` |
+| `HABITS_EVENTS.GOAL_MET` | Meta del período cumplida (filo de cumplimiento) | `{ habitId, period }` |
+| `HABITS_EVENTS.STREAK_BROKEN` | Racha rota | `{ habitId, lostStreak }` |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `HABITS_HABIT_LOGGED` | +2 |
+| `HABITS_GOAL_MET` | +5 |
+
+---
+
+## Eventos del plugin Journal
+
+Definidos en `src/plugins/journal/events.ts`. Prefijo: `JOURNAL_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `JOURNAL_EVENTS.ENTRY_CREATED` | Entrada nueva (1 por día) | `{ entryId, date }` |
+| `JOURNAL_EVENTS.ENTRY_UPDATED` | Entrada editada | `{ entryId }` |
+| `JOURNAL_EVENTS.ENTRY_DELETED` | Entrada eliminada (con undo 5s) | `{ entryId }` |
+| `JOURNAL_EVENTS.ENTRY_PINNED` | Entrada fijada / desfijada | `{ entryId, pinned }` |
+| `JOURNAL_EVENTS.MOOD_LOGGED` | Mood registrado (1–5) | `{ entryId, mood }` |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `JOURNAL_ENTRY_CREATED` | +5 |
+| `JOURNAL_ENTRY_UPDATED` | +2 |
+| `JOURNAL_MOOD_LOGGED` | +1 |
+
+---
+
+## Eventos del plugin Goals
+
+Definidos en `src/plugins/goals/events.ts`. Prefijo: `GOALS_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `GOALS_EVENTS.GOAL_CREATED` | Objetivo creado | `{ goalId, period, year }` |
+| `GOALS_EVENTS.GOAL_UPDATED` | Objetivo editado | `{ goalId }` |
+| `GOALS_EVENTS.GOAL_COMPLETED` | Objetivo completado | `{ goalId, title }` |
+| `GOALS_EVENTS.GOAL_ARCHIVED` | Objetivo archivado | `{ goalId }` |
+| `GOALS_EVENTS.KR_CREATED` | Key Result creado | `{ krId, goalId, source }` |
+| `GOALS_EVENTS.KR_UPDATED` | KR editado | `{ krId }` |
+| `GOALS_EVENTS.KR_PROGRESS` | `current_value` actualizado (manual o vía `syncMetricBackedKRs`) | `{ krId, value }` |
+| `GOALS_EVENTS.KR_COMPLETED` | KR alcanzó el `target_value` | `{ krId, goalId }` |
+| `GOALS_EVENTS.KR_DELETED` | KR eliminado | `{ krId }` |
+| `GOALS_EVENTS.MILESTONE_ADDED` | Hito registrado | `{ milestoneId, krId, value }` |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `GOALS_KR_COMPLETED` | +20 |
+| `GOALS_GOAL_COMPLETED` | +100 |
+
+---
+
+## Eventos del plugin Knowledge
+
+Definidos en `src/plugins/knowledge/events.ts`. Prefijo: `KNOWLEDGE_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `KNOWLEDGE_EVENTS.RESOURCE_CREATED` | Recurso creado | `{ resourceId, type, title }` |
+| `KNOWLEDGE_EVENTS.RESOURCE_UPDATED` | Recurso editado o progreso 0–100 actualizado | `{ resourceId }` |
+| `KNOWLEDGE_EVENTS.RESOURCE_FINISHED` | Recurso marcado como terminado | `{ resourceId }` |
+| `KNOWLEDGE_EVENTS.RESOURCE_DELETED` | Recurso eliminado (cascade a highlights) | `{ resourceId }` |
+| `KNOWLEDGE_EVENTS.HIGHLIGHT_ADDED` | Highlight capturado | `{ highlightId, resourceId }` |
+| `KNOWLEDGE_EVENTS.HIGHLIGHT_DELETED` | Highlight eliminado | `{ highlightId }` |
+| `KNOWLEDGE_EVENTS.FLASHCARD_CREATED` | Flashcard creada | `{ flashcardId }` |
+| `KNOWLEDGE_EVENTS.FLASHCARD_REVIEWED` | Tarjeta repasada (algoritmo SM-2 actualiza ease/interval/repetitions/next_review) | `{ flashcardId, quality }` |
+| `KNOWLEDGE_EVENTS.FLASHCARD_DELETED` | Flashcard eliminada | `{ flashcardId }` |
+| `KNOWLEDGE_EVENTS.STUDY_SESSION_STARTED` | Sesión de repaso iniciada | `{ sessionId, dueCount }` |
+| `KNOWLEDGE_EVENTS.STUDY_SESSION_COMPLETED` | Sesión finalizada | `{ sessionId, reviewedCount }` |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `KNOWLEDGE_HIGHLIGHT_ADDED` | +3 |
+| `KNOWLEDGE_FLASHCARD_REVIEWED` | +2 |
+| `KNOWLEDGE_RESOURCE_FINISHED` | +15 |
+
+---
+
+## Eventos del plugin Tiempo
+
+Definidos en `src/plugins/time/events.ts`. Prefijo: `TIME_`.
+
+| Constante | Descripción | Payload |
+|-----------|-------------|---------|
+| `TIME_EVENTS.PROJECT_CREATED` | Proyecto creado | `{ projectId, name, hourlyRate }` |
+| `TIME_EVENTS.PROJECT_UPDATED` | Proyecto editado | `{ projectId }` |
+| `TIME_EVENTS.PROJECT_DELETED` | Proyecto eliminado (entries quedan con `projectId = null`) | `{ projectId }` |
+| `TIME_EVENTS.ENTRY_STARTED` | Cronómetro arrancado (single-running guard detiene el activo) | `{ entryId, projectId }` |
+| `TIME_EVENTS.ENTRY_STOPPED` | Cronómetro detenido | `{ entryId, durationSec, source }` |
+| `TIME_EVENTS.ENTRY_CREATED` | Entry manual o auto creada (`source` = `manual` o `focus`) | `{ entryId, source }` |
+| `TIME_EVENTS.ENTRY_UPDATED` | Entry editada | `{ entryId }` |
+| `TIME_EVENTS.ENTRY_DELETED` | Entry eliminada | `{ entryId }` |
+
+### Eventos escuchados
+
+| Evento | Origen | Descripción |
+|--------|--------|-------------|
+| `WORK_FOCUS_COMPLETED` | plugin Work | Crea automáticamente una `time_entry` con `source='focus'` y `durationMin` del payload. |
+
+### Efecto en gamificación
+
+| Evento | XP |
+|--------|----|
+| `TIME_ENTRY_STOPPED` (≥5 min) | +2 |
 
 ---
 

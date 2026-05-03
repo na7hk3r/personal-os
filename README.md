@@ -1,12 +1,14 @@
 <div align="center">
 
-# Personal OS
+# Nora OS
 
 **Tu sistema operativo de vida — productividad, salud y foco en una sola app.**
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.9.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.10.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+
+> **Nota de marca y compatibilidad**: el repositorio, las URLs derivadas (sitio en GitHub Pages, API de releases) y los identificadores internos (`appId`, `productName`, paquete npm) mantienen el slug histórico **`personal-os`** por compatibilidad. El nombre de marca de la aplicación es **Nora OS** y se refleja en toda la documentación. La unificación del slug queda fuera del alcance de esta refresh y se planificará como cambio de infraestructura aparte.
 
 [![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-7c3aed?style=flat-square)](https://na7hk3r.github.io/personal-os/)
 [![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=7c3aed)](https://github.com/na7hk3r/personal-os/releases)
@@ -31,9 +33,9 @@
 
 ---
 
-## ¿Qué es Personal OS?
+## ¿Qué es Nora OS?
 
-Personal OS es una aplicación de escritorio modular que centraliza **lo que importa de tu día**: el trabajo que estás ejecutando, tus hábitos de salud, tu agenda y tus objetivos — con gamificación integrada para sostener la consistencia.
+Nora OS es una aplicación de escritorio modular que centraliza **lo que importa de tu día**: el trabajo que estás ejecutando, tus hábitos de salud, tu agenda y tus objetivos — con gamificación integrada para sostener la consistencia.
 
 A diferencia de un dashboard de SaaS o una app cloud, **toda tu información vive en tu máquina**: una base de datos SQLite cifrable, sin servidores, sin telemetría, sin tracking. Si querés inteligencia sobre tus datos, conectás un modelo local con [Ollama](https://ollama.com) y listo — el LLM nunca sale de tu equipo.
 
@@ -65,17 +67,20 @@ A diferencia de un dashboard de SaaS o una app cloud, **toda tu información viv
 
 ### 🧱 Plugins
 
-Sistema de plugins de primera clase. Hoy vienen incluidos:
+Sistema de plugins de primera clase. Hoy vienen incluidos **8 plugins oficiales**:
 
-| Plugin | Qué resuelve |
-| --- | --- |
-| **Work** | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
-| **Fitness** | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
-| **Finance** | Cuentas, transacciones, categorías, presupuestos mensuales y gastos recurrentes con motor RRULE-light. **Insights IA opcionales**: detección de gastos inusuales, resumen mensual narrativo y sugerencia de presupuestos por mediana 3 meses. Default UYU, multi-moneda. |
-| **Habits** | Tracking de hábitos con metas diarias / semanales / mensuales, rachas reales, detección de "en riesgo" y proveedor IA con top streaks. Eventos `LOGGED` / `GOAL_MET` integrados a gamificación. |
-| **Journal** | Diario con prompts builtin, mood (1–5), tags, búsqueda y pin. Una entrada por día, undo en borrado. Privacy-first: el LLM sólo recibe agregados, nunca el contenido. |
+| Plugin | Dominio | Qué resuelve |
+| --- | --- | --- |
+| **Work** | productivity | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
+| **Fitness** | fitness | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
+| **Finance** | finance | Cuentas, transacciones, categorías, presupuestos mensuales y gastos recurrentes con motor RRULE-light. **Insights IA opcionales**: detección de gastos inusuales, resumen mensual narrativo y sugerencia de presupuestos por mediana 3 meses. Default UYU, multi-moneda. |
+| **Habits** | habits | Tracking de hábitos con metas diarias / semanales / mensuales, rachas reales, detección de "en riesgo" y proveedor IA con top streaks. Eventos `LOGGED` / `GOAL_MET` integrados a gamificación. |
+| **Journal** | knowledge | Diario con prompts builtin, mood (1–5), tags, búsqueda y pin. Una entrada por día, undo en borrado. Privacy-first: el LLM sólo recibe agregados, nunca el contenido. |
+| **Goals & OKRs** | productivity | Objetivos trimestrales / anuales con Key Results manuales o **auto-sincronizados** desde métricas publicadas por otros plugins (`syncMetricBackedKRs` lee `metricsRegistry`). Milestones y proveedor IA con progreso por período. |
+| **Knowledge** | knowledge | PKM ligero local-first: recursos (libros / cursos / papers / videos), highlights con tags y flashcards con algoritmo **SM-2** completo. Página de repaso diario y proveedor IA con tarjetas due, mastered y top tags. |
+| **Tiempo** | time | Time tracking manual + **auto-entries desde sesiones de Focus** (escucha `WORK_FOCUS_COMPLETED`). Proyectos con tarifa por hora, timesheet semanal y reporte facturable. Single-running guard: nunca dos cronómetros simultáneos. |
 
-Para la próxima ola de plugins (OKRs, Knowledge, Time Tracking, etc.) ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
+Para propuestas y briefs de plugins futuros ver [docs/PLUGIN_IDEAS.md](docs/PLUGIN_IDEAS.md).
 
 Para crear uno nuevo:
 
@@ -136,6 +141,7 @@ Cola persistente con processor cada 30 s, horas de silencio configurables (con w
 | Entrada de Journal nueva / update / mood | +5 / +2 / +1 |
 | Highlight capturado / flashcard repasada / recurso terminado | +3 / +2 / +15 |
 | Time entry registrada (≥5 min) | +2 |
+| Key Result completado / Objective completado | +20 / +100 |
 
 Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 
@@ -163,17 +169,19 @@ Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 
 ## Descargar
 
-Personal OS se distribuye como app nativa (sin servidor, sin cloud) con
+Nora OS se distribuye como app nativa (sin servidor, sin cloud) con
 auto-update integrado vía GitHub Releases.
 
 ➡️ **[Última versión — github.com/na7hk3r/personal-os/releases/latest](https://github.com/na7hk3r/personal-os/releases/latest)**
 
 | Plataforma | Asset                              | Notas                                       |
 | ---------- | ---------------------------------- | ------------------------------------------- |
-| Windows    | `Personal OS-<ver>-win-x64.exe`    | Instalador NSIS, elige carpeta y atajos     |
-| Windows    | `Personal OS-<ver>-portable.exe`   | Portable, no instala (sin auto-update)      |
-| Linux      | `Personal OS-<ver>.AppImage` / `.deb` | Próximamente                              |
-| macOS      | `Personal OS-<ver>-arm64.dmg`      | Próximamente                                |
+| Windows    | `Nora OS-<ver>-win-x64.exe`    | Instalador NSIS, elige carpeta y atajos     |
+| Windows    | `Nora OS-<ver>-portable.exe`   | Portable, no instala (sin auto-update)      |
+| Linux      | `Nora OS-<ver>.AppImage` / `.deb` | Próximamente                              |
+| macOS      | `Nora OS-<ver>-arm64.dmg`      | Próximamente                                |
+
+> **Compatibilidad transitoria**: mientras `productName` siga apuntando al nombre histórico en `electron-builder.yml` (cambio de infraestructura fuera del alcance de la refresh actual de marca), los binarios reales del GitHub Release pueden seguir publicándose con el prefijo legacy. La recomendación es bajarlos siempre desde el botón de la web o desde la página `releases/latest`.
 
 Una vez instalada, la app chequea actualizaciones al iniciar y cada 6 h. Si hay
 versión nueva aparece un banner discreto con el botón **Reiniciar e instalar**.
@@ -250,25 +258,37 @@ Catálogo completo y roadmap de atajos: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
 personal-os/
 ├── electron/                    # Proceso principal Electron
 │   ├── main.ts                  # Bootstrap de ventana + servicios
-│   ├── preload.ts               # Context Bridge (storage/auth/backup/ollama/notifications)
-│   └── services/                # IPC: database, auth, backup, ollama, notifications
+│   ├── preload.ts               # Context Bridge — 10 bridges (ver más abajo)
+│   └── services/                # IPC: database, auth, backup, profile, ollama,
+│                                # notifications, diagnostic, app-update,
+│                                # scheduled-backup, db-encryption
 ├── scripts/
 │   └── create-plugin.mjs        # CLI de scaffolding de plugins
 ├── src/
 │   ├── App.tsx                  # Bootstrap, rutas, registro de plugins
 │   ├── core/
+│   │   ├── audit/               # Consistency Auditor (10 reglas + catálogo dominio→ícono)
 │   │   ├── events/              # EventBus singleton + catálogo
 │   │   ├── gamification/        # XP, niveles, logros
 │   │   ├── plugins/             # PluginManager + Registry + Context
 │   │   ├── services/            # tags, templates, automations, notifications,
-│   │   │                        # ollama, aiContext, aiSuggestions, calendarAggregator
+│   │   │                        # ollama, aiContext + aiContextRegistry,
+│   │   │                        # aiSuggestions, calendarAggregator,
+│   │   │                        # copilotChatService, dailyBriefService,
+│   │   │                        # dailyScoreService, metricsRegistry
 │   │   ├── state/               # Zustand stores (auth, core)
-│   │   ├── storage/             # StorageAPI con allowlist
+│   │   ├── storage/             # StorageAPI con allowlist + Repository pattern
 │   │   └── ui/                  # Shell, Sidebar, Dashboard, ControlCenter,
-│   │                            # CommandPalette, pages (Calendar, Review, Planner...)
+│   │                            # CommandPalette, pages (Calendar, Review,
+│   │                            # Planner, Profile, Shortcuts, Themes...)
 │   ├── plugins/
-│   │   ├── fitness/
 │   │   ├── finance/
+│   │   ├── fitness/
+│   │   ├── goals/
+│   │   ├── habits/
+│   │   ├── journal/
+│   │   ├── knowledge/
+│   │   ├── time/
 │   │   └── work/
 │   └── test/                    # setup.ts (stubs de bridges Electron)
 ├── docs/                        # Documentación técnica completa
@@ -279,11 +299,12 @@ personal-os/
 
 ## Arquitectura en 30 segundos
 
-1. **Electron main** abre la ventana, inicializa SQLite por usuario y registra los IPC handlers (`storage`, `auth`, `backup`, `ollama`, `notifications`).
-2. **Preload** expone bridges tipados (`window.storage`, `window.auth`, etc.) bajo context isolation.
-3. **PluginManager** lee el registry, aplica migraciones por plugin, expone `CoreAPI` (storage, eventBus, gamification, settings) y monta rutas/nav items.
-4. **EventBus** persistente sirve de columna vertebral: cualquier acción del usuario emite eventos que alimentan automatizaciones, gamificación, dashboard y feed reciente.
-5. **AI opt-in**: `aiContextService` arma un snapshot real → `aiSuggestionsService` lo combina con un prompt → llamada a Ollama vía IPC.
+1. **Electron main** abre la ventana, inicializa SQLite por usuario y registra los IPC handlers: `storage`, `auth`, `backup`, `profile`, `ollama`, `notifications`, `diagnostic`, `app-update`, `scheduled-backup`, `db-encryption`.
+2. **Preload** expone los 10 bridges tipados (`window.storage`, `window.auth`, `window.backup`, `window.profile`, `window.ollama`, `window.notifications`, `window.diagnostic`, `window.appUpdate`, `window.scheduledBackup`, `window.dbEncryption`) bajo context isolation.
+3. **PluginManager** lee el registry, aplica migraciones por plugin, expone `CoreAPI` (`storage`, `events`, `ui`, `gamification`, `metrics`, `getProfile`) y monta rutas/nav items.
+4. **EventBus** persistente sirve de columna vertebral: cualquier acción del usuario emite eventos que alimentan automatizaciones, gamificación, dashboard, feed reciente y métricas publicadas en `metricsRegistry`.
+5. **Consistency Auditor** corre en boot y al togglear plugins; valida 10 reglas (R1–R10) sobre logros huérfanos, eventos sin emisor, iconografía coherente con el dominio, etc.
+6. **AI opt-in**: cada plugin se registra como context provider (`registerAIContextProvider`); `aiContextService` agrega los slices → `aiSuggestionsService` lo combina con un prompt → llamada a Ollama vía IPC.
 
 Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md](docs/PLUGIN_API.md), [docs/EVENTS.md](docs/EVENTS.md).
 
@@ -298,11 +319,14 @@ Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md]
 | [DATABASE](docs/DATABASE.md) | Esquema SQL completo |
 | [EVENTS](docs/EVENTS.md) | Catálogo de eventos del sistema |
 | [GAMIFICATION](docs/GAMIFICATION.md) | XP, niveles, logros |
-| [PLUGINS](docs/PLUGINS.md) | Sistema de plugins |
+| [PLUGINS](docs/PLUGINS.md) | Sistema de plugins (los 8 oficiales) |
 | [PLUGIN_API](docs/PLUGIN_API.md) | Superficie completa del CoreAPI |
 | [PLUGIN_BASE_STRUCTURE](docs/PLUGIN_BASE_STRUCTURE.md) | Plantilla base obligatoria |
-| [PLUGIN_IDEAS](docs/PLUGIN_IDEAS.md) | Roadmap de plugins futuros |
+| [PLUGIN_IDEAS](docs/PLUGIN_IDEAS.md) | Briefs de plugins propuestos |
+| [CONSISTENCY_AUDITOR](docs/CONSISTENCY_AUDITOR.md) | Reglas y dominios del auditor |
 | [SHORTCUTS](docs/SHORTCUTS.md) | Atajos de teclado |
+| [LANDING](docs/LANDING.md) | Sitio público en GitHub Pages |
+| [RELEASES](docs/RELEASES.md) | Cómo cortar un release y publicar binarios |
 | [KNOWLEDGE_BASE_PLAN](docs/KNOWLEDGE_BASE_PLAN.md) | Plan para llevar la doc a un sitio web |
 | [CHANGELOG](CHANGELOG.md) | Historial de versiones |
 
@@ -312,10 +336,9 @@ Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md]
 
 ### Próximas releases
 
-- **Plugin Goals & OKRs** con Key Results auto-actualizados desde otros plugins.
 - **Calendario externo** (import .ics, Google Calendar opcional) integrado al plugin Tiempo.
 - **Galería de temas** ampliada con theme builder visual.
-- **Mejoras de accesibilidad** (foco visible, ARIA completo, navegación por teclado en todo).
+- **Mejoras de accesibilidad** continuas (foco visible, navegación por teclado en pantallas restantes).
 
 ### Lejano
 

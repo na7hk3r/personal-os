@@ -35,9 +35,26 @@ Los logros se desbloquean una sola vez y quedan marcados permanentemente. Cada l
 | **Work** | Tarea completada (movida a "Hecho") | +10 |
 | **Work** | Sesión de foco completada | +5 |
 | **Work** | Sesión de foco interrumpida | −2 |
+| **Work** | Nota creada | +3 |
+| **Finance** | Transacción registrada | +2 |
+| **Finance** | Recurrente creada | +5 |
+| **Finance** | Presupuesto creado | +5 |
+| **Habits** | Hábito loggeado | +2 |
+| **Habits** | Meta del período cumplida | +5 |
+| **Journal** | Entrada nueva | +5 |
+| **Journal** | Entrada actualizada | +2 |
+| **Journal** | Mood loggeado | +1 |
+| **Knowledge** | Highlight capturado | +3 |
+| **Knowledge** | Flashcard repasada | +2 |
+| **Knowledge** | Recurso terminado | +15 |
+| **Tiempo** | Entry detenida (≥5 min) | +2 |
+| **Goals** | Key Result completado | +20 |
+| **Goals** | Objective completado | +100 |
 | **Core Planner** | Tarea de complejidad baja completada | +5 |
 | **Core Planner** | Tarea de complejidad media completada | +10 |
 | **Core Planner** | Tarea de complejidad alta completada | +16 |
+
+> El XP no lo otorga el core: cada plugin escucha sus propios eventos en `init(api)` y llama a `api.gamification.addPoints(amount, reason)`.
 
 Las tareas del Planner core cuentan además como misión diaria del sistema mediante `CORE_PLANNER_TASK_COMPLETED`.
 

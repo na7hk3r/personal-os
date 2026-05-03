@@ -1,6 +1,8 @@
 # Plugin Ideas — Roadmap del ecosistema
 
 > Documento vivo. Cada bloque sirve como brief inicial para construir un plugin nuevo. Se completa con esquema de datos, eventos, vistas y cross-plugin antes de pasar a implementación.
+>
+> **Estado actual:** los plugins ya enviados están marcados con ✅ — para el catálogo definitivo y su API real ver [PLUGINS.md](PLUGINS.md). Los marcadores se conservan acá como contexto histórico del pitch que llevó cada plugin a producción.
 
 ## Convenciones
 
@@ -16,7 +18,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 1 · Hábitos
+## Prioridad 1 · Hábitos  —  ✅ **Implementado** (ver [PLUGINS.md §habits](PLUGINS.md))
 
 **Objetivo**: trackear hábitos atómicos con rachas, heatmap anual y multiplicadores de XP.
 
@@ -48,7 +50,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 2 · Finanzas (modo personal)
+## Prioridad 2 · Finanzas (modo personal)  —  ✅ **Implementado** (ver [PLUGINS.md §finance](PLUGINS.md))
 
 **Objetivo**: gestión de finanzas personales con cashflow, presupuestos y net worth.
 
@@ -104,7 +106,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 4 · Journal & Mood (salud mental)
+## Prioridad 4 · Journal & Mood (salud mental)  —  ✅ **Implementado** (ver [PLUGINS.md §journal](PLUGINS.md))
 
 **Objetivo**: registro emocional diario con análisis de patrones.
 
@@ -135,7 +137,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 5 · Goals / OKRs (meta-plugin)
+## Prioridad 5 · Goals / OKRs (meta-plugin)  —  ✅ **Implementado** (ver [PLUGINS.md §goals](PLUGINS.md))
 
 **Objetivo**: capa meta que vincula KPIs de otros plugins en objetivos trimestrales/anuales.
 
@@ -155,7 +157,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 6 · Knowledge / Learning (PKM ligero)
+## Prioridad 6 · Knowledge / Learning (PKM ligero)  —  ✅ **Implementado** (ver [PLUGINS.md §knowledge](PLUGINS.md))
 
 **Objetivo**: organizar aprendizaje con cursos, libros, highlights y SRS.
 
@@ -179,7 +181,7 @@ Ver `docs/PLUGIN_BASE_STRUCTURE.md` y `docs/PLUGIN_API.md` para detalles.
 
 ---
 
-## Prioridad 7 · Time Tracking + Calendario externo
+## Prioridad 7 · Time Tracking + Calendario externo  —  🟡 **Time Tracking implementado** (ver [PLUGINS.md §time](PLUGINS.md)). Calendario externo aún pendiente.
 
 **Objetivo**: time tracking manual o automático desde Focus Engine, con import/export de calendarios.
 

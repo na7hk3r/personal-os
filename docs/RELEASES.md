@@ -1,6 +1,6 @@
-# Releases — Personal OS
+# Releases — Nora OS
 
-Como cortar un release publico de Personal OS y publicar binarios firmables
+Como cortar un release publico de Nora OS y publicar binarios firmables
 en GitHub Releases con auto-update via `electron-updater`.
 
 ## TL;DR
@@ -71,8 +71,8 @@ El job `build-windows` corre en `windows-latest`:
 
 1. `npm ci` (con rebuild de `better-sqlite3`).
 2. `npm run lint && npm run typecheck && npm test`.
-3. `npm run release` -> sube `Personal OS-<version>-win-x64.exe` (NSIS),
-   `Personal OS-<version>-portable.exe` y `latest.yml` al GitHub Release.
+3. `npm run release` -> sube `Nora OS-<version>-win-x64.exe` (NSIS),
+   `Nora OS-<version>-portable.exe` y `latest.yml` al GitHub Release.
 4. La app instalada en clientes detecta el nuevo `latest.yml` en el proximo
    check (boot + cada 6h) y muestra el banner de update.
 

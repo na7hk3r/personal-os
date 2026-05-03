@@ -1,4 +1,4 @@
-# Atajos de teclado — Personal OS
+# Atajos de teclado — Nora OS
 
 Catálogo navegable disponible en la app en `/shortcuts`.
 La fuente de verdad para la UI vive en `src/core/ui/shortcuts.ts`.

@@ -218,6 +218,234 @@ Sesiones de foco del motor de ejecución. Creada en migración v4.
 
 ---
 
+## Tablas del plugin Finance
+
+### `finance_accounts`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `name` | TEXT NOT NULL | Nombre |
+| `type` | TEXT | `cash` \| `bank` \| `card` \| `wallet` \| `crypto` |
+| `currency` | TEXT NOT NULL | ISO-4217 |
+| `opening_balance` | REAL DEFAULT 0 | Saldo inicial |
+| `archived` | INTEGER DEFAULT 0 | 1 = archivada |
+| `created_at` | TEXT | ISO datetime |
+
+### `finance_categories`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `name` | TEXT NOT NULL | Nombre |
+| `kind` | TEXT NOT NULL | `income` \| `expense` |
+| `parent_id` | TEXT | FK opcional a otra categoría (jerarquía) |
+| `color` | TEXT | Color sugerido para charts |
+
+### `finance_transactions`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `account_id` | TEXT NOT NULL | FK `finance_accounts.id` |
+| `category_id` | TEXT | FK `finance_categories.id` (nullable) |
+| `kind` | TEXT NOT NULL | `income` \| `expense` \| `transfer` |
+| `amount` | REAL NOT NULL | Monto positivo (signo lo da `kind`) |
+| `currency` | TEXT NOT NULL | ISO-4217 |
+| `date` | TEXT NOT NULL | ISO `YYYY-MM-DD` |
+| `description` | TEXT | Texto libre |
+| `merchant` | TEXT | Nombre del comercio (puede mapear vía `finance_merchant_aliases`) |
+| `transfer_id` | TEXT | UUID que liga el par income/expense de una transferencia |
+| `created_at` | TEXT | ISO datetime |
+
+### `finance_recurring`
+Plantilla de transacciones recurrentes. Campos: `id`, `name`, `kind`, `account_id`, `category_id`, `amount`, `currency`, `cadence` (`daily` \| `weekly` \| `monthly` \| `yearly`), `interval` (entero), `start_date`, `end_date?`, `next_run`, `active`. El motor `runRecurringEngine` materializa ocurrencias en `finance_transactions`.
+
+### `finance_budgets`
+Campos: `id`, `category_id`, `period` (`month` \| `quarter` \| `year`), `amount`, `currency`, `start_date`, `rollover` (0/1).
+
+### `finance_merchant_aliases`
+Mapeo `pattern → merchant` para normalizar descripciones al importar movimientos.
+
+---
+
+## Tablas del plugin Habits
+
+### `habits_definitions`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `name` | TEXT NOT NULL | Nombre |
+| `description` | TEXT | Texto libre |
+| `frequency_type` | TEXT NOT NULL | `daily` \| `weekly` \| `monthly` |
+| `target_per_period` | INTEGER DEFAULT 1 | Cuántas veces por período |
+| `unit` | TEXT | Unidad opcional (`min`, `pages`, …) |
+| `color` | TEXT | Color para chips |
+| `archived` | INTEGER DEFAULT 0 | 1 = archivado |
+| `created_at` | TEXT | ISO datetime |
+
+### `habits_logs`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `habit_id` | TEXT NOT NULL | FK `habits_definitions.id` |
+| `date` | TEXT NOT NULL | ISO `YYYY-MM-DD` |
+| `value` | REAL DEFAULT 1 | Cantidad registrada |
+| `note` | TEXT | Texto libre |
+| `created_at` | TEXT | ISO datetime |
+
+**Índices:** `idx_habits_logs_habit_id`, `idx_habits_logs_date`.
+
+---
+
+## Tablas del plugin Journal
+
+### `journal_entries`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `date` | TEXT NOT NULL UNIQUE | ISO `YYYY-MM-DD` (1 entrada por día) |
+| `title` | TEXT | Título opcional |
+| `body` | TEXT | Markdown |
+| `mood` | INTEGER | 1..5 |
+| `tags` | TEXT | JSON array |
+| `pinned` | INTEGER DEFAULT 0 | 1 = pinneado |
+| `prompt_id` | TEXT | FK opcional `journal_prompts.id` |
+| `created_at` | TEXT | ISO datetime |
+| `updated_at` | TEXT | ISO datetime |
+
+### `journal_prompts`
+Catálogo de consignas. Seed v2 inserta 7 prompts builtin (`builtin = 1`). Campos: `id`, `text`, `category`, `builtin`.
+
+---
+
+## Tablas del plugin Goals
+
+### `goals_objectives`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `title` | TEXT NOT NULL | Nombre del Objective |
+| `description` | TEXT | Texto libre |
+| `period` | TEXT NOT NULL | `Q1` \| `Q2` \| `Q3` \| `Q4` \| `H1` \| `H2` \| `Y` |
+| `year` | INTEGER NOT NULL | Año del Objective |
+| `status` | TEXT DEFAULT 'active' | `active` \| `completed` \| `archived` |
+| `color` | TEXT | Color sugerido |
+| `created_at` | TEXT | ISO datetime |
+
+### `goals_key_results`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `goal_id` | TEXT NOT NULL | FK `goals_objectives.id` `ON DELETE CASCADE` |
+| `name` | TEXT NOT NULL | Nombre del KR |
+| `source` | TEXT | `metric:<metricId>` \| `manual` |
+| `baseline` | REAL | Valor inicial |
+| `target_value` | REAL NOT NULL | Valor objetivo |
+| `current_value` | REAL DEFAULT 0 | Valor actual (sincronizado por `syncMetricBackedKRs` cuando `source` apunta a métrica) |
+| `unit` | TEXT | Unidad |
+| `direction` | TEXT DEFAULT 'up' | `up` \| `down` |
+| `created_at` | TEXT | ISO datetime |
+
+### `goals_milestones`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `kr_id` | TEXT NOT NULL | FK `goals_key_results.id` `ON DELETE CASCADE` |
+| `value` | REAL NOT NULL | Valor alcanzado |
+| `achieved_at` | TEXT NOT NULL | ISO datetime |
+| `note` | TEXT | Texto libre |
+
+**Índices:** `idx_goals_kr_goal`, `idx_goals_milestones_kr`, `idx_goals_objectives_year_period`.
+
+---
+
+## Tablas del plugin Knowledge
+
+### `knowledge_resources`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `type` | TEXT NOT NULL | `book` \| `course` \| `paper` \| `article` \| `video` |
+| `title` | TEXT NOT NULL | Título |
+| `author` | TEXT | Autor |
+| `url` | TEXT | URL fuente |
+| `tags` | TEXT | JSON array |
+| `progress` | INTEGER DEFAULT 0 | 0–100 |
+| `status` | TEXT DEFAULT 'in_progress' | `pending` \| `in_progress` \| `finished` |
+| `notes` | TEXT | Markdown |
+| `created_at` | TEXT | ISO datetime |
+| `finished_at` | TEXT | ISO datetime (cuando `status = finished`) |
+
+### `knowledge_highlights`
+Campos: `id`, `resource_id` (FK CASCADE), `text`, `note`, `location`, `created_at`.
+
+### `knowledge_flashcards` (algoritmo SM-2)
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `resource_id` | TEXT | FK opcional `knowledge_resources.id` |
+| `front` | TEXT NOT NULL | Cara frontal |
+| `back` | TEXT NOT NULL | Cara reverso |
+| `ease` | REAL DEFAULT 2.5 | Factor de facilidad (mínimo 1.3) |
+| `interval` | INTEGER DEFAULT 0 | Días hasta el próximo repaso |
+| `repetitions` | INTEGER DEFAULT 0 | Cantidad de repasos exitosos consecutivos |
+| `next_review` | TEXT | ISO `YYYY-MM-DD` |
+| `created_at` | TEXT | ISO datetime |
+
+**Algoritmo SM-2** (`sm2Schedule`): `quality < 3` → reset (`repetitions = 0`, `interval = 1`); `quality ≥ 3` → secuencia `1d → 6d → ease·interval`; `ease += 0.1 - (5 - quality)·(0.08 + (5 - quality)·0.02)`; floor `ease` en `1.3`.
+
+### `knowledge_reviews`
+Log de cada repaso: `id`, `flashcard_id` (FK CASCADE), `quality` (0–5), `reviewed_at`, `prev_interval`, `new_interval`.
+
+---
+
+## Tablas del plugin Tiempo
+
+### `time_projects`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `name` | TEXT NOT NULL | Nombre |
+| `client` | TEXT | Cliente opcional |
+| `hourly_rate` | REAL | Tarifa por hora (moneda en settings) |
+| `color` | TEXT | Color para chips/charts |
+| `archived` | INTEGER DEFAULT 0 | 1 = archivado |
+| `created_at` | TEXT | ISO datetime |
+
+### `time_entries`
+| Columna | Tipo | Descripción |
+|---------|------|-------------|
+| `id` | TEXT PK | UUID |
+| `project_id` | TEXT | FK `time_projects.id` `ON DELETE SET NULL` |
+| `description` | TEXT | Texto libre |
+| `start_time` | INTEGER NOT NULL | Timestamp en ms |
+| `end_time` | INTEGER | Timestamp en ms (nullable si activa) |
+| `duration_sec` | INTEGER | Duración en segundos (nullable si activa) |
+| `source` | TEXT DEFAULT 'manual' | `manual` \| `focus` (auto-creada al recibir `WORK_FOCUS_COMPLETED`) |
+| `billable` | INTEGER DEFAULT 0 | 1 = facturable |
+| `tags` | TEXT | JSON array |
+| `created_at` | TEXT | ISO datetime |
+
+**Índices:** `idx_time_entries_project_id`, `idx_time_entries_start_time`.
+
+**Reglas de negocio:**
+- Single-running guard: `startEntry` cierra cualquier entrada en curso antes de iniciar otra.
+- Cuando un proyecto se elimina, sus entries quedan con `project_id = NULL` (no se borran).
+
+---
+
+## Cifrado opcional de la DB de usuario
+
+Cuando el usuario habilita cifrado en reposo (`window.dbEncryption.enable`), el archivo `personal-os-user-{id}.db` queda envuelto en un blob con layout binario:
+
+```
+MAGIC(4) | VERSION(1) | SALT(16) | IV(12) | TAG(16) | CIPHERTEXT
+```
+
+- Algoritmo: AES-256-GCM.
+- Derivación de clave: scrypt sobre la passphrase del usuario + `SALT`.
+- En cada open/save la DB se descifra a un archivo temporal y el plaintext nunca toca disco persistente sin protección.
+
+---
+
 ## Notas sobre tipos de datos
 
 - **Fechas en texto** (`TEXT`): formato ISO 8601 (`YYYY-MM-DD` o datetime completo). SQLite no tiene tipo DATE nativo.

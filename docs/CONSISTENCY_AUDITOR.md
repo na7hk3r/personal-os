@@ -1,7 +1,7 @@
 # Consistency Auditor
 
 El **Consistency Auditor** es un sistema de validación cruzada que detecta
-inconsistencias entre el core de Personal OS y los plugins instalados.
+inconsistencias entre el core de Nora OS y los plugins instalados.
 Se ejecuta automáticamente al iniciar la app y cada vez que se activa o
 desactiva un plugin desde el Control Center.
 

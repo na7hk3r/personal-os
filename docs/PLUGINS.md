@@ -123,9 +123,26 @@ Los eventos se persisten automáticamente en la tabla `events_log`.
 | `addPoints(amount, reason)` | Suma/resta XP al usuario |
 | `checkAchievement(stats)` | Verifica si corresponde desbloquear logros |
 
+### `api.metrics`
+
+Registro de métricas en memoria para exponer KPIs entre plugins (consumido por Goals para sincronizar Key Results y por widgets del Dashboard).
+
+| Método | Descripción |
+|--------|-------------|
+| `publish(metricId, value, meta?)` | Publica una métrica con timestamp |
+| `get(metricId)` | Snapshot puntual |
+| `list()` | Todos los snapshots actuales |
+
+Convención del `metricId`: `<pluginId>.<nombre>` (ej. `habits.completion_rate_30d`, `time.tracked_week_sec`).
+
 ### `api.getProfile()`
 
-Devuelve el `UserProfile` actual: `{ name, height, age, startDate, weightGoal }`.
+Devuelve el `UserProfile` actual: `{ name, height, age, startDate, weightGoal, bigGoal? }`.
+
+### Imports complementarios (no expuestos en `api`)
+
+- `registerAIContextProvider(id, provider)` desde `@core/services/aiContextRegistry` — cada plugin aporta su slice al snapshot global de IA (sin exponer datos crudos al LLM).
+- `defineRepository<TEntity, TRow>({ table, mapRow, toRow })` desde `@core/storage/Repository` — patrón Repository tipado sobre el mismo allowlist de `StorageAPI`. Lo usan Habits, Journal, Knowledge y Tiempo.
 
 ## Convenciones de nombres
 
@@ -166,40 +183,90 @@ const ALLOWED_TABLES: Record<string, Set<string>> = {
 
 ## Plugins incluidos
 
-### fitness
-- **ID**: `fitness`
+Hoy hay **8 plugins oficiales** distribuidos por dominio. Cada uno declara `domain` + `iconography` para el [Consistency Auditor](CONSISTENCY_AUDITOR.md).
+
+### fitness — `domain: fitness`
 - **Tablas**: `fitness_daily_entries`, `fitness_measurements`
 - **Páginas**: `/fitness`, `/fitness/tracking`, `/fitness/measurements`
-- **Eventos emitidos**: ver [EVENTS.md](EVENTS.md#fitness)
-- **Configuración centralizada en core**: `settings['pluginSettings:fitness']`
+- **Eventos emitidos**: `WEIGHT_RECORDED`, `MEAL_LOGGED`, `WORKOUT_COMPLETED`, `DAILY_ENTRY_SAVED`, `MEASUREMENT_SAVED` (ver [EVENTS.md](EVENTS.md#fitness))
+- **Configuración core**: `pluginSettings:fitness` (entrenos/sem, sueño objetivo, cigarrillos, comidas, recordatorio mediciones)
+- **AI Provider**: no
+- **Gamificación**: +5 entrada diaria, +25 entrenamiento
 
-### work
-- **ID**: `work`
+### work — `domain: productivity`
 - **Tablas**: `work_boards`, `work_columns`, `work_cards`, `work_notes`, `work_links`, `work_focus_sessions`
-- **Páginas**: `/work`
-- **Eventos emitidos**: ver [EVENTS.md](EVENTS.md#work)
-- **Focus Engine**: sesión activa global con `pause`/`resume` reales (`paused_at`, `paused_total`), switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie (>8h), y Pomodoro con objetivo configurable y notificación nativa del SO.
-- **Tarjetas enriquecidas** (v7): `priority` (low/medium/high/urgent), `estimate_minutes`, `checklist` (JSON), `archived` + `archived_at` (auto-archivado en Done >7 días sin actividad).
-- **Columnas**: edición inline (renombrar) + `wip_limit` con indicador visual.
-- **Configuración centralizada en core**: `settings['pluginSettings:work']`
-- **Quick action**: escucha `core:focus-request` desde la barra global del Core para iniciar foco libre.
+- **Páginas**: `/work`, `/work/notes`
+- **Eventos emitidos**: 14 eventos `TASK_*`, `FOCUS_*`, `NOTE_CREATED` (ver [EVENTS.md](EVENTS.md#work))
+- **Focus Engine 2.0**: sesión activa global con `pause`/`resume` reales (`paused_at`, `paused_total`), switch limpio (<1 min descarta sin XP penalty), cleanup automático de sesiones zombie (>8h), Pomodoro configurable con notificación nativa.
+- **Tarjetas enriquecidas** (v7): `priority`, `estimate_minutes`, `checklist` (JSON), `archived` (auto-archivado en Done >7 días).
+- **Columnas**: edición inline + `wip_limit`.
+- **Configuración core**: `pluginSettings:work` (duración foco/break, alerta vencimiento, WIP, vista predeterminada).
+- **Quick action**: escucha `core:focus-request` desde la barra global del Core.
+- **AI Provider**: opcional para Note → Task
+- **Gamificación**: +10 tarea completada, +5 foco completado, −2 foco interrumpido, +3 nota creada
+
+### finance — `domain: finance`
+- **Tablas**: `finance_accounts`, `finance_categories`, `finance_transactions`, `finance_recurring`, `finance_budgets`, `finance_merchant_aliases`
+- **Páginas**: `/finance`, `/finance/accounts`, `/finance/transactions`, `/finance/budgets`, `/finance/recurring`, `/finance/insights`
+- **Eventos emitidos**: 17 eventos `ACCOUNT_*`, `CATEGORY_*`, `TRANSACTION_*`, `TRANSFER_CREATED`, `RECURRING_*`, `BUDGET_*`, `ANOMALY_DETECTED`
+- **Servicios internos**: `runRecurringEngine` (RRULE-light), `detectAnomaly`, `financeAIProvider`
+- **Configuración core**: `pluginSettings:finance` (moneda default, presupuesto auto)
+- **AI Provider**: sí (insights mensuales, sugerencia de presupuestos, gastos inusuales)
+- **Gamificación**: +2 transacción, +5 recurrente creado, +5 presupuesto creado
+
+### habits — `domain: habits`
+- **Tablas**: `habits_definitions`, `habits_logs` (índices por `habit_id` + `date`)
+- **Páginas**: `/habits`, `/habits/history`, `/habits/manage`
+- **Eventos emitidos**: `HABIT_CREATED|UPDATED|ARCHIVED|LOGGED|UNLOGGED|GOAL_MET|STREAK_BROKEN`
+- **Métricas publicadas**: `habits.top_streak`, `habits.completion_rate_30d`
+- **Repository**: `habitDefinitionsRepo`, `habitLogsRepo`
+- **AI Provider**: sí (total, completados hoy, top streaks, en riesgo)
+- **Gamificación**: +2 log, +5 meta cumplida
+
+### journal — `domain: knowledge`
+- **Tablas**: `journal_entries`, `journal_prompts` (seed v2 con 7 prompts builtin)
+- **Páginas**: `/journal`, `/journal/history`
+- **Eventos emitidos**: `ENTRY_CREATED|UPDATED|DELETED|PINNED`, `MOOD_LOGGED`
+- **Repository**: `journalEntriesRepo`, `journalPromptsRepo`
+- **AI Provider**: sí, **privacy-first** (sólo agregados: total, últimos 7 días, mood promedio 7d, top tags, escribió hoy). Nunca el contenido literal.
+- **Gamificación**: +5 entrada nueva, +2 update, +1 mood
+
+### goals — `domain: productivity`
+- **Tablas**: `goals_objectives`, `goals_key_results`, `goals_milestones` (con índices por `goal_id`, `kr_id`, `(year, period)`)
+- **Páginas**: `/goals`
+- **Eventos emitidos**: `GOAL_CREATED|UPDATED|COMPLETED|ARCHIVED`, `KR_CREATED|UPDATED|PROGRESS|COMPLETED|DELETED`, `MILESTONE_ADDED`
+- **Servicios internos**: `syncMetricBackedKRs` lee `metricsRegistry` y actualiza el `current_value` de los KR cuyo `source` apunta a una métrica registrada (`fitness.weight`, `habits.top_streak`, `time.tracked_week_sec`, etc.).
+- **AI Provider**: sí (progreso por período, KR críticos)
+- **Gamificación**: +20 KR completado, +100 Objective completado
+
+### knowledge — `domain: knowledge`
+- **Tablas**: `knowledge_resources` (book/course/paper/article/video), `knowledge_highlights` (FK con cascade), `knowledge_flashcards` (campos SM-2: `ease`, `interval`, `repetitions`, `next_review`), `knowledge_reviews`
+- **Páginas**: `/knowledge`, `/knowledge/resources`, `/knowledge/highlights`, `/knowledge/review`
+- **Eventos emitidos**: 11 eventos `RESOURCE_*`, `HIGHLIGHT_*`, `FLASHCARD_*`, `STUDY_SESSION_*`
+- **Algoritmo SM-2** completo en `sm2Schedule`; floor de ease en 1.3, secuencia 1d → 6d → ease·interval, reset a 0 con quality < 3.
+- **Métricas publicadas**: `knowledge.resources_finished`, `resources_finished_month`, `resources_in_progress`, `flashcards_due`, `flashcards_mastered`, `highlights_total`
+- **Widget**: `KnowledgeSummaryWidget` 1×1 con due hoy + recursos en progreso
+- **AI Provider**: sí (total, terminados, due, mastered, top tags)
+- **Gamificación**: +3 highlight, +2 flashcard repasada, +15 recurso terminado
+
+### time — `domain: time`
+- **Tablas**: `time_projects` (cliente, `hourly_rate`, color), `time_entries` (FK a proyecto con `ON DELETE SET NULL`, `source` = `'manual'` | `'focus'`, `billable`)
+- **Páginas**: `/time`, `/time/projects`, `/time/timesheet`
+- **Eventos emitidos**: `PROJECT_CREATED|UPDATED|DELETED`, `ENTRY_STARTED|STOPPED|CREATED|UPDATED|DELETED`
+- **Eventos escuchados**: `WORK_FOCUS_COMPLETED` → crea `time_entry` con `source='focus'` y `durationMin` del payload (auto-entries).
+- **Single-running guard**: `startEntry` detiene cualquier entrada en curso antes de crear una nueva.
+- **Widget**: `TimeSummaryWidget` 1×1 con total de hoy + start/stop in-place
+- **Métricas publicadas**: `time.tracked_today_sec`, `tracked_week_sec`, `billable_week_sec`, `billable_week_revenue`, `active_running`
+- **AI Provider**: sí (horas hoy/semana, facturable, ingresos proyectados)
+- **Gamificación**: +2 al detener una entrada de ≥5 min
 
 ## Configuración por plugin desde el core
 
 Desde `Control Center`, el core permite guardar preferencias por plugin sin modificar código del plugin:
 
-- `pluginSettings:fitness`:
-  - entrenos/semana
-  - sueño objetivo
-  - límite de cigarrillos
-  - objetivo de comidas
-  - recordatorio de mediciones
-
-- `pluginSettings:work`:
-  - duración de foco y break
-  - alerta de vencimiento
-  - límite WIP
-  - vista predeterminada de tablero
+- `pluginSettings:fitness`: entrenos/semana, sueño objetivo, límite de cigarrillos, objetivo de comidas, recordatorio de mediciones.
+- `pluginSettings:work`: duración de foco y break, alerta de vencimiento, límite WIP, vista predeterminada de tablero.
+- `pluginSettings:finance`: moneda default, opciones de presupuesto e insights.
 
 Estas preferencias se guardan en `settings` y pueden ser consumidas por componentes/plugins para ajustar su comportamiento.
 
@@ -212,9 +279,7 @@ Regla de visibilidad en `Control Center`:
 
 Las páginas de plugins comparten una base visual premium desde `src/index.css`:
 
-- `plugin-shell`: contenedor con animación de entrada.
-- `plugin-shell-fitness`: atmósfera visual fitness (verde/teal).
-- `plugin-shell-work`: atmósfera visual work (cian/azul).
+- `plugin-shell`: contenedor con animación de entrada (común a los 8 plugins).
+- `plugin-shell-fitness`, `plugin-shell-work`, `plugin-shell-finance`: atmósferas visuales específicas con tokens de color por dominio.
 - `plugin-panel`: paneles con hover y transición consistentes.
-
-Esto permite que cada plugin tenga identidad propia sin perder coherencia con la app principal.
+- Los plugins más nuevos (Habits, Journal, Goals, Knowledge, Tiempo) usan `plugin-shell` + `plugin-panel` con tokens neutros del tema activo.

@@ -1,8 +1,8 @@
-# Sistema de Autenticación - Personal OS
+# Sistema de Autenticación - Nora OS
 
 ## Descripción general
 
-Personal OS implementa un **sistema de autenticación multiusuario completamente local** con SQLite. Cada usuario tiene aislamiento total de datos, con su propia base de datos personalizada, sesiones seguras y recuperación de acceso mediante preguntas secretas.
+Nora OS implementa un **sistema de autenticación multiusuario completamente local** con SQLite. Cada usuario tiene aislamiento total de datos, con su propia base de datos personalizada, sesiones seguras y recuperación de acceso mediante preguntas secretas.
 
 ## Características principales
 

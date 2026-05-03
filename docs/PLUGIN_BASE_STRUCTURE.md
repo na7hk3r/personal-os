@@ -1,6 +1,6 @@
 # Estructura base de plugins e integración
 
-Esta guía define la estructura base obligatoria para cualquier plugin nuevo en Personal OS y el procedimiento correcto para integrarlo.
+Esta guía define la estructura base obligatoria para cualquier plugin nuevo en Nora OS y el procedimiento correcto para integrarlo.
 
 ## Objetivo
 

@@ -1,6 +1,6 @@
 # Landing Page
 
-Sitio web público de Personal OS, deployado en GitHub Pages:
+Sitio web público de Nora OS, deployado en GitHub Pages:
 
 🌐 **https://na7hk3r.github.io/personal-os/**
 
