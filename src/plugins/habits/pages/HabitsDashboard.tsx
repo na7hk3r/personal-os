@@ -33,10 +33,10 @@ export function HabitsDashboard() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
-          <BrandIcon name="Cards" size={44} />
+          <BrandIcon name="Fire" size={44} />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
-            <h1 className="text-2xl font-semibold text-white">
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Hábitos</p>
+            <h1 className="text-2xl font-bold text-white">
               {active.length === 0 ? '—' : `${overall.completed}/${overall.total}`}
             </h1>
             <p className="text-xs text-muted">
@@ -75,8 +75,10 @@ export function HabitsDashboard() {
       {showAdd && <HabitQuickAdd onCreated={() => setShowAdd(false)} />}
 
       {active.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted">
-          {messages.empty.habitsAll}
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-surface/40 py-12 text-center text-muted">
+          <BrandIcon name="Fire" size={48} tile={false} className="opacity-40" />
+          <p className="text-sm">{messages.empty.habitsAll}</p>
+          <p className="text-xs">Tocá “Nuevo hábito” para arrancar tu primera racha.</p>
         </div>
       ) : (
         <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" role="list" aria-label="Lista de hábitos">

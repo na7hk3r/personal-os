@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@core/state/authStore'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 
 type AuthMode = 'login' | 'register' | 'recovery'
 
@@ -92,15 +93,12 @@ export function AuthScreen() {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#1a3a52_0%,_#102536_48%,_#0a1420_100%)] px-4 text-white">
-      <div className="absolute inset-0 opacity-10">
-        <img src="./grupo_alt.jpg" alt="Backdrop" className="h-full w-full object-cover" />
-      </div>
-
       <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-surface-light/80 p-6 shadow-2xl backdrop-blur">
-        <div className="mb-5 text-center">
-          <img src="./smc-logo-alt.png" alt="Personal OS" className="mx-auto mb-3 h-12 w-12 rounded border border-white/10" />
-          <h1 className="text-xl font-semibold">{title}</h1>
-          <p className="mt-1 text-sm text-muted">Tu espacio se carga por usuario con sesion local segura.</p>
+        <div className="mb-5 flex flex-col items-center text-center">
+          {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
+          <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mb-3" />
+          <h1 className="text-2xl font-bold">{title}</h1>
+          <p className="mt-1 text-sm text-muted">Tu espacio se carga por usuario con sesión local segura.</p>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-surface p-1 text-xs">

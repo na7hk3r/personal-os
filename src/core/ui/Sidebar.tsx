@@ -5,6 +5,10 @@ import {
   ChevronRight,
   CalendarDays,
   Flame,
+  ListTodo,
+  TrendingUp,
+  Keyboard,
+  Settings,
   LogOut,
 } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
@@ -15,6 +19,8 @@ import { getLevelTier, getLevelTitle } from '@core/gamification/gamificationUtil
 import { useAuthStore } from '@core/state/authStore'
 import { APP_VERSION } from '@core/utils/version'
 import { PluginIcon } from './components/PluginIcon'
+import { BrandIcon } from './components/BrandIcon'
+import { SystemSuggestions } from './SystemSuggestions'
 
 function renderNavIcon(iconName: string, size = 18) {
   return <PluginIcon name={iconName} size={size} />
@@ -63,11 +69,13 @@ const NAV_LINK_CLASS = (isActive: boolean) =>
 export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const updateSettings = useCoreStore((s) => s.updateSettings)
+  const profileName = useCoreStore((s) => s.profile.name)
   // Subscribed to force re-render when plugins are activated/deactivated; the
   // resulting `getActiveNavItems()` call below reads fresh data from PluginManager.
   const activePlugins = useCoreStore((s) => s.activePlugins)
   const { points, level, streak } = useGamificationStore()
   const logout = useAuthStore((s) => s.logout)
+  const headerTitle = profileName?.trim() ? profileName.trim().split(' ')[0] : 'Nora OS'
   const tier = getLevelTier(level)
   const levelTitle = getLevelTitle(level)
   const pointsInLevel = points % 100
@@ -104,13 +112,18 @@ export function Sidebar() {
       {/* Header */}
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!sidebarCollapsed && (
-          <div className="flex min-w-0 items-center gap-2">
-            <img src="./smc-logo-alt.png" alt="SMC" className="h-8 w-8 shrink-0 rounded border border-border/70" />
+          <div className="flex min-w-0 items-center gap-2.5">
+            {/* Logo: CrystalBallEye.svg — elegido como marca de Nora OS por evocar
+                visión / sistema personal con personalidad y leerse bien a 28-32px. */}
+            <BrandIcon name="CrystalBallEye" size={28} tile={false} className="shrink-0" />
             <div className="min-w-0">
-              <p className="truncate text-xs uppercase tracking-[0.18em] text-muted">Personal OS</p>
-              <p className="truncate text-sm font-semibold text-white">Executive Suite</p>
+              <p className="truncate text-xs uppercase tracking-eyebrow text-muted">Nora OS</p>
+              <p className="truncate text-sm font-bold text-white">{headerTitle}</p>
             </div>
           </div>
+        )}
+        {sidebarCollapsed && (
+          <BrandIcon name="CrystalBallEye" size={32} tile={false} className="shrink-0" />
         )}
         <button
           onClick={toggleCollapse}
@@ -124,59 +137,24 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav aria-label="Secciones de la app" className="flex-1 space-y-1 overflow-y-auto px-2 py-3">
-        {/* Core: Dashboard */}
+        {/* Grupo: Principal */}
+        {!sidebarCollapsed && (
+          <p className="px-3 pb-1 text-micro uppercase tracking-eyebrow text-muted">Principal</p>
+        )}
         <NavLink to="/" end className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
           <PluginIcon name="LayoutDashboard" size={18} className="shrink-0" />
           {!sidebarCollapsed && <span className="truncate">Dashboard</span>}
         </NavLink>
-
-        {/* Core: Control Center */}
-        <NavLink to="/control" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <PluginIcon name="SlidersHorizontal" size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Control Center</span>}
-        </NavLink>
-
-        {/* Core: Notas */}
-        <NavLink to="/notes" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <PluginIcon name="NotebookPen" size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Notas</span>}
-        </NavLink>
-
-        {/* Core: Enlaces */}
-        <NavLink to="/links" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <PluginIcon name="Link2" size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Enlaces</span>}
-        </NavLink>
-
-        {/* Core: Planner */}
-        <NavLink to="/planner" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <CalendarDays size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Planner</span>}
-        </NavLink>
-
-        {/* Core: Calendario unificado */}
-        <NavLink to="/calendar" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <CalendarDays size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Calendario</span>}
-        </NavLink>
-
-        {/* Core: Review */}
         <NavLink to="/review" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <Flame size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Review</span>}
+          <TrendingUp size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Progreso</span>}
         </NavLink>
 
-        {/* Core: Atajos de teclado */}
-        <NavLink to="/shortcuts" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
-          <PluginIcon name="Keyboard" size={18} className="shrink-0" />
-          {!sidebarCollapsed && <span className="truncate">Atajos</span>}
-        </NavLink>
-
-        {/* Plugin nav items */}
+        {/* Grupo: Módulos (plugins activos) */}
         {navItems.length > 0 && (
           <>
             {!sidebarCollapsed && (
-              <p className="px-3 pb-1 pt-3 text-[10px] uppercase tracking-[0.18em] text-muted">Módulos</p>
+              <p className="px-3 pb-1 pt-3 text-micro uppercase tracking-eyebrow text-muted">Módulos</p>
             )}
             {navItems.map((item) => {
               const hasActivity = hasPluginActivityToday(item.pluginId)
@@ -201,7 +179,7 @@ export function Sidebar() {
                       renderNavIcon(item.icon, 18)
                     ) : (
                       <>
-                        <span className="text-[10px] text-muted/40">└</span>
+                        <span className="text-micro text-muted/40">└</span>
                         <span className="text-muted/80">{renderNavIcon(item.icon, 14)}</span>
                         <span className="truncate">{item.label}</span>
                       </>
@@ -235,52 +213,97 @@ export function Sidebar() {
             })}
           </>
         )}
+
+        {/* Grupo: Herramientas (peso visual menor) */}
+        {!sidebarCollapsed && (
+          <p className="px-3 pb-1 pt-3 text-micro uppercase tracking-eyebrow text-muted">Herramientas</p>
+        )}
+        <NavLink to="/notes" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <PluginIcon name="NotebookPen" size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Notas</span>}
+        </NavLink>
+        <NavLink to="/links" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <PluginIcon name="Link2" size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Enlaces</span>}
+        </NavLink>
+        <NavLink to="/planner" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <ListTodo size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Planner</span>}
+        </NavLink>
+        <NavLink to="/calendar" className={({ isActive }) => NAV_LINK_CLASS(isActive)}>
+          <CalendarDays size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Calendario</span>}
+        </NavLink>
       </nav>
 
-      {/* Gamification mini widget */}
+      {/* Gamification mini widget (compacto: badge + barra + streak) */}
       {!sidebarCollapsed && (
-        <div className="mx-2 mb-2 rounded-xl border border-border bg-surface/60 p-3 space-y-2">
+        <NavLink
+          to="/review"
+          className="mx-2 mb-2 block rounded-xl border border-border bg-surface/60 p-2.5 transition-colors hover:border-accent/40"
+          title={`Nivel ${level} · ${levelTitle} · ${points} puntos· Ver progreso completo`}
+        >
           <div className="flex items-center gap-2.5">
             <span
-              className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br text-xs font-black shadow ${TIER_STYLE[tier]}`}
-              title={`${levelTitle} (${tier})`}
+              className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/15 bg-gradient-to-br text-xs font-black shadow ${TIER_STYLE[tier]}`}
             >
               {level}
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-xs font-semibold text-white">Nivel {level} · {levelTitle}</p>
-              <p className="text-[10px] text-muted">{points} puntos</p>
+            <div className="relative h-1.5 flex-1 overflow-hidden rounded-full bg-surface-lighter">
+              <div
+                className="h-1.5 rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
+                style={{ width: `${pointsInLevel}%` }}
+              />
             </div>
             {streak > 0 && (
-              <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-warning">
+              <span className="inline-flex items-center gap-0.5 text-xs font-semibold text-warning" title={`Racha de ${streak} días`}>
                 <Flame size={12} />
                 {streak}
               </span>
             )}
           </div>
-          <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-surface-lighter">
-            <div
-              className="h-1.5 rounded-full bg-gradient-to-r from-accent to-accent-light transition-all duration-500"
-              style={{ width: `${pointsInLevel}%` }}
-            />
-          </div>
-          <p className="text-right text-[10px] text-muted">{pointsInLevel}/100 para nivel {level + 1}</p>
-        </div>
+        </NavLink>
       )}
 
       {/* Footer */}
       <div className="border-t border-border p-3 text-center text-xs text-muted">
         {!sidebarCollapsed && (
           <div className="space-y-2">
-            <button
-              onClick={() => void logout()}
+            <div className="flex items-center gap-2">
+              <NavLink
+                to="/control"
+                className={({ isActive }) =>
+                  `flex flex-1 items-center justify-center gap-2 rounded-md border px-2 py-1.5 text-xs transition-colors ${
+                    isActive
+                      ? 'border-accent/60 bg-accent/15 text-accent-light'
+                      : 'border-border bg-surface text-muted hover:border-accent/40 hover:text-white'
+                  }`
+                }
+                title="Configuración"
+              >
+                <Settings size={14} />
+                Config
+              </NavLink>
+              <SystemSuggestions />
+              <button
+                onClick={() => void logout()}
+                className="flex items-center justify-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-muted transition-colors hover:border-accent/40 hover:text-white"
+                title="Salir"
+                aria-label="Cerrar sesión"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+            <NavLink
+              to="/shortcuts"
               className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-muted transition-colors hover:border-accent/40 hover:text-white"
+              title="Atajos de teclado"
             >
-              <LogOut size={14} />
-              Cerrar sesion
-            </button>
+              <Keyboard size={14} />
+              Atajos
+            </NavLink>
             <img src="./ntkr-logo.png" alt="NTKR" className="mx-auto h-5 w-auto opacity-85" />
-            <span title={`Personal OS v${APP_VERSION}`}>v{APP_VERSION}</span>
+            <span title={`Nora OS v${APP_VERSION}`}>v{APP_VERSION}</span>
           </div>
         )}
       </div>

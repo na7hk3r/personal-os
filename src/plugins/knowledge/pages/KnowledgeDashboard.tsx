@@ -26,8 +26,8 @@ export function KnowledgeDashboard() {
         <div className="flex items-center gap-4">
           <BrandIcon name="TomeIdea" size={44} />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Conocimiento</p>
-            <h1 className="text-2xl font-semibold text-white">
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Conocimiento</p>
+            <h1 className="text-2xl font-bold text-white">
               {summary.inProgress.length} en progreso · {summary.due.length} para repasar
             </h1>
             <p className="text-xs text-muted">
@@ -66,9 +66,11 @@ export function KnowledgeDashboard() {
       <section>
         <h2 className="mb-2 text-sm font-medium text-muted">En progreso</h2>
         {summary.inProgress.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-border bg-surface/40 p-6 text-center text-xs text-muted">
-            No tenés nada en progreso. Empezá un recurso desde la biblioteca.
-          </p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-surface/40 py-10 text-center text-muted">
+            <BrandIcon name="TomeIdea" size={48} tile={false} className="opacity-40" />
+            <p className="text-sm">No tenés nada en progreso.</p>
+            <p className="text-xs">Empezá un recurso desde la biblioteca.</p>
+          </div>
         ) : (
           <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" role="list">
             {summary.inProgress.map((r) => (
@@ -81,11 +83,11 @@ export function KnowledgeDashboard() {
                   <BookOpen size={18} className="shrink-0 text-accent-light" aria-hidden="true" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-white">{r.title}</p>
-                    <p className="text-[11px] text-muted">
+                    <p className="text-caption text-muted">
                       {r.type} · {r.progress}%{r.author ? ` · ${r.author}` : ''}
                     </p>
                   </div>
-                  <span className="rounded bg-surface px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+                  <span className="rounded bg-surface px-1.5 py-0.5 text-micro uppercase tracking-wide text-muted">
                     en progreso
                   </span>
                 </button>

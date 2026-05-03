@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Lock, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../state/authStore'
 import { messages } from '../messages'
+import { BrandIcon } from '../components/BrandIcon'
 
 interface UnlockScreenProps {
   onUnlocked: () => void
@@ -47,6 +48,10 @@ export function UnlockScreen({ onUnlocked }: UnlockScreenProps) {
         onSubmit={submit}
         className="relative w-full max-w-md rounded-2xl border border-white/10 bg-surface-light/80 p-8 shadow-2xl backdrop-blur"
       >
+        <div className="mb-4 flex flex-col items-center text-center">
+          {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
+          <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mb-3" />
+        </div>
         <div className="flex items-center gap-2">
           <Lock size={20} className="text-accent-light" aria-hidden />
           <h1 className="text-lg font-semibold">Desbloquear base cifrada</h1>

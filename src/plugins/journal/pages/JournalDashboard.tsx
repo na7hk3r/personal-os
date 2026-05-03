@@ -37,8 +37,8 @@ export function JournalDashboard() {
         <div className="flex items-center gap-4">
           <BrandIcon name="BookJournal" size={44} />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Journal</p>
-            <h1 className="text-2xl font-semibold text-white">{stats.last30} entradas en 30 días</h1>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Journal</p>
+            <h1 className="text-2xl font-bold text-white">{stats.last30} entradas en 30 días</h1>
             {stats.moodAvg != null && (
               <p className="text-xs text-muted">Mood promedio: {stats.moodAvg.toFixed(1)}/5</p>
             )}
@@ -68,7 +68,11 @@ export function JournalDashboard() {
       <section aria-labelledby="recent-entries">
         <h2 id="recent-entries" className="mb-2 text-sm font-semibold text-white">Recientes</h2>
         {recentEntries.length === 0 ? (
-          <p className="text-sm text-muted">{messages.empty.journalEntries}</p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-surface/40 py-10 text-center text-muted">
+            <BrandIcon name="BookJournal" size={48} tile={false} className="opacity-40" />
+            <p className="text-sm">{messages.empty.journalEntries}</p>
+            <p className="text-xs">Empezá escribiendo qué te pasó hoy en el editor de arriba.</p>
+          </div>
         ) : (
           <ul className="space-y-1" role="list">
             {recentEntries.map((e) => (

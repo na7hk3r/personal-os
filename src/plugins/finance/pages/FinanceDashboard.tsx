@@ -67,8 +67,8 @@ export function FinanceDashboard() {
         <div className="flex items-center gap-4">
           <BrandIcon name="TreasureChest" size={44} />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Finanzas</p>
-            <h1 className="text-2xl font-semibold text-white">{formatCents(stats.totalBalance, stats.currency)}</h1>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Finanzas</p>
+            <h1 className="text-2xl font-bold text-white">{formatCents(stats.totalBalance, stats.currency)}</h1>
             <p className="text-xs text-muted">
               Balance total · {accounts.length} {accounts.length === 1 ? 'cuenta' : 'cuentas'}
             </p>
@@ -108,7 +108,7 @@ export function FinanceDashboard() {
         <div className="divide-y divide-border/40">
           {grouped.map(([date, txs]) => (
             <div key={date} className="py-2">
-              <p className="mb-1 text-[10px] uppercase tracking-wider text-muted">{formatHumanDate(date)}</p>
+              <p className="mb-1 text-micro uppercase tracking-wider text-muted">{formatHumanDate(date)}</p>
               <ul className="space-y-1">
                 {txs.map((tx) => {
                   const cat = tx.categoryId ? categoryById.get(tx.categoryId) : null
@@ -145,11 +145,11 @@ export function FinanceDashboard() {
 function Kpi({ label, value, accent, icon, hint }: { label: string; value: string; accent: string; icon: React.ReactNode; hint?: string }) {
   return (
     <div className="rounded-xl border border-border bg-surface px-4 py-3">
-      <div className={`mb-1 flex items-center gap-1.5 text-[11px] uppercase tracking-wider ${accent}`}>
+      <div className={`mb-1 flex items-center gap-1.5 text-caption uppercase tracking-wider ${accent}`}>
         {icon}<span>{label}</span>
       </div>
       <p className="text-xl font-semibold text-white">{value}</p>
-      {hint && <p className="mt-1 text-[11px] text-muted">{hint}</p>}
+      {hint && <p className="mt-1 text-caption text-muted">{hint}</p>}
     </div>
   )
 }

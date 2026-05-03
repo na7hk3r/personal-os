@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Plus, Target, Trash2, TrendingUp, TrendingDown, Layers, Archive, CheckCircle2 } from 'lucide-react'
+import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useGoalsStore } from '../store'
 import { computeGoalProgress, computeKRProgress, currentQuarter, formatPeriod, metricIdOf } from '../utils'
 import {
@@ -51,16 +52,19 @@ export function GoalsDashboard() {
   return (
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Objetivos / OKRs</p>
-          <h1 className="text-2xl font-semibold text-white">
-            {overall.total === 0 ? '—' : `${overall.avg}%`}
-          </h1>
-          <p className="text-xs text-muted">
-            {overall.total === 0
-              ? 'Definí tu primer objetivo del trimestre'
-              : `Avance promedio · ${overall.total} objetivo${overall.total === 1 ? '' : 's'}`}
-          </p>
+        <div className="flex items-center gap-4">
+          <BrandIcon name="TreasureMap" size={44} />
+          <div>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Objetivos / OKRs</p>
+            <h1 className="text-2xl font-bold text-white">
+              {overall.total === 0 ? '—' : `${overall.avg}%`}
+            </h1>
+            <p className="text-xs text-muted">
+              {overall.total === 0
+                ? 'Definí tu primer objetivo del trimestre'
+                : `Avance promedio · ${overall.total} objetivo${overall.total === 1 ? '' : 's'}`}
+            </p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           {(['current', 'all', 'completed'] as const).map((f) => (
@@ -91,8 +95,10 @@ export function GoalsDashboard() {
       {showAdd && <NewGoalForm onCreated={() => setShowAdd(false)} />}
 
       {visible.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-surface/40 p-8 text-center text-sm text-muted">
-          Sin objetivos en este filtro.
+        <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-surface/40 py-12 text-center text-muted">
+          <BrandIcon name="TreasureMap" size={48} tile={false} className="opacity-40" />
+          <p className="text-sm">Sin objetivos en este filtro.</p>
+          <p className="text-xs">Definí tu primer objetivo del trimestre con “Nuevo objetivo”.</p>
         </div>
       ) : (
         <ul className="space-y-3" role="list" aria-label="Lista de objetivos">
@@ -206,12 +212,12 @@ function GoalCard({ goal }: { goal: Goal }) {
             <Target size={16} className="text-accent-light" aria-hidden="true" />
             <h2 className="truncate text-base font-semibold text-white">{goal.title}</h2>
             {goal.status === 'completed' && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-success">
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-micro uppercase tracking-wide text-success">
                 <CheckCircle2 size={10} aria-hidden="true" /> cumplido
               </span>
             )}
           </div>
-          <p className="text-[11px] text-muted">{formatPeriod(goal.period, goal.year)}</p>
+          <p className="text-caption text-muted">{formatPeriod(goal.period, goal.year)}</p>
           {goal.description && (
             <p className="mt-1 text-xs text-muted">{goal.description}</p>
           )}
@@ -220,7 +226,7 @@ function GoalCard({ goal }: { goal: Goal }) {
           <button
             type="button"
             onClick={() => setShowAddKR((v) => !v)}
-            className="rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-white hover:border-accent/50"
+            className="rounded-md border border-border bg-surface px-2 py-1 text-caption text-white hover:border-accent/50"
             title="Agregar Key Result"
           >
             <Plus size={12} aria-hidden="true" />
@@ -229,7 +235,7 @@ function GoalCard({ goal }: { goal: Goal }) {
             <button
               type="button"
               onClick={() => { void archiveGoal(goal.id) }}
-              className="rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted hover:text-white"
+              className="rounded-md border border-border bg-surface px-2 py-1 text-caption text-muted hover:text-white"
               title="Archivar"
             >
               <Archive size={12} aria-hidden="true" />
@@ -242,7 +248,7 @@ function GoalCard({ goal }: { goal: Goal }) {
                 void deleteGoal(goal.id)
               }
             }}
-            className="rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted hover:text-danger"
+            className="rounded-md border border-border bg-surface px-2 py-1 text-caption text-muted hover:text-danger"
             title="Eliminar"
           >
             <Trash2 size={12} aria-hidden="true" />
@@ -251,7 +257,7 @@ function GoalCard({ goal }: { goal: Goal }) {
       </header>
 
       <div className="mt-3">
-        <div className="flex items-center justify-between text-[11px] text-muted">
+        <div className="flex items-center justify-between text-caption text-muted">
           <span>Avance</span>
           <span className="font-semibold text-white">{progress.percent}%</span>
         </div>
@@ -327,7 +333,7 @@ function KRRow({ krId }: { krId: string }) {
           aria-hidden="true"
         />
       </div>
-      <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted">
+      <div className="mt-1.5 flex items-center justify-between text-caption text-muted">
         <span>
           {isManual ? 'Manual' : (
             <span className="inline-flex items-center gap-1">

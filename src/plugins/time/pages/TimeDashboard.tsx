@@ -82,7 +82,11 @@ export function TimeDashboard() {
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Entradas recientes</h2>
         {recent.length === 0 && (
-          <p className="text-sm text-muted">Aún no registraste tiempo. Iniciá una entrada arriba.</p>
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-surface/40 py-12 text-center text-muted">
+            <BrandIcon name="HourGlass" size={48} tile={false} className="opacity-40" />
+            <p className="text-sm">Aún no registraste tiempo.</p>
+            <p className="text-xs">Iniciá una entrada arriba o completá una sesión de Focus.</p>
+          </div>
         )}
         <div className="divide-y divide-border rounded-2xl border border-border bg-surface-light/40">
           {recent.map((entry) => {
@@ -121,7 +125,7 @@ export function TimeDashboard() {
                   <>
                     <button
                       onClick={() => void updateEntry(entry.id, { billable: !entry.billable })}
-                      className="rounded-md px-2 py-1 text-[10px] uppercase tracking-wider text-muted hover:text-white"
+                      className="rounded-md px-2 py-1 text-micro uppercase tracking-wider text-muted hover:text-white"
                     >
                       {entry.billable ? 'no fact.' : 'fact.'}
                     </button>

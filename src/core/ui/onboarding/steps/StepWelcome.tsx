@@ -1,4 +1,5 @@
 import { Brain, Dumbbell, BriefcaseBusiness, Sparkles } from 'lucide-react'
+import { BrandIcon } from '../../components/BrandIcon'
 
 interface Props {
   onNext: () => void
@@ -14,10 +15,12 @@ const WELCOME_ITEMS = [
 export function StepWelcome({ onNext }: Props) {
   return (
     <div className="flex flex-col items-center text-center gap-8 animate-fade-in">
-      <div className="space-y-2">
+      <div className="space-y-3">
+        {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
+        <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mx-auto" />
         <p className="text-xs uppercase tracking-[0.25em] text-muted">Bienvenidx a</p>
         <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-white via-accent-light to-accent bg-clip-text text-transparent">
-          Personal OS
+          Nora OS
         </h1>
         <p className="text-sm text-muted max-w-sm mx-auto leading-relaxed">
           Tu sistema operativo personal. No una app más —<br />
@@ -26,7 +29,7 @@ export function StepWelcome({ onNext }: Props) {
       </div>
 
       <div className="max-w-md text-sm text-muted space-y-3 text-left bg-surface-light/60 border border-border rounded-2xl p-6">
-        <p className="text-white font-medium">¿Qué es Personal OS?</p>
+        <p className="text-white font-medium">¿Qué es Nora OS?</p>
         <ul className="space-y-2">
           {WELCOME_ITEMS.map(({ icon: Icon, text }) => (
             <li key={text} className="flex items-start gap-2">
