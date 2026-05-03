@@ -71,6 +71,19 @@ export default {
           from: { backgroundPosition: '-200% center' },
           to: { backgroundPosition: '200% center' },
         },
+        scoreReveal: {
+          '0%': { transform: 'scale(0.6)', opacity: '0' },
+          '60%': { transform: 'scale(1.08)', opacity: '1' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+        popIn: {
+          '0%': { transform: 'scale(0.92) translateY(6px)', opacity: '0' },
+          '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
+        },
+        glowPulse: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(249,115,22,0)' },
+          '50%': { boxShadow: '0 0 24px 4px rgba(249,115,22,0.35)' },
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out both',
@@ -78,11 +91,41 @@ export default {
         'slide-right': 'slideRight 0.2s ease-out both',
         'pulse-glow': 'pulseGlow 2s ease-in-out infinite',
         shimmer: 'shimmer 2.5s linear infinite',
+        'score-reveal': 'scoreReveal 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both',
+        'pop-in': 'popIn 0.35s ease-out both',
+        'glow-once': 'glowPulse 1.4s ease-in-out 1',
       },
       transitionDuration: {
         '150': '150ms',
         '200': '200ms',
         '300': '300ms',
+      },
+      /**
+       * Escala tipográfica semántica (Etapa 5.4).
+       * Reemplaza los `text-[10px]/[11px]` ad-hoc dispersos por tokens estables.
+       *  - micro:    badges, kbd, eyebrow labels MUY pequeños
+       *  - caption:  metadata, timestamps, hints
+       *  - body-sm:  texto secundario / muted
+       *  - body:     texto principal de UI
+       *  - title:    títulos de sección dentro de cards
+       *  - display:  headers de página
+       */
+      fontSize: {
+        micro: ['0.625rem', { lineHeight: '0.875rem' }],
+        caption: ['0.6875rem', { lineHeight: '1rem' }],
+        'body-sm': ['0.75rem', { lineHeight: '1.125rem' }],
+        body: ['0.875rem', { lineHeight: '1.35rem' }],
+        title: ['1rem', { lineHeight: '1.4rem' }],
+        display: ['1.25rem', { lineHeight: '1.6rem' }],
+      },
+      /**
+       * Tracking semántico (Etapa 5.4).
+       *  - eyebrow:  uppercase labels (lo que antes era tracking-[0.18em]/[0.2em])
+       *  - label:    UI secundaria sutil (antes tracking-[0.14em])
+       */
+      letterSpacing: {
+        eyebrow: '0.18em',
+        label: '0.14em',
       },
     },
   },

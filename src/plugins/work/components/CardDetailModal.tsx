@@ -171,7 +171,7 @@ export function CardDetailModal({ card, onClose }: Props) {
                 <button
                   type="button"
                   onClick={() => setPriority(null)}
-                  className={`rounded-full border px-2 py-1 text-[11px] ${
+                  className={`rounded-full border px-2 py-1 text-caption ${
                     priority == null
                       ? 'border-accent/40 text-accent-light bg-accent/10'
                       : 'border-border/70 text-muted hover:text-white'
@@ -184,7 +184,7 @@ export function CardDetailModal({ card, onClose }: Props) {
                     type="button"
                     key={p.value}
                     onClick={() => setPriority(p.value)}
-                    className={`rounded-full border px-2 py-1 text-[11px] ${
+                    className={`rounded-full border px-2 py-1 text-caption ${
                       priority === p.value
                         ? p.className
                         : 'border-border/70 text-muted hover:text-white'
@@ -238,7 +238,7 @@ export function CardDetailModal({ card, onClose }: Props) {
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs uppercase tracking-[0.16em] text-muted">Checklist</label>
               {checklist.length > 0 && (
-                <span className="text-[10px] text-muted">
+                <span className="text-micro text-muted">
                   {checklist.filter((i) => i.done).length} / {checklist.length}
                 </span>
               )}
@@ -258,7 +258,7 @@ export function CardDetailModal({ card, onClose }: Props) {
                   <button
                     type="button"
                     onClick={() => removeChecklistItem(item.id)}
-                    className="text-[10px] text-muted opacity-0 group-hover:opacity-100 hover:text-red-400"
+                    className="text-micro text-muted opacity-0 group-hover:opacity-100 hover:text-red-400"
                   >
                     ✕
                   </button>

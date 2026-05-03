@@ -67,25 +67,26 @@ export function SystemSuggestions() {
   if (suggestions.length === 0) return null
 
   return (
-    <div className="relative flex justify-end">
+    <div className="relative">
       <button
         onClick={() => setExpanded((prev) => !prev)}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/80 bg-surface-light/90 text-muted shadow transition-colors hover:border-accent/40 hover:text-accent-light"
-        title={hasRelevant ? 'Abrir centro de notificaciones' : 'Abrir historial de notificaciones'}
+        className="relative flex items-center justify-center rounded-md border border-border bg-surface px-2 py-1.5 text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+        title={hasRelevant ? 'Notificaciones del sistema' : 'Historial de notificaciones'}
+        aria-label="Notificaciones del sistema"
       >
-        <Bell size={15} />
+        <Bell size={14} />
         {hasRelevant && (
-          <span className="absolute -right-1 -top-1 inline-flex min-w-[18px] items-center justify-center rounded-full bg-warning px-1 text-[10px] font-semibold text-slate-900">
+          <span className="absolute -right-1 -top-1 inline-flex min-w-[16px] items-center justify-center rounded-full bg-warning px-1 text-[9px] font-semibold text-slate-900">
             {relevantSuggestions.length}
           </span>
         )}
       </button>
 
       {expanded && (
-        <section className="absolute right-0 top-11 z-30 w-[min(92vw,420px)] rounded-xl border border-border bg-surface-light/95 p-3 shadow-2xl backdrop-blur">
+        <section className="absolute bottom-full left-0 z-50 mb-2 w-[min(92vw,360px)] rounded-xl border border-border bg-surface-light/95 p-3 text-left shadow-2xl backdrop-blur">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <p className="truncate text-[11px] uppercase tracking-[0.14em] text-muted">Centro de notificaciones</p>
+              <p className="truncate text-caption uppercase tracking-label text-muted">Centro de notificaciones</p>
               <p className="text-xs text-muted">
                 {hasRelevant
                   ? `${relevantSuggestions.length} alerta${relevantSuggestions.length === 1 ? '' : 's'} pendiente${relevantSuggestions.length === 1 ? '' : 's'}`
@@ -105,7 +106,7 @@ export function SystemSuggestions() {
             {aiAvailable && (
               <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
                 <div className="mb-1 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-accent-light">
+                  <div className="flex items-center gap-1.5 text-caption uppercase tracking-wider text-accent-light">
                     <Sparkles size={11} /> Coach IA local
                   </div>
                   <button

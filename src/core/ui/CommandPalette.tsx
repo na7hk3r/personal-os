@@ -14,7 +14,7 @@ export interface CommandResult {
 
 const NAV_RESULTS: CommandResult[] = [
   { id: 'nav:dashboard', kind: 'nav', title: 'Dashboard', ctaPath: '/' },
-  { id: 'nav:control', kind: 'nav', title: 'Control Center', ctaPath: '/control' },
+  { id: 'nav:control', kind: 'nav', title: 'Configuración', ctaPath: '/control' },
   { id: 'nav:notes', kind: 'nav', title: 'Notas', ctaPath: '/notes' },
   { id: 'nav:links', kind: 'nav', title: 'Enlaces', ctaPath: '/links' },
   { id: 'nav:planner', kind: 'nav', title: 'Planner', ctaPath: '/planner' },
@@ -77,15 +77,48 @@ export function CommandPalette() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<CommandResult[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
+  const [showHint, setShowHint] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
+
+  // Discovery hint: tras 3 sesiones sin abrir Cmd+K, mostrar tooltip una sola vez.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const ls = window.localStorage
+      if (ls.getItem('core:cmdk:hintShown') === '1') return
+      if ((Number(ls.getItem('core:cmdk:opens')) || 0) > 0) return
+      const sessions = (Number(ls.getItem('core:cmdk:sessions')) || 0) + 1
+      ls.setItem('core:cmdk:sessions', String(sessions))
+      if (sessions >= 3) {
+        setShowHint(true)
+        ls.setItem('core:cmdk:hintShown', '1')
+        const t = window.setTimeout(() => setShowHint(false), 8000)
+        return () => window.clearTimeout(t)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const isCmdK = (e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')
       if (isCmdK) {
         e.preventDefault()
-        setOpen((prev) => !prev)
+        setOpen((prev) => {
+          const next = !prev
+          if (next && typeof window !== 'undefined') {
+            try {
+              const opens = (Number(window.localStorage.getItem('core:cmdk:opens')) || 0) + 1
+              window.localStorage.setItem('core:cmdk:opens', String(opens))
+            } catch {
+              // ignore
+            }
+            setShowHint(false)
+          }
+          return next
+        })
       } else if (e.key === 'Escape') {
         setOpen(false)
       }
@@ -142,7 +175,26 @@ export function CommandPalette() {
     }
   }
 
-  if (!open) return null
+  if (!open) {
+    if (!showHint) return null
+    return (
+      <div
+        className="fixed bottom-4 left-1/2 z-[90] -translate-x-1/2 animate-pulse rounded-full border border-accent/40 bg-surface-light/95 px-4 py-2 text-xs text-foreground shadow-2xl backdrop-blur"
+        role="status"
+      >
+        <span>
+          Tip: podés buscar todo con{' '}
+          <kbd className="rounded bg-surface-lighter px-1.5 py-0.5 text-caption font-semibold text-accent-light">⌘</kbd>{' '}
+          <kbd className="rounded bg-surface-lighter px-1.5 py-0.5 text-caption font-semibold text-accent-light">K</kbd>
+        </span>
+        <button
+          onClick={() => setShowHint(false)}
+          className="ml-3 text-muted hover:text-white"
+          aria-label="Cerrar tip"
+        >×</button>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -189,7 +241,10 @@ export function CommandPalette() {
           className="max-h-[55vh] overflow-y-auto p-2"
         >
           {visibleResults.length === 0 ? (
-            <p className="px-3 py-6 text-center text-xs text-muted">Sin resultados</p>
+            <div className="px-3 py-8 text-center">
+              <p className="text-sm text-foreground">Nada por ahora</p>
+              <p className="mt-1 text-xs text-muted">Probá con el nombre de una nota, tarea, enlace o sección.</p>
+            </div>
           ) : (
             visibleResults.map((r, i) => {
               const Icon = ICONS[r.kind]
@@ -211,7 +266,7 @@ export function CommandPalette() {
                     <p className="truncate text-sm">{r.title}</p>
                     {r.subtitle && <p className="truncate text-xs text-muted">{r.subtitle}</p>}
                   </div>
-                  <span className="shrink-0 rounded bg-surface-lighter px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted">
+                  <span className="shrink-0 rounded bg-surface-lighter px-1.5 py-0.5 text-micro uppercase tracking-wider text-muted">
                     {r.kind}
                   </span>
                 </button>
@@ -220,7 +275,7 @@ export function CommandPalette() {
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[10px] uppercase tracking-wider text-muted">
+        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-micro uppercase tracking-wider text-muted">
           <span><kbd className="rounded bg-surface-lighter px-1">↑</kbd> <kbd className="rounded bg-surface-lighter px-1">↓</kbd> navegar</span>
           <span><kbd className="rounded bg-surface-lighter px-1">Enter</kbd> abrir</span>
           <span><kbd className="rounded bg-surface-lighter px-1">Esc</kbd> cerrar</span>

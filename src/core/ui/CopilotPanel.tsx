@@ -171,14 +171,14 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
         aria-label="Abrir copiloto"
       >
         <Sparkles className="h-4 w-4 text-accent-light" />
-        <span className="text-[10px] uppercase tracking-wide">Copiloto</span>
+        <span className="text-micro uppercase tracking-wide">Copiloto</span>
       </button>
     )
   }
 
   return (
     <aside
-      className="flex h-screen w-[360px] shrink-0 flex-col border-l border-border bg-surface-light/95 text-white backdrop-blur"
+      className="flex h-screen w-[88vw] max-w-[360px] shrink-0 flex-col border-l border-border bg-surface-light/95 text-white backdrop-blur md:w-[320px] xl:w-[360px]"
       aria-label="Copiloto IA"
     >
       {/* Header */}
@@ -187,7 +187,7 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
           <Sparkles className="h-4 w-4 text-accent-light" />
           <div>
             <div className="text-sm font-medium">Copiloto</div>
-            <div className="text-[11px] text-muted">
+            <div className="text-caption text-muted">
               {brief?.source === 'fallback' ? 'sin IA · usando datos locales' : 'asistente del día'}
             </div>
           </div>
@@ -232,7 +232,7 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
           <MessageBubble key={m.id} message={m} onRunAction={runAction} />
         ))}
         {actionFeedback && (
-          <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[11px] text-accent-light">
+          <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-caption text-accent-light">
             {actionFeedback}
           </div>
         )}
@@ -240,7 +240,7 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
 
       {/* Acciones rápidas */}
       <div className="border-t border-border px-3 py-2">
-        <div className="mb-2 text-[10px] uppercase tracking-wide text-muted">Acciones rápidas</div>
+        <div className="mb-2 text-micro uppercase tracking-wide text-muted">Acciones rápidas</div>
         <div className="flex flex-wrap gap-1.5">
           {QUICK_ACTIONS.map(({ label, prompt, icon: Icon }) => (
             <button
@@ -248,7 +248,7 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
               type="button"
               disabled={sending}
               onClick={() => void send(prompt)}
-              className="flex items-center gap-1.5 rounded-full border border-border/70 bg-surface px-2.5 py-1 text-[11px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light disabled:opacity-50"
+              className="flex items-center gap-1.5 rounded-full border border-border/70 bg-surface px-2.5 py-1 text-caption text-muted transition-colors hover:border-accent/40 hover:text-accent-light disabled:opacity-50"
             >
               <Icon className="h-3 w-3" />
               {label}
@@ -318,7 +318,7 @@ function MessageBubble({
           <span className="whitespace-pre-wrap">{message.text}</span>
         )}
         {message.contextHint && !message.pending && !message.error && (
-          <div className="mt-1.5 text-[10px] uppercase tracking-wide text-muted/80">
+          <div className="mt-1.5 text-micro uppercase tracking-wide text-muted/80">
             ctx: {message.contextHint}
           </div>
         )}
@@ -327,7 +327,7 @@ function MessageBubble({
         <button
           type="button"
           onClick={() => onRunAction(message.action!)}
-          className="self-start rounded-md border border-accent/40 bg-accent/15 px-3 py-1 text-[11px] font-medium text-accent-light transition-colors hover:bg-accent/25"
+          className="self-start rounded-md border border-accent/40 bg-accent/15 px-3 py-1 text-caption font-medium text-accent-light transition-colors hover:bg-accent/25"
         >
           {actionLabel(message.action)}
         </button>

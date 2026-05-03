@@ -42,7 +42,7 @@ export function HabitQuickAdd({ onCreated }: { onCreated?: () => void }) {
       aria-label="Crear hábito"
     >
       <div className="min-w-[10rem] flex-1">
-        <label htmlFor="habit-new-name" className="text-[10px] uppercase tracking-wider text-muted">Nombre</label>
+        <label htmlFor="habit-new-name" className="text-micro uppercase tracking-wider text-muted">Nombre</label>
         <input
           id="habit-new-name"
           type="text"
@@ -54,7 +54,7 @@ export function HabitQuickAdd({ onCreated }: { onCreated?: () => void }) {
         />
       </div>
       <div>
-        <label htmlFor="habit-new-kind" className="text-[10px] uppercase tracking-wider text-muted">Tipo</label>
+        <label htmlFor="habit-new-kind" className="text-micro uppercase tracking-wider text-muted">Tipo</label>
         <select
           id="habit-new-kind"
           value={kind}
@@ -66,7 +66,7 @@ export function HabitQuickAdd({ onCreated }: { onCreated?: () => void }) {
         </select>
       </div>
       <div>
-        <label htmlFor="habit-new-period" className="text-[10px] uppercase tracking-wider text-muted">Período</label>
+        <label htmlFor="habit-new-period" className="text-micro uppercase tracking-wider text-muted">Período</label>
         <select
           id="habit-new-period"
           value={period}
@@ -78,7 +78,7 @@ export function HabitQuickAdd({ onCreated }: { onCreated?: () => void }) {
         </select>
       </div>
       <div>
-        <label htmlFor="habit-new-target" className="text-[10px] uppercase tracking-wider text-muted">Meta</label>
+        <label htmlFor="habit-new-target" className="text-micro uppercase tracking-wider text-muted">Meta</label>
         <input
           id="habit-new-target"
           type="number"

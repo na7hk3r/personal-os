@@ -45,7 +45,7 @@ export function StepPlugins({ initial, onNext }: Props) {
         <p className="text-xs uppercase tracking-[0.25em] text-muted">Paso 2 de 4</p>
         <h2 className="text-3xl font-bold">¿Qué módulos querés activar?</h2>
         <p className="text-sm text-muted">
-          Podés cambiarlos después en Control Center.
+          Podés cambiarlos después en Configuración.
         </p>
       </div>
 
@@ -70,7 +70,7 @@ export function StepPlugins({ initial, onNext }: Props) {
                         active ? 'border-success bg-success' : 'border-border'
                       }`}
                     >
-                      {active && <span className="text-[10px] text-white font-bold">✓</span>}
+                      {active && <span className="text-micro text-white font-bold">✓</span>}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-muted leading-relaxed">{plugin.description}</p>

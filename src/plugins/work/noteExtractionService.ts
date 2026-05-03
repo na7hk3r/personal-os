@@ -49,7 +49,7 @@ function normalizeTasks(parsed: { tasks?: unknown } | null): ExtractedTask[] {
 export const noteExtractionService = {
   async extract(text: string): Promise<ExtractedTask[]> {
     const ready = await ollamaService.isReady()
-    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Control Center')
+    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Configuración')
     if (!ready.healthy) throw new Error(`Ollama no responde: ${ready.reason ?? 'sin detalle'}`)
     const raw = await ollamaService.generate(buildPrompt(text))
     return normalizeTasks(tryExtractJson(raw))

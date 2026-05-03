@@ -41,7 +41,7 @@ export function HabitsHistoryPage() {
   return (
     <div className="space-y-5">
       <header className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
+        <p className="text-caption uppercase tracking-eyebrow text-muted">Hábitos</p>
         <h1 className="text-2xl font-semibold text-white">Historial 30 días</h1>
         <p className="text-xs text-muted">Cada celda es un día. Más opaco = más cumplimiento.</p>
       </header>

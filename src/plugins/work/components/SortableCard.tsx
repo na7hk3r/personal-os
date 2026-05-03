@@ -126,7 +126,7 @@ export function SortableCard({
           data-delete="true"
           onClick={handleDeleteClick}
           title={confirmDelete ? 'Confirmar eliminación' : 'Eliminar tarea'}
-          className={`mt-0.5 flex-shrink-0 rounded px-1 text-[10px] font-medium transition-all duration-150 ${
+          className={`mt-0.5 flex-shrink-0 rounded px-1 text-micro font-medium transition-all duration-150 ${
             confirmDelete
               ? 'bg-red-500/20 text-red-300 opacity-100'
               : 'text-muted opacity-0 group-hover:opacity-100 hover:bg-red-500/15 hover:text-red-400'
@@ -151,7 +151,7 @@ export function SortableCard({
         <div className="mt-2 flex flex-wrap items-center gap-1">
           {priorityStyle && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${priorityStyle.className}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro ${priorityStyle.className}`}
               title={`Prioridad ${priorityStyle.label}`}
             >
               <Flag size={10} />
@@ -160,7 +160,7 @@ export function SortableCard({
           )}
           {card.estimateMinutes != null && card.estimateMinutes > 0 && (
             <span
-              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted"
+              className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-micro text-muted"
               title={`Estimación: ${formatEstimate(card.estimateMinutes)}`}
             >
               <Timer size={10} />
@@ -169,7 +169,7 @@ export function SortableCard({
           )}
           {checklistTotal > 0 && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] ${
+              className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro ${
                 checklistDone === checklistTotal
                   ? 'border-success/30 bg-success/15 text-success'
                   : 'border-border/70 bg-surface-light/60 text-muted'
@@ -183,19 +183,19 @@ export function SortableCard({
           {visibleLabels.map((label) => (
             <span
               key={label}
-              className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted"
+              className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-micro text-muted"
             >
               {label}
             </span>
           ))}
           {extraLabels > 0 && (
-            <span className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted">
+            <span className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-micro text-muted">
               +{extraLabels}
             </span>
           )}
           {due && (
             <span
-              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] ${
+              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-micro ${
                 due.overdue
                   ? 'bg-danger/15 text-danger'
                   : 'bg-surface-light/60 text-muted border border-border/70'
@@ -207,7 +207,7 @@ export function SortableCard({
           )}
           {focusSessionCount > 0 && (
             <span
-              className="inline-flex items-center gap-1 rounded-full bg-surface-light/60 px-2 py-0.5 text-[10px] text-muted border border-border/70"
+              className="inline-flex items-center gap-1 rounded-full bg-surface-light/60 px-2 py-0.5 text-micro text-muted border border-border/70"
               title={`${focusSessionCount} sesion${focusSessionCount === 1 ? '' : 'es'} de foco`}
             >
               <Target size={10} />
@@ -218,7 +218,7 @@ export function SortableCard({
       )}
 
       <div className="mt-3 flex items-center justify-between gap-2">
-        <span className={`text-[10px] uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
+        <span className={`text-micro uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
           {isFocusActive ? 'En foco' : 'Listo para foco'}
         </span>
         <div className="flex items-center gap-1.5">
@@ -232,7 +232,7 @@ export function SortableCard({
                 onComplete(card)
               }}
               title="Completar tarea (mueve a Hecho y detiene el foco)"
-              className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-medium text-success transition-colors hover:bg-success/25"
+              className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2.5 py-1 text-caption font-medium text-success transition-colors hover:bg-success/25"
             >
               <CheckCircle2 size={12} />
               Completar
@@ -250,7 +250,7 @@ export function SortableCard({
               }
               onStartFocus(card)
             }}
-            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors ${
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-caption font-medium transition-colors ${
               isFocusActive
                 ? 'bg-warning/15 text-warning hover:bg-warning/25'
                 : 'bg-accent/15 text-accent-light hover:bg-accent/25'

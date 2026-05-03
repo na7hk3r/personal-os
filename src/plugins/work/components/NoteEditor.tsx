@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Pin, PinOff, Plus, Search, Trash2, Sparkles } from 'lucide-react'
 import { useWorkStore } from '../store'
 import { eventBus } from '@core/events/EventBus'
@@ -23,18 +23,18 @@ export function NoteEditor() {
     if (!selected) return
     const text = (content ?? '').trim()
     if (text.length <= 200) {
-      toast.info('NecesitÃ¡s mÃ¡s contenido para extraer tareas (mÃ­nimo 200 caracteres).')
+      toast.info('Necesitás más contenido para extraer tareas (mínimo 200 caracteres).')
       return
     }
     setExtracting(true)
     try {
       const tasks = await noteExtractionService.extract(text)
       if (tasks.length === 0) {
-        toast.info('No encontrÃ© tareas accionables en la nota.')
+        toast.info('No encontré tareas accionables en la nota.')
         return
       }
       const ids = await noteExtractionService.createCards(tasks)
-      toast.success(`CreÃ© ${ids.length} ${ids.length === 1 ? 'tarea' : 'tareas'} desde la nota.`)
+      toast.success(`Creé ${ids.length} ${ids.length === 1 ? 'tarea' : 'tareas'} desde la nota.`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Error al extraer tareas'
       toast.error(msg)
@@ -91,7 +91,7 @@ export function NoteEditor() {
     eventBus.emit(WORK_EVENTS.NOTE_CREATED, { id, title: note.title })
   }
 
-  // Atajo global Ctrl/Cmd + N â†’ crea nota desde cualquier lugar.
+  // Atajo global Ctrl/Cmd + N ? crea nota desde cualquier lugar.
   useEffect(() => {
     const onCreate = () => handleNew()
     window.addEventListener('work:new-note', onCreate)
@@ -122,7 +122,7 @@ export function NoteEditor() {
     }
 
     toast.undo({
-      message: messages.confirm.deleteNote(note.title || 'Sin tÃ­tulo'),
+      message: messages.confirm.deleteNote(note.title || 'Sin título'),
       onUndo: async () => {
         addNote(note)
         await window.storage.execute(
@@ -188,7 +188,7 @@ export function NoteEditor() {
           <div className="flex gap-1">
             <button
               onClick={() => setSortMode('recent')}
-              className={`flex-1 rounded border px-2 py-1 text-[10px] transition-colors ${
+              className={`flex-1 rounded border px-2 py-1 text-micro transition-colors ${
                 sortMode === 'recent'
                   ? 'border-accent/50 bg-accent/15 text-accent-light'
                   : 'border-border bg-surface text-muted hover:text-white'
@@ -198,13 +198,13 @@ export function NoteEditor() {
             </button>
             <button
               onClick={() => setSortMode('alpha')}
-              className={`flex-1 rounded border px-2 py-1 text-[10px] transition-colors ${
+              className={`flex-1 rounded border px-2 py-1 text-micro transition-colors ${
                 sortMode === 'alpha'
                   ? 'border-accent/50 bg-accent/15 text-accent-light'
                   : 'border-border bg-surface text-muted hover:text-white'
               }`}
             >
-              Aâ€“Z
+              A–Z
             </button>
           </div>
         </div>
@@ -212,7 +212,7 @@ export function NoteEditor() {
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredNotes.length === 0 && (
             <div className="text-center text-xs text-muted/60 py-6">
-              {search ? 'Sin resultados' : 'No hay notas todavÃ­a'}
+              {search ? 'Sin resultados' : 'No hay notas todavía'}
             </div>
           )}
           {filteredNotes.map((n) => {
@@ -262,7 +262,7 @@ export function NoteEditor() {
                         handleDelete(n.id)
                       }}
                       title={'Eliminar nota'}
-                      className="text-[10px] font-medium flex items-center justify-center w-5 h-5 rounded text-muted hover:text-red-400 hover:bg-red-500/10"
+                      className="text-micro font-medium flex items-center justify-center w-5 h-5 rounded text-muted hover:text-red-400 hover:bg-red-500/10"
                     >
                       <Trash2 size={11} />
                     </button>
@@ -283,7 +283,7 @@ export function NoteEditor() {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleSave}
               className="bg-transparent border-b border-border px-4 py-3 text-lg font-semibold outline-none"
-              placeholder="TÃ­tulo"
+              placeholder="Título"
             />
             {(content ?? '').trim().length > 200 ? (
               <div className="flex items-center justify-end gap-2 border-b border-border/60 px-4 py-1.5">
@@ -291,11 +291,11 @@ export function NoteEditor() {
                   type="button"
                   onClick={() => void handleExtractTasks()}
                   disabled={extracting}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1 text-[11px] text-muted hover:text-accent-light hover:border-accent/40 disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1 text-caption text-muted hover:text-accent-light hover:border-accent/40 disabled:opacity-50"
                   title="Extraer tareas accionables con IA"
                 >
                   <Sparkles size={11} />
-                  {extracting ? 'Extrayendoâ€¦' : 'Extraer tareas'}
+                  {extracting ? 'Extrayendo…' : 'Extraer tareas'}
                 </button>
               </div>
             ) : null}
@@ -304,7 +304,7 @@ export function NoteEditor() {
               onChange={(e) => setContent(e.target.value)}
               onBlur={handleSave}
               className="flex-1 bg-transparent px-4 py-3 text-sm resize-none outline-none leading-relaxed"
-              placeholder="EscribÃ­ la notaâ€¦"
+              placeholder="Escribí la nota…"
             />
           </>
         ) : (

@@ -37,7 +37,7 @@ export function KnowledgeReviewPage() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Repaso</p>
+          <p className="text-caption uppercase tracking-eyebrow text-muted">Repaso</p>
           <h1 className="text-2xl font-semibold text-white">
             {queue.length} pendientes · {flashcards.length} totales · {mastered} dominadas
           </h1>
@@ -62,7 +62,7 @@ export function KnowledgeReviewPage() {
         </div>
       ) : (
         <article className="space-y-4 rounded-2xl border border-border bg-surface-light/90 p-6">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-muted">
+          <div className="flex items-center gap-2 text-caption uppercase tracking-wide text-muted">
             <Brain size={12} className="text-accent-light" aria-hidden="true" />
             <span>{current.deck}</span>
             <span className="ml-auto">
@@ -84,7 +84,7 @@ export function KnowledgeReviewPage() {
                     className={`rounded-xl border bg-surface px-3 py-3 text-sm font-medium hover:bg-surface-light ${b.tone}`}
                   >
                     <div>{b.label}</div>
-                    <div className="text-[10px] font-normal opacity-70">{b.help}</div>
+                    <div className="text-micro font-normal opacity-70">{b.help}</div>
                   </button>
                 ))}
               </div>
@@ -105,7 +105,7 @@ export function KnowledgeReviewPage() {
               if (!confirm('¿Eliminar esta flashcard?')) return
               await deleteFlashcard(current.id)
             }}
-            className="text-[11px] text-muted hover:text-rose-200"
+            className="text-caption text-muted hover:text-rose-200"
           >
             Eliminar flashcard
           </button>

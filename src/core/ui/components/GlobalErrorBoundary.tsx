@@ -100,7 +100,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         <div className="w-full max-w-lg rounded-2xl border border-red-500/30 bg-surface-light/90 p-7 shadow-2xl backdrop-blur">
           <div className="flex items-center gap-2 text-red-300">
             <AlertOctagon size={20} />
-            <p className="text-xs uppercase tracking-[0.2em]">Error inesperado</p>
+            <p className="text-xs uppercase tracking-eyebrow">Error inesperado</p>
           </div>
           <h1 className="mt-3 text-2xl font-semibold">La app se cayó.</h1>
           <p className="mt-1 text-sm text-muted">
@@ -140,7 +140,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <p className="mt-3 text-xs text-muted">{exportResult}</p>
           )}
 
-          <p className="mt-5 text-[11px] text-muted/80">
+          <p className="mt-5 text-caption text-muted/80">
             El diagnóstico se guarda como archivo local. No se envía a ningún servidor.
           </p>
         </div>

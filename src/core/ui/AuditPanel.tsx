@@ -172,7 +172,7 @@ export function AuditPanel() {
                       <div className="min-w-0 flex-1">
                         <p className="text-xs uppercase tracking-wide opacity-70">
                           {RULE_LABELS[f.rule]}
-                          {f.pluginId && <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-[10px]">{f.pluginId}</span>}
+                          {f.pluginId && <span className="ml-2 rounded bg-white/10 px-1.5 py-0.5 text-micro">{f.pluginId}</span>}
                           {f.location && <span className="ml-2 opacity-60">{f.location}</span>}
                         </p>
                         <p className="mt-1 text-white">{f.message}</p>

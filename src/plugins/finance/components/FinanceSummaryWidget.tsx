@@ -51,7 +51,7 @@ export function FinanceSummaryWidget() {
     >
       <div className="flex items-center gap-2">
         <Wallet size={16} className="text-accent-light" />
-        <span className="text-[11px] uppercase tracking-[0.18em] text-muted">Balance del mes</span>
+        <span className="text-caption uppercase tracking-eyebrow text-muted">Balance del mes</span>
       </div>
       <div>
         <p className="text-2xl font-semibold text-white">{formatCents(summary.balance, summary.currency)}</p>

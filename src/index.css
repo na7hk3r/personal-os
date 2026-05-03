@@ -307,6 +307,18 @@ html, body, #root {
 
 /* ========== MICRO-INTERACCIONES BASE ========== */
 
+/* Respeta la preferencia del sistema de reducir movimiento (a11y). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Focus ring premium */
 *:focus-visible {
   outline: 2px solid #7c3aed;

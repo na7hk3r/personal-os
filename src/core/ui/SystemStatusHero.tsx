@@ -40,19 +40,19 @@ function getGreeting(name: string): string {
 
 const STATE_CONFIG: Record<DayState, { label: string; dot: string; border: string; badge: string }> = {
   'on-track': {
-    label: 'En ritmo',
+    label: 'Tu día va bien',
     dot: 'bg-success',
     border: 'border-success/30',
     badge: 'bg-success/10 text-success',
   },
   unstable: {
-    label: 'Inestable',
+    label: 'Tenés pendientes',
     dot: 'bg-warning',
     border: 'border-warning/30',
     badge: 'bg-warning/10 text-warning',
   },
   disconnected: {
-    label: 'Desconectado',
+    label: 'Sin registros hoy',
     dot: 'bg-danger',
     border: 'border-danger/30',
     badge: 'bg-danger/10 text-danger',
@@ -65,7 +65,7 @@ export function SystemStatusHero() {
   const streak = useGamificationStore((s) => s.streak)
   const [heroState, setHeroState] = useState<HeroState>({
     dayState: 'on-track',
-    insight: 'Cargando estado del sistema…',
+    insight: 'Cargando tu día…',
     ctaLabel: 'Ver fitness',
     ctaPath: '/fitness',
   })
@@ -102,7 +102,6 @@ export function SystemStatusHero() {
       <div className="relative flex flex-col gap-4">
         {/* Status + insight */}
         <div className="min-w-0 space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted">Estado del Sistema</p>
 
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${cfg.badge}`}>

@@ -126,11 +126,11 @@ export function ThemeGalleryPage() {
                   <p className="text-xs text-muted line-clamp-1">{t.description}</p>
                 </div>
                 {isActive ? (
-                  <span className="flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-medium text-accent-light">
+                  <span className="flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-caption font-medium text-accent-light">
                     <Check size={12} /> Activo
                   </span>
                 ) : isHovered ? (
-                  <span className="flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-[11px] text-muted">
+                  <span className="flex items-center gap-1 rounded-full bg-surface px-2 py-0.5 text-caption text-muted">
                     <Eye size={12} /> Preview
                   </span>
                 ) : null}
@@ -147,7 +147,7 @@ export function ThemeGalleryPage() {
                     title={`${k}: ${t.swatch[k]}`}
                   />
                 ))}
-                <span className="ml-auto text-[10px] uppercase tracking-wider text-muted">
+                <span className="ml-auto text-micro uppercase tracking-wider text-muted">
                   {t.value}
                 </span>
               </div>

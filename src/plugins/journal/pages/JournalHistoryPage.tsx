@@ -33,7 +33,7 @@ export function JournalHistoryPage() {
   return (
     <div className="space-y-5">
       <header className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Journal</p>
+        <p className="text-caption uppercase tracking-eyebrow text-muted">Journal</p>
         <h1 className="text-2xl font-semibold text-white">Historial</h1>
         <p className="text-xs text-muted">{entries.length} entradas totales · {filtered.length} visibles</p>
       </header>
@@ -88,7 +88,7 @@ export function JournalHistoryPage() {
                 {e.title && <h2 className="mt-1 text-base font-semibold text-white">{e.title}</h2>}
                 <p className="mt-1 whitespace-pre-wrap text-sm text-white/90 line-clamp-6">{e.content}</p>
                 {e.tags.length > 0 && (
-                  <p className="mt-2 flex flex-wrap gap-1 text-[11px] text-accent-light">
+                  <p className="mt-2 flex flex-wrap gap-1 text-caption text-accent-light">
                     {e.tags.map((t) => (
                       <span key={t} className="rounded border border-border px-1.5 py-0.5">#{t}</span>
                     ))}

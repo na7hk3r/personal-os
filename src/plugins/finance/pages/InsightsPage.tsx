@@ -66,7 +66,7 @@ export function InsightsPage() {
       ) : (
         <section className="space-y-4">
           <div className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">{summary.monthLabel}</p>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">{summary.monthLabel}</p>
             <div className="mt-2 grid grid-cols-1 gap-3 md:grid-cols-3">
               <Stat label="Ingresos" value={formatCents(summary.incomeCents, summary.currency, { compact: true })} accent="text-emerald-300" />
               <Stat label="Gastos" value={formatCents(summary.expenseCents, summary.currency, { compact: true })} accent="text-rose-300" />
@@ -121,7 +121,7 @@ export function InsightsPage() {
 function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
     <div className="rounded-xl border border-border bg-surface px-4 py-3">
-      <p className={`text-[11px] uppercase tracking-wider ${accent}`}>{label}</p>
+      <p className={`text-caption uppercase tracking-wider ${accent}`}>{label}</p>
       <p className="text-xl font-semibold text-white">{value}</p>
     </div>
   )

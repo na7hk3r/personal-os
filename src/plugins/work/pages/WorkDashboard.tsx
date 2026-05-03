@@ -376,12 +376,12 @@ export function WorkDashboard() {
           </div>
 
           <div className="flex flex-col items-start gap-3 rounded-2xl border border-border/70 bg-surface px-4 py-3 lg:min-w-[320px]">
-            <div className="flex items-center justify-between w-full gap-2 text-xs uppercase tracking-[0.2em] text-muted">
+            <div className="flex items-center justify-between w-full gap-2 text-xs uppercase tracking-eyebrow text-muted">
               <span className="flex items-center gap-2">
                 <TimerReset size={14} />
                 Tiempo efectivo {isPaused && <span className="text-warning">(pausado)</span>}
               </span>
-              <label className="flex items-center gap-1 normal-case tracking-normal text-[11px]">
+              <label className="flex items-center gap-1 normal-case tracking-normal text-caption">
                 Meta
                 <select
                   value={pomodoroGoalMin}
@@ -409,7 +409,7 @@ export function WorkDashboard() {
                     style={{ width: `${pomodoroProgress * 100}%` }}
                   />
                 </div>
-                <p className="mt-1 text-[10px] text-muted">
+                <p className="mt-1 text-micro text-muted">
                   {pomodoroProgress >= 1
                     ? `✓ Meta alcanzada (${pomodoroGoalMin}m)`
                     : `Faltan ${formatDuration(remainingMs)} para la meta`}
@@ -426,7 +426,7 @@ export function WorkDashboard() {
               ).length
               return (
                 <p
-                  className="text-[10px] text-muted"
+                  className="text-micro text-muted"
                   title={`Jornada de ${workdayHours} h \u00f7 ${pomodoroGoalMin} min por sesi\u00f3n`}
                 >
                   Sesiones de jornada:{' '}
@@ -534,7 +534,7 @@ export function WorkDashboard() {
         <div className="mb-3 flex items-center gap-2 border-l-4 border-l-sky-400/60 pl-3">
           <KanbanSquare size={14} className="text-sky-300" />
           <h3 className="text-lg font-semibold">Tablero principal</h3>
-          <span className="text-[10px] uppercase tracking-[0.2em] text-sky-300/70">Kanban</span>
+          <span className="text-micro uppercase tracking-eyebrow text-sky-300/70">Kanban</span>
         </div>
         <KanbanBoard />
       </div>
@@ -543,7 +543,7 @@ export function WorkDashboard() {
         <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-success/70 shadow-[inset_1px_0_0_0_rgba(34,197,94,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-success flex items-center gap-2"><ListChecks size={12} /> Active Tasks</p>
+              <p className="text-xs uppercase tracking-eyebrow text-success flex items-center gap-2"><ListChecks size={12} /> Active Tasks</p>
               <h3 className="mt-1 text-lg font-semibold text-white">Tareas en progreso</h3>
             </div>
             <span className="rounded-full bg-success/10 border border-success/20 px-2 py-1 text-xs text-success">{activeTasks.length}</span>
@@ -584,7 +584,7 @@ export function WorkDashboard() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="truncate text-sm font-medium text-white">{card.title}</p>
-                        <span className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-wide ${stateClass}`}>
+                        <span className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro uppercase tracking-wide ${stateClass}`}>
                           {isFocusedPaused ? <Pause size={10} /> : isFocused ? <Play size={10} /> : <ListChecks size={10} />}
                           {stateLabel}
                           {isFocused && (
@@ -652,7 +652,7 @@ export function WorkDashboard() {
         </section>
 
         <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-purple-400/60 shadow-[inset_1px_0_0_0_rgba(168,85,247,0.18)]">
-          <p className="text-xs uppercase tracking-[0.2em] text-purple-300 flex items-center gap-2"><History size={12} /> Recent Work Activity</p>
+          <p className="text-xs uppercase tracking-eyebrow text-purple-300 flex items-center gap-2"><History size={12} /> Recent Work Activity</p>
           <h3 className="mt-1 text-lg font-semibold text-white">Actividad reciente</h3>
 
           <div className="mt-4 space-y-3">
@@ -669,7 +669,7 @@ export function WorkDashboard() {
                 <div key={entry.id} className="rounded-xl border border-border bg-surface px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <p className={`text-[10px] uppercase tracking-[0.18em] ${accent}`}>
+                      <p className={`text-micro uppercase tracking-eyebrow ${accent}`}>
                         {EVENT_LABELS[entry.event_type] ?? entry.event_type}
                       </p>
                       {details.primary && (

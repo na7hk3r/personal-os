@@ -31,7 +31,7 @@ export function HabitsManagePage() {
   return (
     <div className="space-y-5">
       <header className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Hábitos</p>
+        <p className="text-caption uppercase tracking-eyebrow text-muted">Hábitos</p>
         <h1 className="text-2xl font-semibold text-white">Administrar</h1>
         <p className="text-xs text-muted">Editá, archivá o borrá hábitos. Los logs históricos se conservan al archivar.</p>
       </header>
@@ -99,7 +99,7 @@ function HabitEditRow({ habit, onArchive, onUnarchive, onAskDelete }: RowProps) 
   return (
     <div className={`flex flex-wrap items-end gap-2 rounded-2xl border p-3 ${habit.archived ? 'border-border/60 bg-surface/40 opacity-70' : 'border-border bg-surface-light/80'}`}>
       <div className="min-w-[10rem] flex-1">
-        <label className="text-[10px] uppercase tracking-wider text-muted" htmlFor={`name-${habit.id}`}>Nombre</label>
+        <label className="text-micro uppercase tracking-wider text-muted" htmlFor={`name-${habit.id}`}>Nombre</label>
         <input
           id={`name-${habit.id}`}
           type="text"
@@ -110,25 +110,25 @@ function HabitEditRow({ habit, onArchive, onUnarchive, onAskDelete }: RowProps) 
         />
       </div>
       <div>
-        <label className="text-[10px] uppercase tracking-wider text-muted" htmlFor={`kind-${habit.id}`}>Tipo</label>
+        <label className="text-micro uppercase tracking-wider text-muted" htmlFor={`kind-${habit.id}`}>Tipo</label>
         <select id={`kind-${habit.id}`} value={kind} onChange={(e) => setKind(e.target.value as HabitKind)} className="block rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-white outline-none focus:border-accent">
           <option value="positive">Hacer</option>
           <option value="negative">Evitar</option>
         </select>
       </div>
       <div>
-        <label className="text-[10px] uppercase tracking-wider text-muted" htmlFor={`period-${habit.id}`}>Período</label>
+        <label className="text-micro uppercase tracking-wider text-muted" htmlFor={`period-${habit.id}`}>Período</label>
         <select id={`period-${habit.id}`} value={period} onChange={(e) => setPeriod(e.target.value as HabitPeriod)} className="block rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-white outline-none focus:border-accent">
           <option value="daily">Diario</option>
           <option value="weekly">Semanal</option>
         </select>
       </div>
       <div>
-        <label className="text-[10px] uppercase tracking-wider text-muted" htmlFor={`target-${habit.id}`}>Meta</label>
+        <label className="text-micro uppercase tracking-wider text-muted" htmlFor={`target-${habit.id}`}>Meta</label>
         <input id={`target-${habit.id}`} type="number" min={1} max={99} value={target} onChange={(e) => setTarget(Math.max(1, Number.parseInt(e.target.value, 10) || 1))} className="block w-16 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-white outline-none focus:border-accent" />
       </div>
       <div>
-        <label className="text-[10px] uppercase tracking-wider text-muted" htmlFor={`color-${habit.id}`}>Color</label>
+        <label className="text-micro uppercase tracking-wider text-muted" htmlFor={`color-${habit.id}`}>Color</label>
         <input id={`color-${habit.id}`} type="text" value={color} onChange={(e) => setColor(e.target.value)} placeholder="#60a5fa" className="block w-24 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-white outline-none focus:border-accent" />
       </div>
       <div className="flex items-end gap-1">

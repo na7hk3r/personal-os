@@ -105,7 +105,7 @@ export function JournalEditor({ date = todayISO(), onAfterSave }: Props) {
   return (
     <article className="space-y-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl" onKeyDown={handleKeyDown} aria-label={`Editor de entrada del ${date}`}>
       <header className="flex flex-wrap items-center gap-2">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-muted">Entrada</span>
+        <span className="text-caption uppercase tracking-eyebrow text-muted">Entrada</span>
         <span className="text-sm text-white">{date}</span>
         {existing && (
           <button

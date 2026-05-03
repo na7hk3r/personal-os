@@ -35,7 +35,7 @@ export function StepName({ initialName, initialBigGoal = '', onNext }: Props) {
         />
 
         <div className="text-left space-y-1">
-          <label className="text-xs uppercase tracking-[0.18em] text-muted">
+          <label className="text-xs uppercase tracking-eyebrow text-muted">
             ¿Cuál es tu gran objetivo este año? <span className="text-muted/60 normal-case tracking-normal">(opcional)</span>
           </label>
           <textarea
@@ -48,7 +48,7 @@ export function StepName({ initialName, initialBigGoal = '', onNext }: Props) {
             rows={2}
             className="w-full rounded-xl border border-border bg-surface/80 px-4 py-3 text-sm placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/20 transition-all resize-none"
           />
-          <p className="text-[11px] text-muted/70">
+          <p className="text-caption text-muted/70">
             Tu copiloto lo va a recordar y te lo va a devolver cuando te disperses.
           </p>
         </div>

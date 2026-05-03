@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Maximize2, Minimize2, Puzzle, SlidersHorizontal, Zap } from 'lucide-react'
+import { useNavigate, Link } from 'react-router-dom'
+import { ChevronDown, ChevronUp, Maximize2, Minimize2, Puzzle, SlidersHorizontal, TrendingUp, X, Zap } from 'lucide-react'
 import { pluginManager } from '../plugins/PluginManager'
 import { SystemStatusHero } from './SystemStatusHero'
 import { QuickActionsBar } from './QuickActionsBar'
-import { GlobalProgress } from './GlobalProgress'
-import { DailyMissions } from './DailyMissions'
-import { MainDayTasks } from './MainDayTasks'
+import { TodayFocus } from './TodayFocus'
 import { RecentActivityFeed } from './RecentActivityFeed'
 import { DashboardFooter } from './DashboardFooter'
-import { useGamificationStore } from '@core/gamification/gamificationStore'
 
 const DASHBOARD_LAYOUT_SETTINGS_KEY = 'dashboardLayoutState'
+const PROGRESS_MOVED_NOTICE_KEY = 'core:progressMoved:notified:v1'
 
 interface DashboardLayoutState {
   collapsedModules: Record<string, boolean>
@@ -47,15 +45,26 @@ function moveToFront<T extends { id: string }>(widgets: T[], id: string | null):
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const missions = useGamificationStore((s) => s.dailyMissions)
   const [collapsedModules, setCollapsedModules] = useState<Record<string, boolean>>({})
   const [expandedModuleId, setExpandedModuleId] = useState<string | null>(null)
   const [activityCollapsed, setActivityCollapsed] = useState(false)
   const [widgetOrder, setWidgetOrder] = useState<string[]>([])
+  const [progressNoticeDismissed, setProgressNoticeDismissed] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.localStorage.getItem(PROGRESS_MOVED_NOTICE_KEY) === '1'
+  })
+
+  const dismissProgressNotice = () => {
+    setProgressNoticeDismissed(true)
+    try {
+      window.localStorage.setItem(PROGRESS_MOVED_NOTICE_KEY, '1')
+    } catch {
+      // ignore
+    }
+  }
   const widgets = pluginManager.getActiveWidgets()
   const navItems = pluginManager.getActiveNavItems()
   const allPlugins = pluginManager.getAllPlugins()
-  const hasDailyMissions = missions.length > 0
 
   const hasFitnessKpi = widgets.some((w) => w.id === 'fitness-kpi')
   const hasWorkSummary = widgets.some((w) => w.id === 'work-summary')
@@ -166,26 +175,37 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
+      {!progressNoticeDismissed && (
+        <div className="flex items-start gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm">
+          <TrendingUp size={16} className="mt-0.5 shrink-0 text-accent-light" />
+          <div className="flex-1">
+            <p className="text-foreground">
+              Tu progreso global ahora vive en{' '}
+              <Link to="/review" className="font-semibold text-accent-light underline-offset-2 hover:underline">
+                Progreso
+              </Link>
+              . El Dashboard se enfoca en lo que tenés que hacer hoy.
+            </p>
+          </div>
+          <button
+            onClick={dismissProgressNotice}
+            className="shrink-0 rounded-md p-1 text-muted transition-colors hover:bg-surface-lighter hover:text-white"
+            aria-label="Cerrar aviso"
+            title="Cerrar"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
       {/* 1. Hero */}
       <SystemStatusHero />
 
       {/* 2. Quick Actions (el brief diario ahora vive en el CopilotPanel persistente) */}
       <QuickActionsBar />
 
-      {/* 3. Global Progress + Daily Missions */}
-      {hasDailyMissions ? (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-          <div className="xl:col-span-2">
-            <GlobalProgress />
-          </div>
-          <div className="xl:col-span-1 flex flex-col gap-4">
-            <DailyMissions />
-            <MainDayTasks />
-          </div>
-        </div>
-      ) : (
-        <GlobalProgress />
-      )}
+      {/* 3. Hoy: tareas principales + misiones diarias */}
+      <TodayFocus />
 
       {/* 4. Modules + Activity feed */}
       {widgets.length > 0 ? (
@@ -236,21 +256,21 @@ export function Dashboard() {
                       {path && (
                         <button
                           onClick={() => navigate(path)}
-                          className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-[10px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                          className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-micro text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
                         >
                           Ver módulo
                         </button>
                       )}
                       <button
                         onClick={() => toggleExpandModule(widget.id)}
-                        className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-[10px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                        className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-micro text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
                         title={isExpanded ? 'Volver tamaño normal' : 'Expandir módulo'}
                       >
                         {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
                       </button>
                       <button
                         onClick={() => toggleModule(widget.id)}
-                        className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-[10px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                        className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-micro text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
                         title={isCollapsed ? 'Expandir módulo' : 'Colapsar módulo'}
                       >
                         {isCollapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
@@ -273,16 +293,24 @@ export function Dashboard() {
           <div className="xl:col-span-1">
             <div className="rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <h3 className="text-sm font-medium text-muted">Actividad reciente</h3>
+                <div className="flex flex-col">
+                  <h3 className="text-sm font-medium text-muted">Actividad reciente</h3>
+                  <button
+                    onClick={() => navigate('/review')}
+                    className="text-left text-micro text-muted/70 transition-colors hover:text-accent-light"
+                  >
+                    Ver historial completo →
+                  </button>
+                </div>
                 <button
                   onClick={() => setActivityCollapsed((prev) => !prev)}
-                  className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-[10px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                  className="shrink-0 rounded-md border border-border/70 px-2 py-1 text-micro text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
                   title={activityCollapsed ? 'Expandir módulo' : 'Colapsar módulo'}
                 >
                   {activityCollapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
                 </button>
               </div>
-              {!activityCollapsed && <RecentActivityFeed />}
+              {!activityCollapsed && <RecentActivityFeed compact />}
             </div>
           </div>
         </div>
@@ -312,7 +340,7 @@ export function Dashboard() {
                     <p className="mt-0.5 line-clamp-2 text-xs text-muted">{plugin.manifest.description}</p>
                   </div>
                   <span
-                    className={`shrink-0 self-start rounded-full px-2 py-0.5 text-[11px] ${
+                    className={`shrink-0 self-start rounded-full px-2 py-0.5 text-caption ${
                       plugin.status === 'active'
                         ? 'bg-emerald-500/15 text-emerald-300'
                         : 'bg-slate-500/10 text-slate-400'
@@ -329,7 +357,7 @@ export function Dashboard() {
               className="mt-6 flex items-center justify-center gap-2 self-start rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-white transition hover:bg-accent/85"
             >
               <SlidersHorizontal size={15} />
-              Ir al Control Center
+              Ir a Configuración
             </button>
 
             <p className="mt-4 flex items-center gap-1.5 text-xs text-muted">
@@ -343,7 +371,7 @@ export function Dashboard() {
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h3 className="text-sm font-medium text-muted">Actividad reciente</h3>
               </div>
-              <RecentActivityFeed />
+              <RecentActivityFeed compact />
             </div>
           </div>
         </div>

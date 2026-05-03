@@ -79,7 +79,7 @@ export function CalendarPage() {
         <div className="flex items-center gap-3">
           <CalendarDays size={20} className="text-accent-light" />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Calendario unificado</p>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Calendario unificado</p>
             <h1 className="text-xl font-semibold capitalize">{monthLabel}</h1>
           </div>
         </div>
@@ -116,7 +116,7 @@ export function CalendarPage() {
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1 text-[10px] uppercase tracking-wider text-muted">
+        <div className="grid grid-cols-7 gap-1 text-micro uppercase tracking-wider text-muted">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].map((d) => (
             <div key={d} className="px-1 py-1 text-center">{d}</div>
           ))}
@@ -128,11 +128,11 @@ export function CalendarPage() {
             return (
               <div
                 key={cell.iso}
-                className={`min-h-[88px] rounded-lg border p-1.5 text-[11px] transition-colors ${
+                className={`min-h-[88px] rounded-lg border p-1.5 text-caption transition-colors ${
                   cell.inMonth ? 'border-border bg-surface' : 'border-border/40 bg-surface/30 opacity-50'
                 } ${isToday ? 'ring-1 ring-accent' : ''}`}
               >
-                <div className={`mb-1 flex items-center justify-between text-[10px] ${isToday ? 'text-accent-light' : 'text-muted'}`}>
+                <div className={`mb-1 flex items-center justify-between text-micro ${isToday ? 'text-accent-light' : 'text-muted'}`}>
                   <span>{cell.date.getDate()}</span>
                   {dayEvents.length > 0 && <span>{dayEvents.length}</span>}
                 </div>
@@ -141,14 +141,14 @@ export function CalendarPage() {
                     <button
                       key={e.id}
                       onClick={() => e.ctaPath && navigate(e.ctaPath)}
-                      className={`block w-full truncate rounded border px-1.5 py-0.5 text-left text-[10px] ${SOURCE_COLOR[e.source]}`}
+                      className={`block w-full truncate rounded border px-1.5 py-0.5 text-left text-micro ${SOURCE_COLOR[e.source]}`}
                       title={`${SOURCE_LABEL[e.source]}: ${e.title}`}
                     >
                       {e.title}
                     </button>
                   ))}
                   {dayEvents.length > 3 && (
-                    <p className="text-[10px] text-muted">+{dayEvents.length - 3}</p>
+                    <p className="text-micro text-muted">+{dayEvents.length - 3}</p>
                   )}
                 </div>
               </div>

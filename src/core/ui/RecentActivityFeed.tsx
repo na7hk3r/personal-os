@@ -169,12 +169,13 @@ function relativeTime(isoStr: string): string {
   return `hace ${days}d`
 }
 
-export function RecentActivityFeed() {
+export function RecentActivityFeed({ compact = false, maxItems }: { compact?: boolean; maxItems?: number } = {}) {
   const [events, setEvents] = useState<EventLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>('all')
   const [timeFilter, setTimeFilter] = useState<ActivityTimeFilter>('all')
   const activePlugins = useCoreStore((s) => s.activePlugins)
+  const limit = maxItems ?? (compact ? 3 : 5)
 
   const load = () => {
     storageAPI
@@ -260,10 +261,11 @@ export function RecentActivityFeed() {
 
       return true
     })
-    .slice(0, 5)
+    .slice(0, limit)
 
   return (
     <div className="flex flex-col">
+      {!compact && (
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         {[
           { id: 'all', label: 'Todos' },
@@ -274,7 +276,7 @@ export function RecentActivityFeed() {
           <button
             key={opt.id}
             onClick={() => setSourceFilter(opt.id as ActivitySourceFilter)}
-            className={`rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+            className={`rounded-full border px-2 py-0.5 text-micro transition-colors ${
               sourceFilter === opt.id
                 ? 'border-accent/60 bg-accent/20 text-accent-light'
                 : 'border-border bg-surface text-muted hover:text-white'
@@ -286,7 +288,7 @@ export function RecentActivityFeed() {
 
         <button
           onClick={() => setTimeFilter((prev) => (prev === 'all' ? '24h' : 'all'))}
-          className={`ml-auto rounded-full border px-2 py-0.5 text-[10px] transition-colors ${
+          className={`ml-auto rounded-full border px-2 py-0.5 text-micro transition-colors ${
             timeFilter === '24h'
               ? 'border-accent/60 bg-accent/20 text-accent-light'
               : 'border-border bg-surface text-muted hover:text-white'
@@ -295,15 +297,20 @@ export function RecentActivityFeed() {
           {timeFilter === '24h' ? 'Ultimas 24h' : 'Todo el historial'}
         </button>
       </div>
+      )}
 
       {loading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-xs text-muted animate-pulse">Cargando…</p>
+        <div className="flex-1 space-y-2" role="status" aria-label="Cargando actividad">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-7 animate-pulse rounded-md bg-surface-lighter/40" />
+          ))}
+          <span className="sr-only">Cargando actividad reciente…</span>
         </div>
       ) : filteredEvents.length === 0 ? (
-        <div className="flex-1 flex flex-col items-center justify-center text-center gap-2">
+        <div className="flex-1 flex flex-col items-center justify-center text-center gap-2 py-6">
           <Inbox size={28} className="text-muted/70" />
-          <p className="text-xs text-muted">Sin actividad para los filtros actuales</p>
+          <p className="text-xs text-muted">Cuando registres algo va a aparecer acá.</p>
+          <p className="text-caption text-muted/70">Empezá con una nota, una tarea o un hábito.</p>
         </div>
       ) : (
         <ul className="flex-1 space-y-2 pr-1">
@@ -319,7 +326,7 @@ export function RecentActivityFeed() {
                 <p className="text-xs text-foreground leading-snug truncate">
                   {humanizeEvent(entry)}
                 </p>
-                <p className="text-[10px] text-muted mt-0.5">{relativeTime(entry.created_at)}</p>
+                <p className="text-micro text-muted mt-0.5">{relativeTime(entry.created_at)}</p>
               </div>
             </li>
           ))}

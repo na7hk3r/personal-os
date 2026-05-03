@@ -321,7 +321,7 @@ export function CorePlannerPage() {
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-white">{dayLabel}</span>
           {hasTasks && (
-            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+            <span className={`rounded-full px-1.5 py-0.5 text-micro font-semibold ${
               allDone
                 ? 'bg-success/20 text-success'
                 : doneCount > 0
@@ -347,7 +347,7 @@ export function CorePlannerPage() {
   return (
     <div className="space-y-5">
       <header className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-lg">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted">Core Planner</p>
+        <p className="text-xs uppercase tracking-eyebrow text-muted">Core Planner</p>
         <h1 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-white">
           <CalendarDays size={22} className="text-accent-light" />
           Agenda diaria y calendario
@@ -485,7 +485,7 @@ export function CorePlannerPage() {
             </div>
           )}
 
-          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-wide text-muted">
+          <div className="mt-3 grid grid-cols-7 gap-1 text-center text-caption uppercase tracking-wide text-muted">
             {Array.from({ length: 7 }).map((_, idx) => (
               <span key={idx}>{toWeekdayLabel(idx)}</span>
             ))}
@@ -515,7 +515,7 @@ export function CorePlannerPage() {
 
         <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <label className="space-y-1">
-            <span className="text-[11px] uppercase tracking-wide text-muted">Estado</span>
+            <span className="text-caption uppercase tracking-wide text-muted">Estado</span>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as TaskFilterStatus)}
@@ -528,7 +528,7 @@ export function CorePlannerPage() {
           </label>
 
           <label className="space-y-1 sm:col-span-1 xl:col-span-2">
-            <span className="text-[11px] uppercase tracking-wide text-muted">Categoría</span>
+            <span className="text-caption uppercase tracking-wide text-muted">Categoría</span>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value as 'all' | PlannerCategory)}
@@ -578,7 +578,7 @@ export function CorePlannerPage() {
                     {task.title}
                   </p>
                   {task.note && <p className="mt-0.5 text-xs text-muted">{task.note}</p>}
-                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-muted">
+                  <div className="mt-1.5 flex items-center gap-2 text-caption text-muted">
                     <span className={`rounded-full border px-2 py-0.5 ${CATEGORY_STYLES[task.category]}`}>
                       {CATEGORY_LABELS[task.category]}
                     </span>

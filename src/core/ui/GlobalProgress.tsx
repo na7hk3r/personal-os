@@ -100,7 +100,7 @@ export function GlobalProgress() {
           </p>
           <p className="text-xs text-muted">racha activa</p>
           {nextAchievement && (
-            <p className="text-[10px] text-muted" title={`${nextAchievement.title}: ${nextAchievement.progress.current}/${nextAchievement.progress.target}`}>
+            <p className="text-micro text-muted" title={`${nextAchievement.title}: ${nextAchievement.progress.current}/${nextAchievement.progress.target}`}>
               🎯 {nextAchievement.title} {nextAchievement.progress.current}/{nextAchievement.progress.target}
             </p>
           )}
@@ -129,7 +129,7 @@ export function GlobalProgress() {
       </div>
 
       <div className="rounded-xl border border-border bg-surface/50 p-3">
-        <p className="mb-2 text-xs uppercase tracking-[0.18em] text-muted">XP Ultimos 7 dias</p>
+        <p className="mb-2 text-xs uppercase tracking-eyebrow text-muted">XP Ultimos 7 dias</p>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={xpByDay}>
@@ -191,7 +191,7 @@ export function GlobalProgress() {
                       </div>
                       <div className="min-w-0">
                         <p className="truncate text-xs font-semibold">{ach.title}</p>
-                        <p className="truncate text-[11px] text-muted">{ach.description}</p>
+                        <p className="truncate text-caption text-muted">{ach.description}</p>
                       </div>
                     </div>
                     {!unlocked && (
@@ -202,7 +202,7 @@ export function GlobalProgress() {
                             style={{ width: `${progress.percent}%` }}
                           />
                         </div>
-                        <p className="text-[11px] text-muted">
+                        <p className="text-caption text-muted">
                           {progress.current}/{progress.target} {progress.label}
                         </p>
                       </div>

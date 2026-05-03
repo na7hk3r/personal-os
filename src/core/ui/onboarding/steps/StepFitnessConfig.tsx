@@ -99,7 +99,7 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
               config.smokingTracker ? 'border-warning bg-warning' : 'border-border'
             }`}
           >
-            {config.smokingTracker && <span className="text-[10px] text-black font-bold">✓</span>}
+            {config.smokingTracker && <span className="text-micro text-black font-bold">✓</span>}
           </span>
         </button>
       </div>

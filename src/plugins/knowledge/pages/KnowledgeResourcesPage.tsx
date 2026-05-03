@@ -49,7 +49,7 @@ export function KnowledgeResourcesPage() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Biblioteca</p>
+          <p className="text-caption uppercase tracking-eyebrow text-muted">Biblioteca</p>
           <h1 className="text-2xl font-semibold text-white">{resources.length} recursos</h1>
         </div>
         <button
@@ -205,7 +205,7 @@ function ResourceRow({ resourceId, highlighted }: { resourceId: string; highligh
         <BookOpen size={18} className="shrink-0 text-accent-light" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-white">{r.title}</p>
-          <p className="text-[11px] text-muted">
+          <p className="text-caption text-muted">
             {r.type}
             {r.author ? ` · ${r.author}` : ''} · {STATUS_LABEL[r.status]} · {r.progress}%
             {highlightCount > 0 && ` · ${highlightCount} highlights`}
@@ -225,7 +225,7 @@ function ResourceRow({ resourceId, highlighted }: { resourceId: string; highligh
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="rounded-full border border-border bg-surface px-3 py-1 text-[11px] text-muted hover:text-white"
+          className="rounded-full border border-border bg-surface px-3 py-1 text-caption text-muted hover:text-white"
         >
           {expanded ? 'Cerrar' : 'Editar'}
         </button>
@@ -233,7 +233,7 @@ function ResourceRow({ resourceId, highlighted }: { resourceId: string; highligh
 
       {expanded && (
         <div className="mt-3 space-y-3 border-t border-border pt-3">
-          <div className="flex flex-wrap gap-1.5 text-[11px]">
+          <div className="flex flex-wrap gap-1.5 text-caption">
             {(['queued', 'in_progress', 'finished', 'dropped'] as ResourceStatus[]).map((s) => (
               <button
                 key={s}
@@ -264,7 +264,7 @@ function ResourceRow({ resourceId, highlighted }: { resourceId: string; highligh
           <button
             type="button"
             onClick={remove}
-            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1 text-[11px] text-rose-200 hover:border-rose-500/70"
+            className="inline-flex items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1 text-caption text-rose-200 hover:border-rose-500/70"
           >
             <Trash2 size={12} aria-hidden="true" />
             Eliminar recurso

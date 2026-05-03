@@ -62,7 +62,7 @@ export function GoalsSummaryWidget() {
     >
       <div className="flex items-center gap-2">
         <Target size={16} className="text-accent-light" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-[0.18em] text-muted">Objetivos · {summary.label}</span>
+        <span className="text-caption uppercase tracking-eyebrow text-muted">Objetivos · {summary.label}</span>
       </div>
       <div>
         <p className="text-2xl font-semibold text-white">

@@ -46,7 +46,7 @@ export function DailyBriefBanner() {
     <div className="flex items-start gap-3 rounded-2xl border border-border bg-surface-light/90 px-4 py-3">
       <Sparkles className="mt-0.5 h-4 w-4 text-accent-light" />
       <div className="flex-1 min-w-0">
-        <div className="text-[11px] uppercase tracking-wide text-muted">
+        <div className="text-caption uppercase tracking-wide text-muted">
           {messages.guidance.dailyBriefHeading}
           {brief?.source === 'fallback' ? <span className="ml-2 text-muted/70">sin IA</span> : null}
         </div>

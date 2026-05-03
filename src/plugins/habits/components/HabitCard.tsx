@@ -70,7 +70,7 @@ export function HabitCard({ habit }: Props) {
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-white">{habit.name}</p>
-        <p className="text-[11px] text-muted">
+        <p className="text-caption text-muted">
           {habit.period === 'daily' ? 'Diario' : 'Semanal'}
           {habit.target > 1 && ` · meta ${habit.target}`}
           {habit.kind === 'negative' && ' · evitar'}

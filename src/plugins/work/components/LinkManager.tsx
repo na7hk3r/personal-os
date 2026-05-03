@@ -256,7 +256,7 @@ function LinkGroup({
     <div className="bg-surface-light rounded-xl border border-border p-4">
       <h4 className="text-sm font-semibold mb-3 flex items-center justify-between">
         <span>{title}</span>
-        <span className="text-[10px] font-normal text-muted">{links.length}</span>
+        <span className="text-micro font-normal text-muted">{links.length}</span>
       </h4>
       <div className="space-y-2">
         {links.map((link) => (
@@ -357,7 +357,7 @@ function LinkRow({
       >
         <Icon size={14} className="shrink-0 text-muted" />
         <span className="truncate">{link.title}</span>
-        <span className="hidden md:inline text-[10px] text-muted/60 truncate">
+        <span className="hidden md:inline text-micro text-muted/60 truncate">
           {hostOf(link.url)}
         </span>
         <ExternalLink size={11} className="shrink-0 text-muted/50" />
@@ -373,7 +373,7 @@ function LinkRow({
         <button
           onClick={onDelete}
           title={confirmingDelete ? 'Confirmar eliminación' : 'Eliminar'}
-          className={`rounded px-1 text-[10px] font-medium ${
+          className={`rounded px-1 text-micro font-medium ${
             confirmingDelete ? 'text-red-300 bg-red-500/15' : 'text-muted hover:text-red-400'
           }`}
         >

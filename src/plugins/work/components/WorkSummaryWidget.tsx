@@ -63,28 +63,28 @@ export function WorkSummaryWidget() {
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-lg border border-border bg-surface px-2 py-2 text-center">
           <p className="text-lg font-semibold tabular-nums">{activeCount}</p>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Activas</p>
+          <p className="text-micro text-muted uppercase tracking-wide">Activas</p>
         </div>
         <div className="rounded-lg border border-border bg-surface px-2 py-2 text-center">
           <p className="text-lg font-semibold tabular-nums">{inProgressCount}</p>
-          <p className="text-[10px] text-muted uppercase tracking-wide">En progreso</p>
+          <p className="text-micro text-muted uppercase tracking-wide">En progreso</p>
         </div>
         <div className="rounded-lg border border-border bg-surface px-2 py-2 text-center">
           <p className="text-lg font-semibold tabular-nums">{doneCount}</p>
-          <p className="text-[10px] text-muted uppercase tracking-wide">Hechas</p>
+          <p className="text-micro text-muted uppercase tracking-wide">Hechas</p>
         </div>
       </div>
 
       <div className="space-y-1.5 rounded-lg border border-border bg-surface px-3 py-2">
-        <div className="flex items-center justify-between text-[11px] text-muted">
+        <div className="flex items-center justify-between text-caption text-muted">
           <span>Backlog/Todo</span>
           <span className="tabular-nums">{backlogCount}/{todoCount}</span>
         </div>
-        <div className="flex items-center justify-between text-[11px] text-muted">
+        <div className="flex items-center justify-between text-caption text-muted">
           <span>Foco hoy</span>
           <span className="tabular-nums">{formatFocusDuration(focusTodayMs)} ({sessionsToday.length})</span>
         </div>
-        <div className="flex items-center justify-between text-[11px] text-muted">
+        <div className="flex items-center justify-between text-caption text-muted">
           <span>Vencidas</span>
           <span className={`tabular-nums ${overdueCount > 0 ? 'text-warning' : ''}`}>{overdueCount}</span>
         </div>
@@ -97,20 +97,20 @@ export function WorkSummaryWidget() {
         />
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-muted">
+      <div className="flex items-center justify-between text-caption text-muted">
         <span>Avance tablero</span>
         <span className="tabular-nums">{completedPct}%</span>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
         {topColumnEntries.map(([name, count]) => (
-          <span key={name} className="rounded-full border border-border bg-surface px-2 py-0.5 text-[10px] text-muted">
+          <span key={name} className="rounded-full border border-border bg-surface px-2 py-0.5 text-micro text-muted">
             {name}: {count}
           </span>
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-muted">
+      <div className="flex items-center justify-between text-caption text-muted">
         <span>Notas / Links</span>
         <span className="tabular-nums">{notes.length} / {links.length}</span>
       </div>

@@ -50,8 +50,14 @@ function isSafeModeRequested(): boolean {
 
 function RouteFallback() {
   return (
-    <div className="flex items-center justify-center px-6 py-10 text-sm text-muted">
-      Cargando…
+    <div className="space-y-4 p-2" role="status" aria-label="Cargando contenido">
+      <div className="h-24 animate-pulse rounded-2xl border border-border/60 bg-surface-light/40" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="h-40 animate-pulse rounded-2xl border border-border/60 bg-surface-light/40" />
+        <div className="h-40 animate-pulse rounded-2xl border border-border/60 bg-surface-light/40" />
+      </div>
+      <div className="h-32 animate-pulse rounded-2xl border border-border/60 bg-surface-light/40" />
+      <span className="sr-only">Cargando…</span>
     </div>
   )
 }

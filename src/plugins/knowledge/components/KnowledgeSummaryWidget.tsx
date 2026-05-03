@@ -40,7 +40,7 @@ export function KnowledgeSummaryWidget() {
     >
       <div className="flex items-center gap-2">
         <BookOpen size={16} className="text-accent-light" aria-hidden="true" />
-        <span className="text-[11px] uppercase tracking-[0.18em] text-muted">Conocimiento</span>
+        <span className="text-caption uppercase tracking-eyebrow text-muted">Conocimiento</span>
       </div>
       <div>
         <p className="text-2xl font-semibold text-white">

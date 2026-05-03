@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 import { GamificationNotificationHub } from './GamificationNotificationHub'
-import { SystemSuggestions } from './SystemSuggestions'
 import { AppUpdateBanner } from './components/AppUpdateBanner'
 import { CopilotPanel } from './CopilotPanel'
 import { GlobalShortcuts } from './GlobalShortcuts'
@@ -15,12 +14,35 @@ export function Shell() {
   const theme = useCoreStore((s) => s.settings.theme)
   const [copilotCollapsed, setCopilotCollapsed] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false
+    if (window.matchMedia('(max-width: 1024px)').matches) return true
     return window.localStorage?.getItem(COPILOT_COLLAPSED_KEY) === 'true'
   })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme || 'default')
   }, [theme])
+
+  // Auto-colapsar el copiloto cuando la pantalla es chica (≤1024px) para
+  // evitar que el panel coma todo el ancho útil. Cuando el viewport vuelve a
+  // ser amplio respetamos la preferencia persistida del usuario.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia('(max-width: 1024px)')
+    const apply = () => {
+      if (mq.matches) {
+        setCopilotCollapsed(true)
+      } else {
+        try {
+          setCopilotCollapsed(window.localStorage?.getItem(COPILOT_COLLAPSED_KEY) === 'true')
+        } catch {
+          setCopilotCollapsed(false)
+        }
+      }
+    }
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
+  }, [])
 
   // Permite que otras superficies (ej. DailyScoreScreen) abran el copiloto
   // sin acoplarse al estado local de Shell. Persiste también el flag para
@@ -61,14 +83,11 @@ export function Shell() {
         id="main-content"
         role="main"
         tabIndex={-1}
-        className={`flex-1 overflow-y-auto transition-all duration-200 ${
-          sidebarCollapsed ? 'ml-16' : 'ml-60'
+        className={`min-w-0 flex-1 overflow-y-auto transition-all duration-200 ${
+          sidebarCollapsed ? 'ml-16' : 'ml-56'
         }`}
       >
-        <div className="mx-auto max-w-7xl p-6">
-          <div className="mb-2 flex justify-end">
-            <SystemSuggestions />
-          </div>
+        <div className="mx-auto max-w-7xl p-4 md:p-6">
           <Outlet />
         </div>
       </main>

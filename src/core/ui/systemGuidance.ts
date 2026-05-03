@@ -44,7 +44,7 @@ export function buildSystemSuggestions(
       {
         id: 'activate-plugin',
         message: 'No hay módulos activos. Activá al menos uno para comenzar.',
-        ctaLabel: 'Ir al Control Center',
+        ctaLabel: 'Ir a Configuración',
         ctaPath: '/control',
         type: 'warning',
       },

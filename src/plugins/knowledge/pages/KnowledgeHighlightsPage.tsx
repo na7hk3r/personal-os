@@ -32,7 +32,7 @@ export function KnowledgeHighlightsPage() {
     <div className="space-y-5">
       <header className="flex flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Highlights</p>
+          <p className="text-caption uppercase tracking-eyebrow text-muted">Highlights</p>
           <h1 className="text-2xl font-semibold text-white">{highlights.length}</h1>
           <p className="text-xs text-muted">Citas y notas ancladas a tus recursos</p>
         </div>
@@ -83,7 +83,7 @@ export function KnowledgeHighlightsPage() {
               <header className="flex items-start gap-2">
                 <Highlighter size={14} className="mt-1 shrink-0 text-amber-300" aria-hidden="true" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] uppercase tracking-wide text-muted">
+                  <p className="text-caption uppercase tracking-wide text-muted">
                     {resourceById.get(h.resourceId) ?? '(recurso eliminado)'}
                     {h.page != null && ` · p.${h.page}`}
                   </p>
@@ -91,7 +91,7 @@ export function KnowledgeHighlightsPage() {
               </header>
               <p className="mt-2 whitespace-pre-wrap text-sm text-white">{h.text}</p>
               {h.note && <p className="mt-1.5 text-xs italic text-muted">{h.note}</p>}
-              <footer className="mt-3 flex flex-wrap gap-1.5 text-[11px]">
+              <footer className="mt-3 flex flex-wrap gap-1.5 text-caption">
                 <button
                   type="button"
                   onClick={async () => {

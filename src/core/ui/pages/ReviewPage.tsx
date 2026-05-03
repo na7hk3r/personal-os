@@ -3,13 +3,15 @@ import { Sparkles, RefreshCw, BarChart3 } from 'lucide-react'
 import { aiContextService, type UserContextSnapshot } from '@core/services/aiContextService'
 import { aiSuggestionsService } from '@core/services/aiSuggestionsService'
 import { ollamaService } from '@core/services/ollamaService'
+import { GlobalProgress } from '../GlobalProgress'
+import { RecentActivityFeed } from '../RecentActivityFeed'
 
 type RangeKind = 'week' | 'month'
 
 function summarizeNumber(label: string, value: number | null | undefined, suffix = ''): React.ReactNode {
   return (
     <div className="rounded-lg border border-border bg-surface px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted">{label}</p>
+      <p className="text-micro uppercase tracking-wider text-muted">{label}</p>
       <p className="text-lg font-semibold">{value == null ? '—' : `${value}${suffix}`}</p>
     </div>
   )
@@ -47,8 +49,8 @@ export function ReviewPage() {
         <div className="flex items-center gap-3">
           <BarChart3 size={20} className="text-accent-light" />
           <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted">Review automático</p>
-            <h1 className="text-xl font-semibold">Revisión {range === 'week' ? 'semanal' : 'mensual'}</h1>
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Progreso</p>
+            <h1 className="text-xl font-semibold">Tu evolución {range === 'week' ? 'semanal' : 'mensual'}</h1>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
@@ -63,6 +65,9 @@ export function ReviewPage() {
           ))}
         </div>
       </header>
+
+      {/* Progreso global (movido del Dashboard como hogar canónico) */}
+      <GlobalProgress />
 
       {snapshot && (
         <>
@@ -116,7 +121,7 @@ export function ReviewPage() {
         </div>
         {!ollamaReady.enabled && (
           <p className="text-xs text-muted">
-            Ollama está deshabilitado. Activalo desde Control Center → Ollama para obtener análisis con IA local.
+            Ollama está deshabilitado. Activalo desde Configuración → Ollama para obtener análisis con IA local.
           </p>
         )}
         {ollamaReady.enabled && !ollamaReady.healthy && (
@@ -126,6 +131,12 @@ export function ReviewPage() {
         )}
         {aiError && <p className="mt-2 text-xs text-warning">{aiError}</p>}
         {aiText && <p className="mt-2 whitespace-pre-line text-sm text-foreground/80">{aiText}</p>}
+      </section>
+
+      {/* Historial completo de actividad */}
+      <section className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
+        <h2 className="mb-3 text-sm font-semibold text-white">Historial reciente</h2>
+        <RecentActivityFeed />
       </section>
     </div>
   )

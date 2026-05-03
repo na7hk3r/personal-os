@@ -56,7 +56,7 @@ export function AppUpdateBanner() {
           {isDownloaded ? 'Actualización lista' : 'Hay una actualización disponible'}
         </span>
         {version && (
-          <span className="text-[11px] text-muted">Versión {version}</span>
+          <span className="text-caption text-muted">Versión {version}</span>
         )}
       </div>
       <button

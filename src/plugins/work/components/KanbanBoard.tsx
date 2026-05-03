@@ -454,15 +454,11 @@ export function KanbanBoard() {
   }
 
   const sortedColumns = [...columns].sort((a, b) => a.position - b.position)
-  // Hasta 4 columnas: reparten ancho equitativo y no scrollean.
-  // 5 o más: ancho fijo + scroll horizontal del tablero.
-  const fitsWithoutScroll = sortedColumns.length <= 4
-  const trackClass = fitsWithoutScroll
-    ? 'flex gap-4 pb-4'
-    : 'scrollbar-kanban flex gap-4 overflow-x-auto pb-4'
-  const columnSizingClass = fitsWithoutScroll
-    ? 'flex-1 min-w-0'
-    : 'flex-shrink-0 w-64'
+  // Layout uniforme: scroll horizontal SIEMPRE con anchos fijos predecibles.
+  // El layout equitativo deformaba columnas al competir con el botón "Nueva
+  // columna" (w-44 fijo) y al achicar el viewport con sidebar+copilot abiertos.
+  const trackClass = 'scrollbar-kanban flex gap-4 overflow-x-auto pb-4'
+  const columnSizingClass = 'flex-shrink-0 w-[280px] md:w-[300px]'
 
   return (
     <>
@@ -535,7 +531,7 @@ export function KanbanBoard() {
                         <span className={`h-2 w-2 rounded-full ${isDone ? 'bg-success/80 shadow-[0_0_6px_1px_rgba(34,197,94,0.45)]' : 'bg-accent/70 shadow-[0_0_6px_1px_rgba(249,115,22,0.42)]'}`} />
                         <h4 className="text-sm font-semibold truncate">{col.name}</h4>
                         {isDone && (
-                          <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success" title="Columna marcada como Completada">
+                          <span className="rounded-full bg-success/15 px-1.5 py-0.5 text-micro font-semibold uppercase tracking-wide text-success" title="Columna marcada como Completada">
                             Done
                           </span>
                         )}
