@@ -6,7 +6,7 @@ const tabs: ScreenshotTab[] = [
     id: 'dashboard',
     label: 'Dashboard',
     src: 'screenshots/dashboard.png',
-    alt: 'Dashboard de Personal OS con Daily Score y misiones',
+    alt: 'Dashboard de Nora OS con Daily Score y misiones',
     caption: 'Daily Score, misiones del día y resumen de hábitos en una sola vista.',
   },
   {

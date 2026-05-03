@@ -13,7 +13,7 @@ export function Footer() {
         <div>
           <p className="text-xl font-bold text-foreground flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
-            Personal OS
+            Nora OS
           </p>
           <p className="mt-3 text-base font-medium text-foreground/90">
             Tu copiloto. Tu máquina. Tus datos.
@@ -116,7 +116,7 @@ export function Footer() {
       <div className="border-t border-border">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted">
           <p>
-            © {year} Personal OS — Licencia ISC. Hecho con{' '}
+            © {year} Nora OS — Licencia ISC. Hecho con{' '}
             <Heart className="inline w-3 h-3 text-accent" aria-label="amor" /> por{' '}
             <a
               href="https://github.com/na7hk3r"

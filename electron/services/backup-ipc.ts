@@ -53,7 +53,7 @@ function decrypt(blob: Buffer, passphrase: string): Buffer {
 async function pickSavePath(defaultName: string): Promise<string | null> {
   const focused = BrowserWindow.getFocusedWindow()
   const result = await dialog.showSaveDialog(focused ?? new BrowserWindow({ show: false }), {
-    title: 'Guardar backup de Personal OS',
+    title: 'Guardar backup de Nora OS',
     defaultPath: defaultName,
   })
   return result.canceled || !result.filePath ? null : result.filePath
@@ -62,7 +62,7 @@ async function pickSavePath(defaultName: string): Promise<string | null> {
 async function pickOpenPath(): Promise<string | null> {
   const focused = BrowserWindow.getFocusedWindow()
   const result = await dialog.showOpenDialog(focused ?? new BrowserWindow({ show: false }), {
-    title: 'Restaurar backup de Personal OS',
+    title: 'Restaurar backup de Nora OS',
     properties: ['openFile'],
   })
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0]

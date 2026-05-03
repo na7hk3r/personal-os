@@ -48,7 +48,7 @@ export function ForDevs() {
       id="devs"
       eyebrow="Para desarrolladores"
       title="Una plataforma, no una app cerrada."
-      description="Personal OS está diseñado para extenderse. Si sabés TypeScript, podés agregar un módulo nuevo en una tarde."
+      description="Nora OS está diseñado para extenderse. Si sabés TypeScript, podés agregar un módulo nuevo en una tarde."
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {cards.map(({ title, description, href, linkText, icon: Icon }) => (

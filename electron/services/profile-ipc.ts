@@ -77,7 +77,7 @@ function decrypt(blob: Buffer, passphrase: string): Buffer {
     throw new Error('Archivo de perfil corrupto o demasiado chico')
   }
   if (!blob.subarray(0, MAGIC.length).equals(MAGIC)) {
-    throw new Error('Formato inválido: el archivo no es un perfil cifrado de Personal OS')
+    throw new Error('Formato inválido: el archivo no es un perfil cifrado de Nora OS')
   }
   let offset = MAGIC.length
   const salt = blob.subarray(offset, offset + SALT_LEN); offset += SALT_LEN
@@ -93,7 +93,7 @@ function decrypt(blob: Buffer, passphrase: string): Buffer {
 async function pickSavePath(defaultName: string): Promise<string | null> {
   const focused = BrowserWindow.getFocusedWindow()
   const result = await dialog.showSaveDialog(focused ?? new BrowserWindow({ show: false }), {
-    title: 'Exportar perfil de Personal OS',
+    title: 'Exportar perfil de Nora OS',
     defaultPath: defaultName,
   })
   return result.canceled || !result.filePath ? null : result.filePath
@@ -102,7 +102,7 @@ async function pickSavePath(defaultName: string): Promise<string | null> {
 async function pickOpenPath(): Promise<string | null> {
   const focused = BrowserWindow.getFocusedWindow()
   const result = await dialog.showOpenDialog(focused ?? new BrowserWindow({ show: false }), {
-    title: 'Importar perfil de Personal OS',
+    title: 'Importar perfil de Nora OS',
     properties: ['openFile'],
   })
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0]
@@ -200,7 +200,7 @@ function parseSnapshot(text: string): ProfileSnapshot {
   if (!parsed || typeof parsed !== 'object') throw new Error('Snapshot inválido')
   const snap = parsed as ProfileSnapshot
   if (snap.app?.name !== 'personal-os') {
-    throw new Error('El archivo no parece ser un perfil de Personal OS')
+    throw new Error('El archivo no parece ser un perfil de Nora OS')
   }
   return snap
 }

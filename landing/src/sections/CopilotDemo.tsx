@@ -163,7 +163,7 @@ export function CopilotDemo() {
             </span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground leading-tight">
-                Personal OS Copiloto
+                Nora OS Copiloto
               </p>
               <p className="text-xs text-muted leading-tight flex items-center gap-1.5">
                 <span

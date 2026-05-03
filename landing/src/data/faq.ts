@@ -22,7 +22,7 @@ export const faq: FAQItem[] = [
   {
     question: '¿Es gratis?',
     answer:
-      'Sí. Personal OS es open source bajo licencia ISC y gratuito para uso personal. No hay tier "Pro", no hay paywall.',
+      'Sí. Nora OS es open source bajo licencia ISC y gratuito para uso personal. No hay tier "Pro", no hay paywall.',
   },
   {
     question: '¿Mis datos van a la nube?',
@@ -57,6 +57,6 @@ export const faq: FAQItem[] = [
   {
     question: '¿Necesito una cuenta para usarla?',
     answer:
-      'No. Personal OS es 100% local y multiusuario por máquina (cada usuario del equipo tiene su propia base cifrable). No hay registro online.',
+      'No. Nora OS es 100% local y multiusuario por máquina (cada usuario del equipo tiene su propia base cifrable). No hay registro online.',
   },
 ]

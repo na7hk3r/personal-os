@@ -14,7 +14,7 @@ export const DEFAULT_OLLAMA_SETTINGS: OllamaSettings = {
   enabled: false,
   model: 'llama3.2:3b',
   systemPrompt:
-    'Sos el coach personal de Personal OS. Hablás en español rioplatense, breve, motivador, sin emojis. ' +
+    'Sos el coach personal de Nora OS. Hablás en español rioplatense, breve, motivador, sin emojis. ' +
     'Te basás en datos reales del usuario que se incluyen en el prompt. Si los datos están vacíos, ' +
     'reconocelo en lugar de inventar. Sugerí un único próximo paso accionable cuando sea pertinente.',
   temperature: 0.6,
@@ -60,7 +60,7 @@ export const ollamaService = {
   async generate(prompt: string, opts?: { systemOverride?: string; modelOverride?: string }): Promise<string> {
     if (!window.ollama) throw new Error('Ollama bridge no disponible')
     const settings = await loadSettings()
-    if (!settings.enabled) throw new Error('Ollama está deshabilitado en Control Center')
+    if (!settings.enabled) throw new Error('Ollama está deshabilitado en Configuración')
     const req: OllamaGenerateRequest = {
       model: opts?.modelOverride ?? settings.model,
       prompt,

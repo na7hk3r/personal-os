@@ -54,7 +54,7 @@ function buildPrompt(kind: AISuggestionKind, snapshot: UserContextSnapshot): str
   const context = aiContextService.asPromptContext(snapshot)
   const { instruction } = TASKS[kind]
   return [
-    'CONTEXTO REAL DEL USUARIO (datos de su Personal OS local):',
+    'CONTEXTO REAL DEL USUARIO (datos de su Nora OS local):',
     context,
     '',
     'TAREA:',
@@ -74,7 +74,7 @@ function summarizeContext(snapshot: UserContextSnapshot): string {
 export const aiSuggestionsService = {
   async generate(kind: AISuggestionKind): Promise<AISuggestion> {
     const ready = await ollamaService.isReady()
-    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Control Center')
+    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Configuración')
     if (!ready.healthy) throw new Error(`Ollama no responde: ${ready.reason ?? 'sin detalle'}`)
     const snapshot = await aiContextService.snapshot()
     const prompt = buildPrompt(kind, snapshot)
@@ -93,12 +93,12 @@ export const aiSuggestionsService = {
    */
   async freeChat(userMessage: string): Promise<AISuggestion> {
     const ready = await ollamaService.isReady()
-    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Control Center')
+    if (!ready.enabled) throw new Error('Ollama está deshabilitado en Configuración')
     if (!ready.healthy) throw new Error(`Ollama no responde: ${ready.reason ?? 'sin detalle'}`)
     const snapshot = await aiContextService.snapshot()
     const context = aiContextService.asPromptContext(snapshot)
     const prompt = [
-      'CONTEXTO REAL DEL USUARIO (datos de su Personal OS local):',
+      'CONTEXTO REAL DEL USUARIO (datos de su Nora OS local):',
       context,
       '',
       'TAREA:',

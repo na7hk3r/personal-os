@@ -34,7 +34,7 @@ async function seedWork(): Promise<void> {
   if (!(await tableIsEmpty('work_cards'))) return
   const samples = [
     { title: 'Configurar primer foco profundo de la mañana', col: 'col-todo' },
-    { title: 'Revisar plugins activos en Control Center', col: 'col-doing' },
+    { title: 'Revisar plugins activos en Configuración', col: 'col-doing' },
     { title: 'Probar el copiloto con tu objetivo', col: 'col-todo' },
   ]
   let pos = 0
@@ -64,7 +64,7 @@ async function seedHabits(): Promise<void> {
 
 async function seedJournal(): Promise<void> {
   if (!(await tableIsEmpty('journal_entries'))) return
-  const content = 'Empecé a usar Personal OS hoy. Quiero ver qué pasa cuando lo uso una semana entera.'
+  const content = 'Empecé a usar Nora OS hoy. Quiero ver qué pasa cuando lo uso una semana entera.'
   await safeExec(
     `INSERT OR IGNORE INTO journal_entries (id, date, mood, title, content, tags, word_count, pinned, created_at, updated_at)
      VALUES (?, date('now'), 4, 'Primer día', ?, '[]', ?, 0, datetime('now'), datetime('now'))`,

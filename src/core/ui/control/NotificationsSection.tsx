@@ -35,7 +35,7 @@ export function NotificationsSection() {
   }
 
   const testNotify = async () => {
-    await notificationsService.showNow({ title: 'Personal OS', body: 'Notificación de prueba' })
+    await notificationsService.showNow({ title: 'Nora OS', body: 'Notificación de prueba' })
     setStatus('Notificación enviada')
   }
 

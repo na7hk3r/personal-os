@@ -84,7 +84,7 @@ export function StepSummary({ name, bigGoal, plugins, fitnessGoal, firstAction, 
 
       <div className="space-y-2 text-center max-w-xs">
         <p className="text-xs text-muted">
-          Personal OS guarda todo localmente. Tus datos son solo tuyos.
+          Nora OS guarda todo localmente. Tus datos son solo tuyos.
         </p>
       </div>
 

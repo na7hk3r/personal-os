@@ -55,7 +55,7 @@ export function registerDiagnosticIpc(): void {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-')
     const defaultName = `personal-os-diagnostic-${stamp}.json`
     const result = await dialog.showSaveDialog(focused ?? new BrowserWindow({ show: false }), {
-      title: 'Exportar diagnóstico de Personal OS',
+      title: 'Exportar diagnóstico de Nora OS',
       defaultPath: join(app.getPath('downloads'), defaultName),
       filters: [{ name: 'JSON', extensions: ['json'] }],
     })

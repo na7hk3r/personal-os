@@ -61,7 +61,7 @@ export function AutomationsSection() {
         ><Plus size={12} /> Nueva</button>
       </div>
       <p className="mt-1 text-sm text-muted">
-        Reaccioná a eventos de Personal OS sin escribir código. Por ejemplo: cuando completás un foco, sumá XP o disparate una notificación.
+        Reaccioná a eventos de Nora OS sin escribir código. Por ejemplo: cuando completás un foco, sumá XP o disparate una notificación.
       </p>
 
       {showForm && (
@@ -114,7 +114,7 @@ export function AutomationsSection() {
           <div key={a.id} className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{a.name}</p>
-              <p className="truncate text-[11px] text-muted">
+              <p className="truncate text-caption text-muted">
                 {a.trigger_event} → {a.action_type} · ejecutada {a.run_count}x
                 {a.last_run_at && ` · última ${a.last_run_at}`}
               </p>

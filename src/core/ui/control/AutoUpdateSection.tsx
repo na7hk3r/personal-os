@@ -75,7 +75,7 @@ export function AutoUpdateSection() {
           Actualizaciones
         </h2>
         <p className="text-xs text-muted mt-1">
-          Personal OS busca actualizaciones automáticamente. Vos decidís cuándo descargar e instalar.
+          Nora OS busca actualizaciones automáticamente. Vos decidís cuándo descargar e instalar.
         </p>
       </header>
 

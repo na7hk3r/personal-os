@@ -32,7 +32,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 md:px-8 h-14 flex items-center justify-between">
           <a href="#" className="font-bold text-foreground text-lg flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
-            Personal OS
+            Nora OS
           </a>
           <nav
             aria-label="Principal"

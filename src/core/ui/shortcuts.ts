@@ -1,5 +1,5 @@
 /**
- * Catálogo central de atajos de teclado de Personal OS.
+ * Catálogo central de atajos de teclado de Nora OS.
  *
  * Cada entrada documenta un shortcut implementado en el shell o en un plugin.
  * Si añadís un atajo nuevo, agregalo acá para que aparezca en /shortcuts y en

@@ -238,7 +238,7 @@ export function ProfilePage() {
 
       {!isAvailable && (
         <p className="text-xs text-muted text-center">
-          La importación/exportación requiere ejecutar Personal OS como app de escritorio.
+          La importación/exportación requiere ejecutar Nora OS como app de escritorio.
         </p>
       )}
     </div>

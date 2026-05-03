@@ -228,9 +228,9 @@ export function ControlCenter() {
         />
         <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-[0.24em] text-muted">Control Center</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-muted">Configuración</p>
             <h1 className="mt-2 flex items-center gap-3 text-3xl font-semibold text-white">
-              Gobernanza de Personal OS
+              Gobernanza de Nora OS
               <AuditHeaderBadge />
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-muted">
@@ -379,7 +379,7 @@ export function ControlCenter() {
                 <button
                   type="button"
                   onClick={() => navigate('/themes')}
-                  className="shrink-0 rounded-md border border-border bg-surface-light px-2.5 py-1 text-[11px] text-muted hover:border-accent/50 hover:text-white"
+                  className="shrink-0 rounded-md border border-border bg-surface-light px-2.5 py-1 text-caption text-muted hover:border-accent/50 hover:text-white"
                 >
                   Galería completa
                 </button>
@@ -402,7 +402,7 @@ export function ControlCenter() {
                     />
                     <span className="flex min-w-0 flex-col">
                       <span className="text-xs font-semibold">{t.label}</span>
-                      <span className="line-clamp-1 text-[11px] opacity-70">{t.description}</span>
+                      <span className="line-clamp-1 text-caption opacity-70">{t.description}</span>
                     </span>
                   </button>
                 ))}
@@ -410,7 +410,7 @@ export function ControlCenter() {
               <button
                 type="button"
                 onClick={() => navigate('/themes')}
-                className="mt-2 w-full rounded-md border border-dashed border-border px-3 py-1.5 text-[11px] text-muted hover:border-accent/50 hover:text-accent-light"
+                className="mt-2 w-full rounded-md border border-dashed border-border px-3 py-1.5 text-caption text-muted hover:border-accent/50 hover:text-accent-light"
               >
                 Ver los {THEMES.length} temas con previsualización en vivo →
               </button>
@@ -606,7 +606,7 @@ export function ControlCenter() {
                   }}
                   className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
                 />
-                <p className="text-[11px] text-muted/80">
+                <p className="text-caption text-muted/80">
                   Necesitás aproximadamente{' '}
                   <span className="font-semibold text-accent-light">
                     {Math.max(
@@ -682,7 +682,7 @@ export function ControlCenter() {
                       <span className="truncate">{plugin.manifest.name}</span>
                     </p>
                     <p className="mt-1 line-clamp-2 text-xs text-muted">{plugin.manifest.description}</p>
-                    <p className="mt-1 text-[11px] text-muted">v{plugin.manifest.version}</p>
+                    <p className="mt-1 text-caption text-muted">v{plugin.manifest.version}</p>
                   </div>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${

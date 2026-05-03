@@ -57,7 +57,7 @@ export function OllamaSection() {
         <h2 className="text-lg font-semibold">Ollama (IA local)</h2>
       </div>
       <p className="mt-1 text-sm text-muted">
-        Conectá Personal OS a tu instancia local de Ollama (http://127.0.0.1:11434) para análisis con IA basados en tus datos. Todo se procesa offline.
+        Conectá Nora OS a tu instancia local de Ollama (http://127.0.0.1:11434) para análisis con IA basados en tus datos. Todo se procesa offline.
       </p>
 
       <div className="mt-4 space-y-3">

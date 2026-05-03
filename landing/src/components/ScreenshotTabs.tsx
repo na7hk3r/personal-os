@@ -26,7 +26,7 @@ export function ScreenshotTabs({ tabs, defaultTabId }: Props) {
       {/* Tablist */}
       <div
         role="tablist"
-        aria-label="Capturas de Personal OS"
+        aria-label="Capturas de Nora OS"
         className="flex flex-wrap gap-2 justify-center mb-6"
       >
         {tabs.map((t) => {

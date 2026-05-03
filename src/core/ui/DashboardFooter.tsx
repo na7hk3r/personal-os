@@ -9,8 +9,8 @@ export function DashboardFooter() {
     <footer className="flex flex-col gap-3 pt-4 border-t border-border sm:flex-row sm:items-center sm:justify-between">
       {/* Brand */}
       <div className="flex items-center gap-3">
-        <img src="./GRUPO.png" alt="Personal OS" className="h-6 object-contain opacity-70" />
-        <span className="text-xs text-muted" title={`Personal OS v${APP_VERSION}`}>v{APP_VERSION}</span>
+        <img src="./GRUPO.png" alt="Nora OS" className="h-6 object-contain opacity-70" />
+        <span className="text-xs text-muted" title={`Nora OS v${APP_VERSION}`}>v{APP_VERSION}</span>
       </div>
 
       {/* System status */}

@@ -46,7 +46,7 @@ export function Download_() {
                 ? ` · publicada el ${new Date(release.publishedAt).toLocaleDateString('es-ES')}`
                 : ''
             }`
-          : 'Descargá Personal OS para tu sistema operativo.'
+          : 'Descargá Nora OS para tu sistema operativo.'
       }
     >
       <div className="flex justify-center mb-10">

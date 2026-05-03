@@ -50,7 +50,7 @@ export function Hero() {
       </h1>
 
       <p className="mt-8 max-w-2xl mx-auto text-lg md:text-xl text-muted leading-relaxed animate-slide-up">
-        Personal OS conecta tu trabajo, salud, hábitos y finanzas para decirte
+        Nora OS conecta tu trabajo, salud, hábitos y finanzas para decirte
         qué hacer hoy — sin enviar tus datos a ningún servidor.
       </p>
 
@@ -99,7 +99,7 @@ export function Hero() {
         Windows · Linux · macOS · Licencia ISC · Sin cuenta requerida
       </p>
 
-      {/* Brand strip — identidad gráfica de Personal OS */}
+      {/* Brand strip — identidad gráfica de Nora OS */}
       <div className="mt-12 md:mt-16 relative">
         <div
           aria-hidden="true"

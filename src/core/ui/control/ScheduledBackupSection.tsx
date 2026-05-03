@@ -205,8 +205,8 @@ export function ScheduledBackupSection() {
           <p className="text-xs text-muted flex items-center gap-2">
             <KeyRound size={12} /> Passphrase {passphraseLoaded ? '(cargada en memoria)' : '(no definida)'}
           </p>
-          <p className="text-[11px] text-muted">
-            La passphrase no se guarda a disco. Tenés que volver a ingresarla cuando reiniciás Personal OS.
+          <p className="text-caption text-muted">
+            La passphrase no se guarda a disco. Tenés que volver a ingresarla cuando reiniciás Nora OS.
           </p>
           <div className="flex items-center gap-2">
             <input

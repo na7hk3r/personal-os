@@ -51,7 +51,7 @@ export function ShortcutsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Atajos de teclado</h1>
           <p className="text-sm text-muted">
-            Catálogo completo de atajos disponibles en Personal OS.
+            Catálogo completo de atajos disponibles en Nora OS.
           </p>
         </div>
       </header>
