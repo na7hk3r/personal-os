@@ -183,16 +183,16 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
     >
       {/* Header */}
       <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent-light" />
-          <div>
-            <div className="text-sm font-medium">Copiloto</div>
-            <div className="text-caption text-muted">
-              {brief?.source === 'fallback' ? 'sin IA · usando datos locales' : 'asistente del día'}
+        <div className="flex min-w-0 items-center gap-2">
+          <Sparkles className="h-4 w-4 shrink-0 text-accent-light" />
+          <div className="min-w-0">
+            <div className="truncate text-xs font-semibold">Copiloto</div>
+            <div className="truncate text-[10px] uppercase tracking-eyebrow text-muted">
+              {brief?.source === 'fallback' ? 'sin IA · datos locales' : 'asistente del día'}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
           <button
             type="button"
             onClick={() => void refreshBrief()}
@@ -215,15 +215,15 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
       </header>
 
       {/* Mensajes */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-3 space-y-2.5">
         {messages.length === 0 && !briefLoading && (
-          <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border/70 p-3 text-xs text-muted">
-            <MessageSquare className="h-4 w-4 text-muted" />
+          <div className="flex flex-col items-start gap-2 rounded-lg border border-dashed border-border/70 p-3 text-[11px] text-muted">
+            <MessageSquare className="h-3.5 w-3.5 text-muted" />
             Preguntale a tu copiloto sobre tu día, tus rachas o qué priorizar.
           </div>
         )}
         {briefLoading && messages.length === 0 && (
-          <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-surface/60 p-3 text-xs text-muted">
+          <div className="flex items-center gap-2 rounded-lg border border-border/70 bg-surface/60 p-3 text-[11px] text-muted">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-accent-light" />
             Preparando el brief de hoy…
           </div>
@@ -232,7 +232,7 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
           <MessageBubble key={m.id} message={m} onRunAction={runAction} />
         ))}
         {actionFeedback && (
-          <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-caption text-accent-light">
+          <div className="rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-[11px] text-accent-light break-words">
             {actionFeedback}
           </div>
         )}
@@ -240,18 +240,19 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
 
       {/* Acciones rápidas */}
       <div className="border-t border-border px-3 py-2">
-        <div className="mb-2 text-micro uppercase tracking-wide text-muted">Acciones rápidas</div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="mb-1.5 text-[10px] uppercase tracking-eyebrow text-muted">Acciones rápidas</div>
+        <div className="flex flex-wrap gap-1">
           {QUICK_ACTIONS.map(({ label, prompt, icon: Icon }) => (
             <button
               key={label}
               type="button"
               disabled={sending}
               onClick={() => void send(prompt)}
-              className="flex items-center gap-1.5 rounded-full border border-border/70 bg-surface px-2.5 py-1 text-caption text-muted transition-colors hover:border-accent/40 hover:text-accent-light disabled:opacity-50"
+              title={prompt}
+              className="flex items-center gap-1 rounded-full border border-border/70 bg-surface px-2 py-0.5 text-[10px] text-muted transition-colors hover:border-accent/40 hover:text-accent-light disabled:opacity-50"
             >
-              <Icon className="h-3 w-3" />
-              {label}
+              <Icon className="h-3 w-3 shrink-0" />
+              <span className="truncate">{label}</span>
             </button>
           ))}
         </div>
@@ -266,17 +267,17 @@ export function CopilotPanel({ collapsed, onToggle }: CopilotPanelProps) {
             onKeyDown={handleKeyDown}
             rows={2}
             placeholder="Escribí algo… (Enter envía, Shift+Enter salto)"
-            className="flex-1 resize-none bg-transparent text-sm text-white placeholder:text-muted focus:outline-none"
+            className="min-w-0 flex-1 resize-none bg-transparent text-xs text-white placeholder:text-muted focus:outline-none"
             disabled={sending}
           />
           <button
             type="submit"
             disabled={sending || !input.trim()}
-            className="shrink-0 rounded-md bg-accent/80 p-2 text-white transition-colors hover:bg-accent disabled:opacity-50"
+            className="shrink-0 rounded-md bg-accent/80 p-1.5 text-white transition-colors hover:bg-accent disabled:opacity-50"
             title="Enviar"
             aria-label="Enviar mensaje"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
           </button>
         </div>
       </form>
@@ -294,7 +295,7 @@ function MessageBubble({
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
-        <div className="max-w-[85%] rounded-2xl rounded-tr-sm bg-accent/20 px-3 py-2 text-sm text-white">
+        <div className="max-w-[85%] break-words rounded-2xl rounded-tr-sm bg-accent/20 px-3 py-2 text-xs text-white">
           {message.text}
         </div>
       </div>
@@ -303,22 +304,22 @@ function MessageBubble({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <div className="max-w-[90%] rounded-2xl rounded-tl-sm border border-border/70 bg-surface/80 px-3 py-2 text-sm text-white">
+      <div className="max-w-[92%] break-words rounded-2xl rounded-tl-sm border border-border/70 bg-surface/80 px-3 py-2 text-xs leading-relaxed text-white">
         {message.pending ? (
           <span className="inline-flex items-center gap-2 text-muted">
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin" />
             Pensando con tus datos…
           </span>
         ) : message.error ? (
           <span className="inline-flex items-center gap-2 text-danger">
-            <AlertCircle className="h-3.5 w-3.5" />
-            {message.error}
+            <AlertCircle className="h-3 w-3 shrink-0" />
+            <span className="break-words">{message.error}</span>
           </span>
         ) : (
-          <span className="whitespace-pre-wrap">{message.text}</span>
+          <span className="whitespace-pre-wrap break-words">{message.text}</span>
         )}
         {message.contextHint && !message.pending && !message.error && (
-          <div className="mt-1.5 text-micro uppercase tracking-wide text-muted/80">
+          <div className="mt-1.5 truncate text-[10px] uppercase tracking-eyebrow text-muted/80">
             ctx: {message.contextHint}
           </div>
         )}
@@ -327,7 +328,7 @@ function MessageBubble({
         <button
           type="button"
           onClick={() => onRunAction(message.action!)}
-          className="self-start rounded-md border border-accent/40 bg-accent/15 px-3 py-1 text-caption font-medium text-accent-light transition-colors hover:bg-accent/25"
+          className="self-start rounded-md border border-accent/40 bg-accent/15 px-2.5 py-0.5 text-[11px] font-medium text-accent-light transition-colors hover:bg-accent/25"
         >
           {actionLabel(message.action)}
         </button>

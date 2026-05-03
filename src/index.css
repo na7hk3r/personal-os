@@ -305,6 +305,33 @@ html, body, #root {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
+/* ========== ANTI-OVERFLOW DEFENSIVO ==========
+   Evita que palabras largas (URLs, identificadores sin espacios) o cards
+   con contenido inesperado generen scrollbars horizontales globales. */
+html,
+body,
+#root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Quiebra palabras largas dentro de bubbles, cards y descripciones —
+   no afecta inputs ni elementos con whitespace-nowrap explícito. */
+p,
+li,
+span,
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* Imágenes nunca empujan layout */
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
 /* ========== MICRO-INTERACCIONES BASE ========== */
 
 /* Respeta la preferencia del sistema de reducir movimiento (a11y). */
