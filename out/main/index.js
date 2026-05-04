@@ -1219,6 +1219,9 @@ function buildSnapshot(db) {
   return {
     schemaVersion: PROFILE_SCHEMA_VERSION,
     exportedAt: (/* @__PURE__ */ new Date()).toISOString(),
+    // `app.name` legacy: se mantiene como `personal-os` para que snapshots
+    // exportados sigan siendo importables en versiones previas de la app.
+    // No es el nombre comercial visible (la app se llama Nora OS).
     app: { name: "personal-os", ref: "profile-export" },
     profile: profileRow ? {
       ...profileRow,
@@ -1945,6 +1948,15 @@ function shutdownScheduledBackup() {
 let mainWindow = null;
 const rendererUrl = process.env.ELECTRON_RENDERER_URL;
 const isDebugDevtoolsEnabled = process.env.ELECTRON_DEBUG_DEVTOOLS === "true";
+electron.app.setName("Nora OS");
+if (process.platform !== "win32") {
+  electron.app.setAboutPanelOptions({
+    applicationName: "Nora OS",
+    applicationVersion: electron.app.getVersion(),
+    copyright: "Copyright © 2026 na7hk3r",
+    iconPath: path.join(__dirname, "../../buildResources/icon.png")
+  });
+}
 const ALLOWED_EXTERNAL_PROTOCOLS = /* @__PURE__ */ new Set(["https:", "http:", "mailto:"]);
 function isSafeExternalUrl(rawUrl) {
   try {
@@ -1973,6 +1985,7 @@ function createWindow() {
     height: 820,
     minWidth: 900,
     minHeight: 600,
+    title: "Nora OS",
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.js"),
       contextIsolation: true,

@@ -1,5 +1,44 @@
 # Changelog - Nora OS
 
+## [1.13.0] - 2026-05-04
+
+### 🪐 Renombrado de repositorio + adopción del kit oficial PNG
+
+Pulido final del rebrand iniciado en 1.11/1.12: el repositorio pasa de `personal-os` a `nora-os`, los logos abandonan el SVG vectorial improvisado y la app adopta los PNG oficiales del kit (`identidadVisual-noraOS/`). Suma además mejoras de notificaciones, integración planner ↔ daily focus y detección de Ollama en el instalador NSIS.
+
+#### Marca + repositorio
+
+- **Repo renombrado**: `na7hk3r/personal-os` → `na7hk3r/nora-os`. Actualizadas todas las referencias en `package.json` (name, productName, homepage, repository), `electron-builder.yml` (`appId: com.na7hk3r.nora-os`, `productName`, `publish.repo`, `shortcutName`), README, [docs/DATABASE.md](docs/DATABASE.md), [docs/LANDING.md](docs/LANDING.md), [docs/RELEASES.md](docs/RELEASES.md), `electron/main.ts` (con `app.setName`, About panel y `BrowserWindow.title`) y los servicios IPC (`app-update-ipc`, `database`, `profile-ipc`).
+- **Landing**: `vite.config.ts` con `base: '/nora-os/'`, sitemap, robots, OG image, hooks de release y tests sincronizados al nuevo slug.
+- **Adopción del kit oficial PNG**: 7 PNGs por destino (`identidadVisual-noraOS/`, `landing/public/brand/`, `public/brand/`) con todas las variantes — full, isotipo y wordmark, en white/black/original.
+- **Componentes de logo reescritos**: [landing/src/components/NoraLogo.tsx](landing/src/components/NoraLogo.tsx) y [src/core/ui/components/NoraLogo.tsx](src/core/ui/components/NoraLogo.tsx) renderizan los PNGs reales con variantes `mark | mark-original | mark-white | mark-black | wordmark | full`. Las variantes duales conmutan entre versión blanca y negra según `data-theme` vía clases `.nora-logo-dark` / `.nora-logo-light` (regla en [src/index.css](src/index.css)).
+- **Aplicación**:
+  - Landing Navbar: `mark-original` 36px + wordmark 20px al lado.
+  - Landing Hero: `mark-original` 160px (con glow) + 16px en mock de window-frame.
+  - Landing Footer: `mark-original` 88px con glow.
+  - Sidebar app: el `ntkr-logo.png` que estaba arriba del versionado se reemplaza por el wordmark (`variant="wordmark"`, 12px) alineado en línea con `vX.Y.Z`.
+  - Login, Unlock, Onboarding StepWelcome, DashboardFooter y SystemStatusHero ahora muestran el isotipo a color (variante default `mark` → `nora-isotipo-original.png`).
+
+#### Notificaciones
+
+- **Marcar como leídas** en el Centro de Notificaciones (sidebar → bell junto a Config). Se persisten los IDs leídos en `localStorage` (`core:guidanceReadIds`, FIFO 200). Cada sugerencia trae un botón ✓ y el header agrega un botón **Todas** cuando hay no leídas. El badge del bell ahora cuenta sólo no-leídas.
+- `notificationsService` suma `unreadCount()`, `markAsRead(id)` y `markAllAsRead()` (semántica `dismissed_at IS NULL`).
+
+#### Planner ↔ Daily Focus
+
+- Nuevo hook [src/core/ui/hooks/usePlannerTasksToday.ts](src/core/ui/hooks/usePlannerTasksToday.ts) que carga `corePlannerTasksV1` desde settings, filtra hoy y vencidas, devuelve hasta 3 tareas y se refresca cada 60s.
+- `TodayFocus` muestra ahora una sección **Planner** con badges de fuente (Work violeta, Planner ámbar) junto al foco habitual.
+
+#### Instalador
+
+- [buildResources/installer.nsh](buildResources/installer.nsh): nueva macro `NoraOsCheckOllama` que ejecuta `ollama --version` durante `customInstall` y, si Ollama no está presente, ofrece abrir https://ollama.com/download (silencioso en modo `/SD IDNO` para instalaciones desatendidas). El include se activa desde `electron-builder.yml > nsis.include`.
+- README documenta el comportamiento — la app funciona sin Ollama, sólo se degradan funciones del copiloto IA.
+
+#### Fixes
+
+- **Work — Card detail modal**: se renderiza vía `createPortal` sobre `document.body` y sube a `z-[100]` para escapar contextos de stacking ancestrales que lo recortaban. ([src/plugins/work/components/CardDetailModal.tsx](src/plugins/work/components/CardDetailModal.tsx))
+- **Planner — banner de ayuda**: el chip "Arrastra tareas al calendario para reprogramarlas" se reduce (`text-[11px]`, `py-1`, `rounded-md`) para no dominar la toolbar. ([src/core/ui/pages/PlannerPage.tsx](src/core/ui/pages/PlannerPage.tsx))
+
 ## [1.12.0] - 2026-05-04
 
 ### 🎨 Identidad visual oficial Nora OS
