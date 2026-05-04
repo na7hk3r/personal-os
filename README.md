@@ -1,8 +1,7 @@
 <div align="center">
 
-<img src="public/icons/NoraLogo.svg" alt="Nora OS" width="96" height="96" />
+<img src="public/brand/nora-logo-white.png" alt="Nora OS" width="300" />
 
-# Nora OS
 
 **Tu sistema. Tu vida. Una sola IA.**
 
