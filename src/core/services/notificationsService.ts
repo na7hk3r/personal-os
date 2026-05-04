@@ -143,6 +143,31 @@ export const notificationsService = {
     )
   },
 
+  /**
+   * Conteo de notificaciones no leídas. Una notificación se considera no
+   * leída mientras `dismissed_at` sea NULL — el campo se reutiliza como
+   * marca "leída/descartada" para evitar una migración de schema.
+   */
+  async unreadCount(): Promise<number> {
+    const rows = await storageAPI.query<{ c: number }>(
+      'SELECT COUNT(*) as c FROM core_notifications_queue WHERE dismissed_at IS NULL',
+    )
+    return rows[0]?.c ?? 0
+  },
+
+  async markAsRead(id: number): Promise<void> {
+    await storageAPI.execute(
+      "UPDATE core_notifications_queue SET dismissed_at = datetime('now') WHERE id = ? AND dismissed_at IS NULL",
+      [id],
+    )
+  },
+
+  async markAllAsRead(): Promise<void> {
+    await storageAPI.execute(
+      "UPDATE core_notifications_queue SET dismissed_at = datetime('now') WHERE dismissed_at IS NULL",
+    )
+  },
+
   async dismiss(id: number): Promise<void> {
     await storageAPI.execute(
       "UPDATE core_notifications_queue SET dismissed_at = datetime('now') WHERE id = ?",

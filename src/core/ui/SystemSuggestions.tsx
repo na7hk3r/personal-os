@@ -2,10 +2,38 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
-import { Bell, CheckCircle2, Lightbulb, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react'
+import { Bell, Check, CheckCircle2, CheckCheck, Lightbulb, RefreshCw, Sparkles, TriangleAlert, X } from 'lucide-react'
 import { buildSystemSuggestions, subscribeGuidanceRefresh, type GuidanceSuggestion } from './systemGuidance'
 import { aiSuggestionsService } from '@core/services/aiSuggestionsService'
 import { ollamaService } from '@core/services/ollamaService'
+
+const READ_IDS_KEY = 'core:guidanceReadIds'
+const READ_IDS_LIMIT = 200
+
+/**
+ * Persistencia local de IDs de sugerencias marcadas como leídas. Se almacena
+ * en `localStorage` (no en SQLite) porque las sugerencias se regeneran desde
+ * eventos en cada carga; el set de IDs leídos es efímero por diseño y
+ * tolerar pérdida es aceptable. Se limita a 200 entradas (FIFO).
+ */
+function loadReadIds(): Set<string> {
+  if (typeof window === 'undefined') return new Set()
+  try {
+    const raw = window.localStorage.getItem(READ_IDS_KEY)
+    if (!raw) return new Set()
+    return new Set(JSON.parse(raw) as string[])
+  } catch {
+    return new Set()
+  }
+}
+
+function saveReadIds(set: Set<string>) {
+  if (typeof window === 'undefined') return
+  try {
+    const arr = Array.from(set).slice(-READ_IDS_LIMIT)
+    window.localStorage.setItem(READ_IDS_KEY, JSON.stringify(arr))
+  } catch { /* noop */ }
+}
 
 const TYPE_STYLES: Record<
   GuidanceSuggestion['type'],
@@ -20,10 +48,29 @@ export function SystemSuggestions() {
   const navigate = useNavigate()
   const activePluginIds = useCoreStore((s) => s.activePlugins)
   const [suggestions, setSuggestions] = useState<GuidanceSuggestion[]>([])
+  const [readIds, setReadIds] = useState<Set<string>>(() => loadReadIds())
   const [expanded, setExpanded] = useState(false)
   const [aiText, setAiText] = useState<string>('')
   const [aiLoading, setAiLoading] = useState(false)
   const [aiAvailable, setAiAvailable] = useState(false)
+
+  const markAsRead = (id: string) => {
+    setReadIds((prev) => {
+      const next = new Set(prev)
+      next.add(id)
+      saveReadIds(next)
+      return next
+    })
+  }
+
+  const markAllAsRead = () => {
+    setReadIds((prev) => {
+      const next = new Set(prev)
+      for (const s of suggestions) next.add(s.id)
+      saveReadIds(next)
+      return next
+    })
+  }
 
   useEffect(() => {
     void ollamaService.isReady().then((r) => setAiAvailable(r.enabled && r.healthy)).catch(() => setAiAvailable(false))
@@ -60,9 +107,10 @@ export function SystemSuggestions() {
     return () => unsubs.forEach((u) => u())
   }, [activePluginIds])
 
-  const relevantSuggestions = suggestions.filter((s) => s.type !== 'positive')
+  const unreadSuggestions = suggestions.filter((s) => !readIds.has(s.id))
+  const relevantSuggestions = unreadSuggestions.filter((s) => s.type !== 'positive')
   const hasRelevant = relevantSuggestions.length > 0
-  const displaySuggestions = hasRelevant ? relevantSuggestions : suggestions
+  const displaySuggestions = hasRelevant ? relevantSuggestions : unreadSuggestions
 
   if (suggestions.length === 0) return null
 
@@ -90,16 +138,30 @@ export function SystemSuggestions() {
               <p className="text-xs text-muted">
                 {hasRelevant
                   ? `${relevantSuggestions.length} alerta${relevantSuggestions.length === 1 ? '' : 's'} pendiente${relevantSuggestions.length === 1 ? '' : 's'}`
-                  : 'No hay alertas pendientes, mostrando historial reciente'}
+                  : unreadSuggestions.length > 0
+                    ? 'No hay alertas pendientes, mostrando historial reciente'
+                    : 'Todo al día — sin notificaciones nuevas'}
               </p>
             </div>
-            <button
-              onClick={() => setExpanded(false)}
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
-              title="Cerrar notificaciones"
-            >
-              <X size={13} />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              {unreadSuggestions.length > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="inline-flex items-center gap-1 rounded-md border border-border/70 px-2 py-1 text-[10px] uppercase tracking-wide text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                  title="Marcar todas como leídas"
+                >
+                  <CheckCheck size={11} />
+                  Todas
+                </button>
+              )}
+              <button
+                onClick={() => setExpanded(false)}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border/70 text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                title="Cerrar notificaciones"
+              >
+                <X size={13} />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -121,6 +183,9 @@ export function SystemSuggestions() {
                 </p>
               </div>
             )}
+            {displaySuggestions.length === 0 && !aiAvailable && (
+              <p className="px-3 py-6 text-center text-xs text-muted">No hay notificaciones nuevas.</p>
+            )}
             {displaySuggestions.map((s) => {
               const style = TYPE_STYLES[s.type]
               const Icon = style.icon
@@ -133,15 +198,25 @@ export function SystemSuggestions() {
                     <Icon size={14} className="mt-0.5 shrink-0" />
                     <p className="text-xs leading-relaxed text-muted">{s.message}</p>
                   </div>
-                  <button
-                    onClick={() => {
-                      navigate(s.ctaPath)
-                      setExpanded(false)
-                    }}
-                    className={`shrink-0 self-center text-xs font-medium ${style.text} transition-all hover:underline`}
-                  >
-                    {s.ctaLabel} →
-                  </button>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => {
+                        navigate(s.ctaPath)
+                        setExpanded(false)
+                      }}
+                      className={`text-xs font-medium ${style.text} transition-all hover:underline`}
+                    >
+                      {s.ctaLabel} →
+                    </button>
+                    <button
+                      onClick={() => markAsRead(s.id)}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded text-muted/70 transition-colors hover:bg-surface hover:text-foreground"
+                      title="Marcar como leída"
+                      aria-label="Marcar como leída"
+                    >
+                      <Check size={12} />
+                    </button>
+                  </div>
                 </div>
               )
             })}
