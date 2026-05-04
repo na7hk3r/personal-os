@@ -5,7 +5,7 @@ import { detectOS, osLabel, type DetectedOS } from '../hooks/useDetectOS'
 import { useLatestRelease, type LatestRelease } from '../hooks/useLatestRelease'
 
 interface DownloadButtonProps {
-  size?: 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg'
   /** Forzar OS (útil para tests). */
   forceOS?: DetectedOS
 }
