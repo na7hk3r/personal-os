@@ -1,47 +1,56 @@
+// Reformado: copy orientado a beneficio (no a feature técnica), íconos lucide curados.
 import type { LucideIcon } from 'lucide-react'
-import { Sunrise, LayoutGrid, Lock, Bot, Trophy, Sliders } from 'lucide-react'
+import { HardDrive, Boxes, RefreshCw, ShieldCheck, Users, Bot } from 'lucide-react'
 
 export interface Feature {
   title: string
   description: string
   icon: LucideIcon
+  /** Tag corto opcional, mostrado como chip arriba del título. */
+  tag?: string
 }
 
 export const features: Feature[] = [
   {
-    title: 'Sabés qué hacer cada mañana',
+    tag: 'Local-first',
+    title: 'Tus datos nunca salen de tu máquina',
     description:
-      'El copiloto analiza tus datos y te da un plan accionable al abrir la app. Sin decidir vos.',
-    icon: Sunrise,
+      'SQLite en tu disco. Sin nube, sin sincronización, sin telemetría. Ni siquiera nosotros podemos verlos.',
+    icon: HardDrive,
   },
   {
-    title: 'Todo en un lugar',
+    tag: 'Modular',
+    title: 'Todo lo que necesitás, nada de lo que no',
     description:
-      'Trabajo, salud, hábitos, finanzas y journal. Sin pagar diez SaaS distintos.',
-    icon: LayoutGrid,
+      'Activás solo los módulos que usás: trabajo, hábitos, finanzas, fitness, journal, conocimiento.',
+    icon: Boxes,
   },
   {
-    title: 'Tus datos son tuyos',
+    tag: 'Auto-update',
+    title: 'Siempre actualizado, sin que lo notes',
     description:
-      'SQLite en tu disco. Sin cuenta, sin nube, sin telemetría. Ni siquiera nosotros podemos verlos.',
-    icon: Lock,
+      'Releases en GitHub, instalación en un clic. Sin pop-ups molestos ni interrupciones de tu flujo.',
+    icon: RefreshCw,
   },
   {
-    title: 'IA que no espía',
+    tag: 'Seguro',
+    title: 'Privacidad real, no marketing',
     description:
-      'Ollama corre en tu máquina. El modelo nunca sale de tu equipo. Privacidad real, no marketing.',
+      'Cifrado AES-256-GCM opcional sobre la base completa. Tu vida no es un asset para vender.',
+    icon: ShieldCheck,
+  },
+  {
+    tag: 'Multiusuario',
+    title: 'Varios perfiles, cero cloud',
+    description:
+      'Cada usuario del equipo tiene su propia base cifrable. Sin cuentas online, todo separado en disco.',
+    icon: Users,
+  },
+  {
+    tag: 'IA opcional',
+    title: 'Un copiloto que no espía',
+    description:
+      'Ollama corre en tu equipo. El modelo te conoce, pero nunca le manda nada a OpenAI ni a la nube.',
     icon: Bot,
-  },
-  {
-    title: 'Gamificado, no infantil',
-    description:
-      'XP real conectado a tus acciones. Rachas, logros y misiones diarias con consecuencias reales.',
-    icon: Trophy,
-  },
-  {
-    title: 'Se adapta a lo que usás',
-    description:
-      'Activás solo los módulos que necesitás. La app no te impone estructura.',
-    icon: Sliders,
   },
 ]

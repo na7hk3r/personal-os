@@ -27,7 +27,7 @@ interface AnchorProps {
 
 const sizeClasses: Record<Size, string> = {
   sm: 'px-3 py-1.5 text-sm',
-  md: 'px-5 py-2.5 text-base',
+  md: 'px-5 py-2.5 text-[1rem]',
   lg: 'px-7 py-3.5 text-lg',
 }
 

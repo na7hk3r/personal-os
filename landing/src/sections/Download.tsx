@@ -1,3 +1,5 @@
+// Reformado: tono inkdrop (directo, sin fricción). CTA enorme, fila de OS y pie con filosofía.
+import { motion } from 'framer-motion'
 import { Section } from '../components/Section'
 import { DownloadButton } from '../components/DownloadButton'
 import {
@@ -35,30 +37,47 @@ export function Download_() {
     : []
 
   return (
-    <Section
-      id="download"
-      eyebrow="Descargar"
-      title="Instalá la última versión"
-      description={
-        release
-          ? `Versión ${release.version}${
-              release.publishedAt
-                ? ` · publicada el ${new Date(release.publishedAt).toLocaleDateString('es-ES')}`
-                : ''
-            }`
-          : 'Descargá Nora OS para tu sistema operativo.'
-      }
-    >
-      <div className="flex justify-center mb-10">
-        <DownloadButton size="lg" />
-      </div>
+    <Section id="download">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.6 }}
+        className="text-center max-w-3xl mx-auto"
+      >
+        <p className="text-sm font-semibold uppercase tracking-widest text-accent mb-3">
+          Descargar
+        </p>
+        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
+          Descargá Nora OS.{' '}
+          <span className="text-gradient-accent animate-gradient-shift">Es gratis.</span>
+        </h2>
+        <p className="mt-5 text-lg text-muted leading-relaxed">
+          Sin cuentas. Sin suscripciones. Sin sorpresas.
+          {release && (
+            <>
+              <br />
+              <span className="text-sm text-muted/80">
+                Versión {release.version}
+                {release.publishedAt && (
+                  <> · publicada el {new Date(release.publishedAt).toLocaleDateString('es-ES')}</>
+                )}
+              </span>
+            </>
+          )}
+        </p>
+
+        <div className="mt-10 flex justify-center">
+          <DownloadButton size="lg" />
+        </div>
+      </motion.div>
 
       {loading && !release && (
-        <p className="text-center text-muted">Cargando información del último release…</p>
+        <p className="text-center text-muted mt-10">Cargando información del último release…</p>
       )}
 
       {error && !release && (
-        <div className="text-center">
+        <div className="text-center mt-10">
           <p className="text-muted mb-3">
             No pudimos consultar GitHub ahora mismo. Podés ver todos los binarios manualmente:
           </p>
@@ -74,7 +93,13 @@ export function Download_() {
       )}
 
       {release && (
-        <div className="overflow-hidden rounded-2xl border border-border bg-surface/60">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="mt-12 max-w-3xl mx-auto overflow-hidden rounded-2xl border border-border bg-surface/60"
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-surface-light text-left text-foreground">
@@ -116,10 +141,13 @@ export function Download_() {
               ))}
             </tbody>
           </table>
-        </div>
+        </motion.div>
       )}
 
-      <p className="mt-6 text-center text-xs text-muted">
+      <p className="mt-8 text-center text-xs text-muted">
+        Open source · Licencia ISC · Auto-update incluido · GitHub Releases
+      </p>
+      <p className="mt-2 text-center text-xs text-muted">
         ¿Buscás versiones anteriores?{' '}
         <a
           href={FALLBACK_RELEASES_URL}

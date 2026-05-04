@@ -1,14 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Bot, Sparkles } from 'lucide-react'
+// Reformado: sin emojis en bullets (regla "sin emojis en UI"), badge de privacidad, Section reveal con framer.
+import { useMemo, useState } from 'react'
+import { Bot, Sparkles, Zap, Dumbbell, Wallet, Target, Clock, BookOpen, Moon, TrendingUp, AlertTriangle, CheckCircle2, Flame, BarChart3, Coffee, Sunrise, ChefHat } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { Section } from '../components/Section'
 import { useTypewriter } from '../hooks/useTypewriter'
 
+interface Bullet {
+  icon: LucideIcon
+  text: string
+}
+
 interface Reply {
-  /** Texto que tipea el copiloto */
   body: string
-  /** Líneas estructuradas debajo del cuerpo */
-  bullets?: { icon: string; text: string }[]
-  /** Cierre con CTA dentro del mensaje */
+  bullets?: Bullet[]
   closing?: string
 }
 
@@ -18,11 +23,11 @@ interface QuickAction {
 }
 
 const INITIAL_REPLY: Reply = {
-  body: 'Buenos días, Nico. Hoy estás al 71% de tu score semanal.',
+  body: 'Buenos días. Hoy estás al 71% de tu score semanal.',
   bullets: [
-    { icon: '⚡', text: 'Foco: 2h 40m esta semana (objetivo: 4h)' },
-    { icon: '💪', text: 'Ejercicio: 4 días consecutivos — racha activa' },
-    { icon: '💰', text: 'Finanzas: 12% por encima del presupuesto' },
+    { icon: Zap, text: 'Foco: 2h 40m esta semana (objetivo: 4h)' },
+    { icon: Dumbbell, text: 'Ejercicio: 4 días consecutivos — racha activa' },
+    { icon: Wallet, text: 'Finanzas: 12% por encima del presupuesto' },
   ],
   closing:
     'Para volver a baseline hoy:\n→ Completar "Propuesta cliente X" (vence hoy)\n→ 45 min de foco antes de las 14hs',
@@ -35,8 +40,8 @@ const QUICK_ACTIONS: QuickAction[] = [
       body:
         'Hoy lo más urgente es cerrar la propuesta del cliente X. Vence en 6 horas y bloquea tu KR de Q2.',
       bullets: [
-        { icon: '🎯', text: '1 tarea crítica · 2 importantes · 5 menores' },
-        { icon: '⏱️', text: 'Bloque sugerido: 90 min de foco profundo' },
+        { icon: Target, text: '1 tarea crítica · 2 importantes · 5 menores' },
+        { icon: Clock, text: 'Bloque sugerido: 90 min de foco profundo' },
       ],
       closing: 'Arrancá con la propuesta. Las menores las hacemos después de las 17hs.',
     },
@@ -46,11 +51,11 @@ const QUICK_ACTIONS: QuickAction[] = [
     reply: {
       body: 'Plan armado en base a tu energía habitual y vencimientos:',
       bullets: [
-        { icon: '🌅', text: '09:00 — 10:30 · Foco profundo · Propuesta cliente X' },
-        { icon: '☕', text: '10:30 — 11:00 · Break + email triage' },
-        { icon: '🧠', text: '11:00 — 12:30 · Code review + arquitectura' },
-        { icon: '🍽️', text: '13:00 — 14:00 · Almuerzo' },
-        { icon: '💪', text: '18:00 — 19:00 · Entrenamiento (día 5 de racha)' },
+        { icon: Sunrise, text: '09:00 — 10:30 · Foco profundo · Propuesta cliente X' },
+        { icon: Coffee, text: '10:30 — 11:00 · Break + email triage' },
+        { icon: BookOpen, text: '11:00 — 12:30 · Code review + arquitectura' },
+        { icon: ChefHat, text: '13:00 — 14:00 · Almuerzo' },
+        { icon: Dumbbell, text: '18:00 — 19:00 · Entrenamiento (día 5 de racha)' },
       ],
     },
   },
@@ -59,9 +64,9 @@ const QUICK_ACTIONS: QuickAction[] = [
     reply: {
       body: 'Mirando los últimos 14 días, tres áreas en rojo:',
       bullets: [
-        { icon: '📚', text: 'Knowledge: sin sesiones de estudio hace 8 días' },
-        { icon: '😴', text: 'Sueño: promedio 6h 10m (objetivo: 7h)' },
-        { icon: '💸', text: 'Finance: gastos en delivery +34% vs mes pasado' },
+        { icon: BookOpen, text: 'Knowledge: sin sesiones de estudio hace 8 días' },
+        { icon: Moon, text: 'Sueño: promedio 6h 10m (objetivo: 7h)' },
+        { icon: TrendingUp, text: 'Finance: gastos en delivery +34% vs mes pasado' },
       ],
       closing: 'Sugerencia: hoy 30 min de lectura + dormirte 9 antes de medianoche.',
     },
@@ -71,10 +76,10 @@ const QUICK_ACTIONS: QuickAction[] = [
     reply: {
       body: 'Resumen de la semana, sin floja:',
       bullets: [
-        { icon: '✅', text: '12 tareas completadas (vs 9 promedio)' },
-        { icon: '🔥', text: 'Racha de hábitos: 4/6 mantenidos' },
-        { icon: '📈', text: 'Foco semanal: 67% del objetivo' },
-        { icon: '⚠️', text: 'Goal Q2 "Lanzar v2": 38% — vas atrasado' },
+        { icon: CheckCircle2, text: '12 tareas completadas (vs 9 promedio)' },
+        { icon: Flame, text: 'Racha de hábitos: 4/6 mantenidos' },
+        { icon: BarChart3, text: 'Foco semanal: 67% del objetivo' },
+        { icon: AlertTriangle, text: 'Goal Q2 "Lanzar v2": 38% — vas atrasado' },
       ],
       closing: 'Próxima semana: priorizar 2 sesiones de foco diario para recuperar Goal Q2.',
     },
@@ -82,7 +87,6 @@ const QUICK_ACTIONS: QuickAction[] = [
 ]
 
 function ReplyView({ reply }: { reply: Reply }) {
-  // Typewriter sólo del cuerpo principal — los bullets aparecen al terminar
   const { text, done } = useTypewriter(reply.body, {
     speed: 18,
     startDelay: 80,
@@ -91,7 +95,7 @@ function ReplyView({ reply }: { reply: Reply }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-sm md:text-base text-foreground leading-relaxed font-mono min-h-[1.5em]">
+      <p className="text-sm md:text-[1rem] text-foreground leading-relaxed font-mono min-h-[1.5em]">
         {text}
         {!done && (
           <span
@@ -107,11 +111,9 @@ function ReplyView({ reply }: { reply: Reply }) {
           {reply.bullets.map((b, i) => (
             <li
               key={i}
-              className="text-sm text-muted flex items-start gap-2 leading-relaxed"
+              className="text-sm text-muted flex items-start gap-2.5 leading-relaxed"
             >
-              <span aria-hidden="true" className="shrink-0">
-                {b.icon}
-              </span>
+              <b.icon className="w-4 h-4 mt-0.5 shrink-0 text-accent-light" aria-hidden="true" />
               <span>{b.text}</span>
             </li>
           ))}
@@ -119,7 +121,7 @@ function ReplyView({ reply }: { reply: Reply }) {
       )}
 
       {done && reply.closing && (
-        <p className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed pt-2 border-t border-border/50 animate-fade-in">
+        <p className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed pt-3 mt-3 border-t border-border/50 animate-fade-in">
           {reply.closing}
         </p>
       )}
@@ -130,16 +132,10 @@ function ReplyView({ reply }: { reply: Reply }) {
 export function CopilotDemo() {
   const [reply, setReply] = useState<Reply>(INITIAL_REPLY)
   const [activeIdx, setActiveIdx] = useState<number | null>(null)
-  // Key que fuerza re-mount del ReplyView cuando cambia la reply
-  const replyKey = useMemo(() => `${activeIdx ?? 'init'}-${reply.body.slice(0, 8)}`, [
-    reply,
-    activeIdx,
-  ])
-
-  // Auto-rotación sutil al primer entrar (opcional). La dejamos manual.
-  useEffect(() => {
-    // noop — la animación inicial ocurre on-mount
-  }, [])
+  const replyKey = useMemo(
+    () => `${activeIdx ?? 'init'}-${reply.body.slice(0, 8)}`,
+    [reply, activeIdx],
+  )
 
   function handleClick(idx: number) {
     setActiveIdx(idx)
@@ -150,13 +146,17 @@ export function CopilotDemo() {
     <Section
       id="copilot-demo"
       eyebrow="Copiloto IA local"
-      title="Preguntale a tu propia app"
-      description="Tu copiloto conoce tu trabajo, hábitos, salud y finanzas. No es un chatbot genérico: opera sobre tus datos reales."
+      title="Preguntale a tu propia app."
+      description="Tu copiloto conoce tu trabajo, hábitos, salud y finanzas. No es un chatbot genérico: opera sobre tus datos reales — y nunca los manda afuera."
     >
-      <div className="max-w-3xl mx-auto">
-        {/* Marco simulando un panel del copiloto */}
-        <div className="rounded-2xl border border-border bg-surface/70 backdrop-blur shadow-xl overflow-hidden">
-          {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.6 }}
+        className="max-w-3xl mx-auto"
+      >
+        <div className="window-frame">
           <div className="flex items-center gap-3 px-5 py-3 border-b border-border bg-surface-light/50">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-accent/15 text-accent">
               <Bot className="w-4 h-4" aria-hidden="true" />
@@ -179,12 +179,10 @@ export function CopilotDemo() {
             </span>
           </div>
 
-          {/* Body */}
-          <div className="px-5 py-6 min-h-[260px]">
+          <div className="px-5 py-6 min-h-[280px]">
             <ReplyView key={replyKey} reply={reply} />
           </div>
 
-          {/* Quick actions */}
           <div className="px-4 py-3 border-t border-border bg-base/40">
             <div className="grid grid-cols-2 gap-2">
               {QUICK_ACTIONS.map((qa, idx) => {
@@ -208,10 +206,28 @@ export function CopilotDemo() {
           </div>
         </div>
 
-        <p className="text-center text-xs md:text-sm text-muted mt-6">
+        {/* Badge de privacidad — refuerza la verdad del producto. */}
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {[
+            'Requiere Ollama',
+            '100% offline',
+            'Sin API keys',
+            'Sin envío de datos',
+          ].map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-light/70 border border-border text-xs text-muted"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+              {tag}
+            </span>
+          ))}
+        </div>
+
+        <p className="text-center text-xs md:text-sm text-muted mt-4">
           Tus datos reales. Tu modelo local. Sin internet.
         </p>
-      </div>
+      </motion.div>
     </Section>
   )
 }

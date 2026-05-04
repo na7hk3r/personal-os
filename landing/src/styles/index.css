@@ -1,3 +1,4 @@
+/* Tokens reformados: gradiente hero más dramático + --color-glow para halos accent. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,7 +17,13 @@
   --color-text: 226 232 240; /* #e2e8f0 */
   --color-muted: 148 163 184; /* #94a3b8 */
   --color-border: 51 65 85; /* #334155 */
-  --bg-gradient: radial-gradient(circle at top left, #17314e 0%, #0e1723 42%, #070d14 100%);
+  --color-glow: 124 58 237; /* mismo accent, usado en box-shadow */
+  /* Gradiente más dramático: tensión azul → violeta sobre la base oscura */
+  --bg-gradient:
+    radial-gradient(ellipse 90% 60% at 20% -10%, rgba(56, 24, 108, 0.55) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 50% at 85% 5%, rgba(20, 60, 120, 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 50% 100%, rgba(124, 58, 237, 0.18) 0%, transparent 55%),
+    linear-gradient(180deg, #0a1220 0%, #070d14 60%, #050811 100%);
 }
 
 /* ===== TEMA: LIGHT =====
@@ -35,6 +42,7 @@
   --color-text: 46 32 20;            /* marrón profundo, casi negro cálido */
   --color-muted: 96 78 60;           /* legible sobre cremas y papel arroz */
   --color-border: 218 204 178;       /* algo más oscuro para definir mejor las cards */
+  --color-glow: 196 95 65;
   --bg-gradient: radial-gradient(circle at top left, #fff8ec 0%, #fbf7ee 60%, #f3ecdd 100%);
 }
 
@@ -193,3 +201,78 @@ html {
   max-width: 100%;
   border-radius: 0.5rem;
 }
+
+/* ===== UTILIDADES DE LANDING ===== */
+
+/* Glow accent reutilizable en CTAs y cards. */
+.shadow-glow {
+  box-shadow:
+    0 0 0 1px rgb(var(--color-glow) / 0.18),
+    0 12px 40px -8px rgb(var(--color-glow) / 0.45),
+    0 0 60px -10px rgb(var(--color-glow) / 0.35);
+}
+.shadow-glow-sm {
+  box-shadow:
+    0 0 0 1px rgb(var(--color-glow) / 0.15),
+    0 6px 24px -6px rgb(var(--color-glow) / 0.35);
+}
+.hover-glow {
+  transition: box-shadow 280ms ease, transform 280ms ease, border-color 280ms ease;
+}
+.hover-glow:hover {
+  box-shadow:
+    0 0 0 1px rgb(var(--color-glow) / 0.25),
+    0 16px 50px -10px rgb(var(--color-glow) / 0.40);
+  transform: translateY(-2px);
+}
+
+/* Texto con gradiente accent → accent-light para titulares. */
+.text-gradient-accent {
+  background: linear-gradient(
+    120deg,
+    rgb(var(--color-accent)) 0%,
+    rgb(var(--color-accent-light)) 55%,
+    rgb(var(--color-accent)) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Borde con gradiente sutil para cards inkdrop-style. */
+.card-gradient {
+  background:
+    linear-gradient(180deg, rgb(var(--color-surface) / 0.85) 0%, rgb(var(--color-surface) / 0.55) 100%);
+}
+
+/* Frame estilo "ventana" para mockups y screenshots.
+ * El mockup es una "consola" — siempre se ve oscuro, incluso en el tema light,
+ * para mantener la metáfora visual de terminal y que el texto resalte.
+ */
+.window-frame {
+  /* Override local de los tokens dentro del frame: paleta oscura fija. */
+  --color-base: 7 13 20;
+  --color-surface: 30 30 46;
+  --color-surface-light: 42 42 62;
+  --color-surface-lighter: 54 54 80;
+  --color-text: 226 232 240;
+  --color-muted: 148 163 184;
+  --color-border: 51 65 85;
+  --color-accent: 124 58 237;
+  --color-accent-light: 167 139 250;
+  --color-glow: 124 58 237;
+
+  border-radius: 14px;
+  border: 1px solid rgb(var(--color-border));
+  box-shadow:
+    0 30px 80px -20px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgb(var(--color-border) / 0.4),
+    0 0 80px -10px rgb(var(--color-glow) / 0.25);
+  overflow: hidden;
+  background: rgb(var(--color-surface));
+  color: rgb(var(--color-text));
+}
+
+
+
