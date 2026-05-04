@@ -8,15 +8,15 @@ import {
 const RAW = {
   tag_name: 'v2.0.0',
   published_at: '2026-04-30T12:00:00Z',
-  html_url: 'https://github.com/na7hk3r/personal-os/releases/tag/v2.0.0',
+  html_url: 'https://github.com/na7hk3r/nora-os/releases/tag/v2.0.0',
   assets: [
     {
-      name: 'Personal-OS-Setup-2.0.0.exe',
+      name: 'Nora-OS-Setup-2.0.0.exe',
       browser_download_url: 'https://x/setup.exe',
       size: 1,
     },
     {
-      name: 'Personal-OS-2.0.0-portable.exe',
+      name: 'Nora-OS-2.0.0-portable.exe',
       browser_download_url: 'https://x/portable.exe',
       size: 2,
     },
@@ -83,7 +83,7 @@ describe('useLatestRelease', () => {
     await waitFor(() => expect(result.current.release).not.toBeNull())
     unmount()
 
-    expect(sessionStorage.getItem('personal-os:latest-release')).not.toBeNull()
+    expect(sessionStorage.getItem('nora-os:latest-release')).not.toBeNull()
 
     // Segunda invocación debería leer de cache, sin nuevo fetch
     const callsBefore = (fetchMock as unknown as { mock: { calls: unknown[] } }).mock.calls.length

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://na7hk3r.github.io/personal-os/sitemap.xml
+Sitemap: https://na7hk3r.github.io/nora-os/sitemap.xml

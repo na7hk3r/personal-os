@@ -2,7 +2,7 @@
 
 Sitio web público de Nora OS, deployado en GitHub Pages:
 
-🌐 **https://na7hk3r.github.io/personal-os/**
+🌐 **https://na7hk3r.github.io/nora-os/**
 
 Stack: **Vite + React 19 + TypeScript + TailwindCSS**, sin backend.
 
@@ -42,10 +42,10 @@ landing/
 ```bash
 cd landing
 npm install
-npm run dev          # http://localhost:5173/personal-os/
+npm run dev          # http://localhost:5173/nora-os/
 ```
 
-> El sitio usa `base: '/personal-os/'` para GitHub Pages, por eso la URL local incluye el prefijo.
+> El sitio usa `base: '/nora-os/'` para GitHub Pages, por eso la URL local incluye el prefijo.
 
 ### Otros scripts
 
@@ -127,7 +127,7 @@ Para mejorar el OG image en redes que no parsean SVG, generá un `og-image.png` 
 
 ## Hook `useLatestRelease`
 
-Consulta `https://api.github.com/repos/na7hk3r/personal-os/releases/latest` y:
+Consulta `https://api.github.com/repos/na7hk3r/nora-os/releases/latest` y:
 
 - Cachea la respuesta en `sessionStorage` por **10 minutos**.
 - Clasifica los assets por SO/tipo (`windows`, `windowsPortable`, `linuxAppImage`, `linuxDeb`, `macDmg`).
@@ -164,7 +164,7 @@ npm test
 npm run build
 ```
 
-Verificar que `landing/dist/index.html` contenga rutas con prefijo `/personal-os/`.
+Verificar que `landing/dist/index.html` contenga rutas con prefijo `/nora-os/`.
 
 ### Lighthouse
 
@@ -175,5 +175,5 @@ npm install -g @lhci/cli
 cd landing
 npm run build && npx serve dist
 # en otra terminal
-lhci autorun --collect.url=http://localhost:3000/personal-os/
+lhci autorun --collect.url=http://localhost:3000/nora-os/
 ```

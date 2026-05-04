@@ -16,7 +16,7 @@ import { scheduleAutoUpdateChecks, type AutoUpdateScheduleHandle } from '../upda
  *   1. npm install electron-updater electron-builder --save-dev
  *   2. Agregar a package.json:
  *        "build": {
- *          "appId": "com.personalos.app",
+ *          "appId": "com.nora-os.app",
  *          "publish": [{ "provider": "generic", "url": "https://updates.tu-dominio/" }]
  *        }
  *   3. Configurar certificados de signing en CI.

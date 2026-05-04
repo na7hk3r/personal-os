@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
-// La app se sirve desde https://na7hk3r.github.io/personal-os/
+// La app se sirve desde https://na7hk3r.github.io/nora-os/
 export default defineConfig({
   plugins: [react()],
-  base: '/personal-os/',
+  base: '/nora-os/',
   resolve: {
     alias: {
       '@docs': resolve(__dirname, '../docs'),

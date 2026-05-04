@@ -4,7 +4,7 @@ import { Section } from '../components/Section'
 import { BrandIcon } from '../components/BrandIcon'
 import { plugins } from '../data/plugins'
 
-const REPO_URL = 'https://github.com/na7hk3r/personal-os'
+const REPO_URL = 'https://github.com/na7hk3r/nora-os'
 
 export function Plugins() {
   return (

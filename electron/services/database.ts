@@ -165,11 +165,16 @@ export class DatabaseService {
 
   getLegacyDbPath(): string {
     if (!this.dataDir) throw new Error('Database not initialized')
+    // Filename legacy `personal-os.db`: mantenido por compatibilidad con
+    // instalaciones existentes. La marca actual de la app es Nora OS, pero
+    // renombrar el archivo requeriría una migración de datos en clientes ya
+    // instalados. NO renombrar sin un script de migración.
     return join(this.dataDir, 'personal-os.db')
   }
 
   getUserDbPath(userId: string): string {
     if (!this.dataDir) throw new Error('Database not initialized')
+    // Filename legacy `personal-os-user-{id}.db`: ver nota en getLegacyDbPath.
     return join(this.dataDir, `personal-os-user-${userId}.db`)
   }
 

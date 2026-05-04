@@ -145,6 +145,9 @@ function buildSnapshot(db: DatabaseService): ProfileSnapshot {
   return {
     schemaVersion: PROFILE_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
+    // `app.name` legacy: se mantiene como `personal-os` para que snapshots
+    // exportados sigan siendo importables en versiones previas de la app.
+    // No es el nombre comercial visible (la app se llama Nora OS).
     app: { name: 'personal-os', ref: 'profile-export' },
     profile: profileRow
       ? {

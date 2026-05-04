@@ -2,6 +2,8 @@
 
 Base de datos SQLite con WAL mode. Archivo: `{userData}/data/personal-os.db`.
 
+> **Nota**: los nombres de archivo `personal-os.db` y `personal-os-user-{userId}.db` se mantienen por compatibilidad con instalaciones existentes. Renombrarlos requeriría una migración de datos. La marca de la app es **Nora OS**.
+
 ## Tablas del core
 
 ### `profile`

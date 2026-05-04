@@ -22,6 +22,20 @@ let mainWindow: BrowserWindow | null = null
 const rendererUrl = process.env.ELECTRON_RENDERER_URL
 const isDebugDevtoolsEnabled = process.env.ELECTRON_DEBUG_DEVTOOLS === 'true'
 
+// Marca de la app a nivel SO. Afecta título de la ventana en algunos WMs,
+// el menú "Acerca de" en macOS y el nombre del proceso en Windows.
+app.setName('Nora OS')
+
+if (process.platform !== 'win32') {
+  app.setAboutPanelOptions({
+    applicationName: 'Nora OS',
+    applicationVersion: app.getVersion(),
+    copyright: 'Copyright © 2026 na7hk3r',
+    iconPath: join(__dirname, '../../buildResources/icon.png'),
+  })
+}
+
+
 /**
  * Allowed protocols for opening URLs externally via shell.openExternal.
  * Anything else is silently blocked to prevent protocol-handler abuse.
@@ -61,6 +75,7 @@ function createWindow(): void {
     height: 820,
     minWidth: 900,
     minHeight: 600,
+    title: 'Nora OS',
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

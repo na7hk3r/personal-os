@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Sun, Moon } from 'lucide-react'
 
-const STORAGE_KEY = 'personal-os:theme'
+const STORAGE_KEY = 'nora-os:theme'
 
 type Theme = 'dark' | 'light'
 

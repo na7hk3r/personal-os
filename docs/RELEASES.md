@@ -23,7 +23,7 @@ git push --follow-tags
 
 - Node 20+, npm 9+ (ver `.nvmrc`).
 - En Windows: VS Build Tools si vas a empaquetar local (better-sqlite3).
-- Repo configurado con `publish.provider: github` apuntando a `na7hk3r/personal-os`
+- Repo configurado con `publish.provider: github` apuntando a `na7hk3r/nora-os`
   (ver [`electron-builder.yml`](../electron-builder.yml)).
 
 ## Scripts npm

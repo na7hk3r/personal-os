@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Section } from '../components/Section'
 import { Docs } from './Docs'
 
-const REPO_URL = 'https://github.com/na7hk3r/personal-os'
+const REPO_URL = 'https://github.com/na7hk3r/nora-os'
 
 interface DevCard {
   title: string
@@ -35,7 +35,7 @@ const cards: DevCard[] = [
     description:
       'MIT/ISC. Forkeable. Auditeable. Contribuible. Sin vendor lock-in, sin dependencias propietarias.',
     href: REPO_URL,
-    linkText: 'github.com/na7hk3r/personal-os',
+    linkText: 'github.com/na7hk3r/nora-os',
     icon: GitBranch,
   },
 ]

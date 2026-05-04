@@ -41,7 +41,7 @@ import './plugins/time'
 /**
  * Safe mode skips plugin initialization so the shell can boot even if a plugin
  * throws during init. Triggered via `#safe` in the hash of the URL (e.g. the
- * user can launch with `personal-os#safe`).
+ * user can launch with `nora-os#safe`).
  */
 function isSafeModeRequested(): boolean {
   if (typeof window === 'undefined') return false

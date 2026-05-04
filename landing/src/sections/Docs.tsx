@@ -22,7 +22,7 @@ interface DocEntry {
   filename: string
 }
 
-const REPO_DOCS_URL = 'https://github.com/na7hk3r/personal-os/blob/main/docs'
+const REPO_DOCS_URL = 'https://github.com/na7hk3r/nora-os/blob/main/docs'
 
 /**
  * Convierte "ARCHITECTURE.md" → "Architecture",
@@ -174,7 +174,7 @@ export function Docs() {
         </aside>
 
         {/* Viewer */}
-        <article className="rounded-2xl border border-border bg-surface/60 p-6 md:p-10 min-w-0">
+        <article className="rounded-2xl border border-border bg-surface/60 p-6 md:p-10 min-w-0 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
           {active && (
             <>
               <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-4 border-b border-border">

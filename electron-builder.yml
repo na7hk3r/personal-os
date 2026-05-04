@@ -1,5 +1,5 @@
-appId: com.na7hk3r.personalos
-productName: Personal OS
+appId: com.na7hk3r.nora-os
+productName: Nora OS
 copyright: Copyright © 2026 na7hk3r
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 
@@ -34,12 +34,12 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: Personal OS
+  shortcutName: Nora OS
   installerLanguages:
     - es_ES
     - en_US
   language: "1034" # Spanish (ES) por defecto
-  # include: buildResources/installer.nsh  # Activar cuando se agregue script custom.
+  include: buildResources/installer.nsh  # Detecta Ollama y otras tareas custom de instalación.
 
 portable:
   artifactName: ${productName}-${version}-portable.${ext}
@@ -73,7 +73,7 @@ linux:
 publish:
   - provider: github
     owner: na7hk3r
-    repo: personal-os
+    repo: nora-os
     releaseType: release
 
 # Code signing:

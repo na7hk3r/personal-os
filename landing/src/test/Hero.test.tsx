@@ -28,7 +28,7 @@ describe('Hero', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /ver en github/i })).toHaveAttribute(
       'href',
-      'https://github.com/na7hk3r/personal-os',
+      'https://github.com/na7hk3r/nora-os',
     )
   })
 })

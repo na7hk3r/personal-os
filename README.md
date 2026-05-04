@@ -10,13 +10,13 @@
 
 `v1.12.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
-> **Nota de marca y compatibilidad**: el repositorio, las URLs derivadas (sitio en GitHub Pages, API de releases) y los identificadores internos (`appId`, `productName`, paquete npm) mantienen el slug histórico **`personal-os`** por compatibilidad. El nombre de marca de la aplicación es **Nora OS** y se refleja en toda la documentación. La unificación del slug queda fuera del alcance de esta refresh y se planificará como cambio de infraestructura aparte.
+> **Nota de marca**: el slug del repositorio, paquete y URLs ahora usan **`nora-os`**. El nombre comercial de la aplicación es **Nora OS**.
 
-[![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-6A39F6?style=flat-square)](https://na7hk3r.github.io/personal-os/)
-[![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=6A39F6)](https://github.com/na7hk3r/personal-os/releases)
+[![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fnora--os-6A39F6?style=flat-square)](https://na7hk3r.github.io/nora-os/)
+[![Releases](https://img.shields.io/github/v/release/na7hk3r/nora-os?style=flat-square&color=6A39F6)](https://github.com/na7hk3r/nora-os/releases)
 [![License](https://img.shields.io/badge/license-ISC-6A39F6?style=flat-square)](LICENSE)
 
-[Sitio web](https://na7hk3r.github.io/personal-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Identidad visual](#identidad-visual) · [Roadmap](#roadmap)
+[Sitio web](https://na7hk3r.github.io/nora-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Identidad visual](#identidad-visual) · [Roadmap](#roadmap)
 
 <br />
 
@@ -174,7 +174,7 @@ Cada 100 puntos sube un nivel. Logros se desbloquean por hitos acumulados.
 Nora OS se distribuye como app nativa (sin servidor, sin cloud) con
 auto-update integrado vía GitHub Releases.
 
-➡️ **[Última versión — github.com/na7hk3r/personal-os/releases/latest](https://github.com/na7hk3r/personal-os/releases/latest)**
+➡️ **[Última versión — github.com/na7hk3r/nora-os/releases/latest](https://github.com/na7hk3r/nora-os/releases/latest)**
 
 | Plataforma | Asset                              | Notas                                       |
 | ---------- | ---------------------------------- | ------------------------------------------- |
@@ -188,6 +188,12 @@ auto-update integrado vía GitHub Releases.
 Una vez instalada, la app chequea actualizaciones al iniciar y cada 6 h. Si hay
 versión nueva aparece un banner discreto con el botón **Reiniciar e instalar**.
 
+> **Detección de Ollama en el instalador**: el instalador de Windows verifica
+> si tenés [Ollama](https://ollama.com) instalado y, si no, te ofrece abrir la
+> página de descarga durante el setup. La app funciona igual sin Ollama —
+> simplemente las funciones del copiloto IA quedan deshabilitadas hasta que lo
+> instales y selecciones un modelo desde el Control Center.
+
 > Code signing pendiente: en el primer arranque Windows SmartScreen puede
 > mostrar "Editor desconocido". Tocá *Más información → Ejecutar de todas formas*.
 
@@ -199,7 +205,7 @@ Para distribuir tu propio fork, ver [docs/RELEASES.md](docs/RELEASES.md).
 
 ### Descargar (usuarios)
 
-¿Solo querés usar la app? Bajala desde la **[página oficial](https://na7hk3r.github.io/personal-os/#download)** o directamente desde [GitHub Releases](https://github.com/na7hk3r/personal-os/releases). Disponible para Windows (NSIS y portable), Linux (AppImage / .deb) y macOS (.dmg).
+¿Solo querés usar la app? Bajala desde la **[página oficial](https://na7hk3r.github.io/nora-os/#download)** o directamente desde [GitHub Releases](https://github.com/na7hk3r/nora-os/releases). Disponible para Windows (NSIS y portable), Linux (AppImage / .deb) y macOS (.dmg).
 
 ### Requisitos (build desde source)
 
@@ -215,7 +221,7 @@ Para distribuir tu propio fork, ver [docs/RELEASES.md](docs/RELEASES.md).
 
 ```bash
 git clone <repo>
-cd personal-os
+cd nora-os
 npm ci          # postinstall ejecuta electron-rebuild para better-sqlite3
 npm run dev     # abre la ventana Electron con HMR
 ```
@@ -257,7 +263,7 @@ Catálogo completo y roadmap de atajos: [docs/SHORTCUTS.md](docs/SHORTCUTS.md).
 ## Estructura del proyecto
 
 ```
-personal-os/
+nora-os/
 ├── electron/                    # Proceso principal Electron
 │   ├── main.ts                  # Bootstrap de ventana + servicios
 │   ├── preload.ts               # Context Bridge — 10 bridges (ver más abajo)

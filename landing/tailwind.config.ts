@@ -2,7 +2,7 @@
 import type { Config } from 'tailwindcss'
 
 /**
- * Paleta inspirada en el app principal (Personal OS).
+ * Paleta inspirada en el app principal (Nora OS).
  * Tokens replicados a través de CSS vars para soportar dark/light toggle.
  */
 const config: Config = {

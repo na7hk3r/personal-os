@@ -6,25 +6,25 @@ import { detectOS } from '../hooks/useDetectOS'
 const mockRelease = {
   tag_name: 'v1.8.1',
   published_at: '2026-04-20T10:00:00Z',
-  html_url: 'https://github.com/na7hk3r/personal-os/releases/tag/v1.8.1',
+  html_url: 'https://github.com/na7hk3r/nora-os/releases/tag/v1.8.1',
   assets: [
     {
-      name: 'Personal-OS-Setup-1.8.1.exe',
+      name: 'Nora-OS-Setup-1.8.1.exe',
       browser_download_url: 'https://example.com/setup.exe',
       size: 90 * 1024 * 1024,
     },
     {
-      name: 'Personal-OS-1.8.1-portable.exe',
+      name: 'Nora-OS-1.8.1-portable.exe',
       browser_download_url: 'https://example.com/portable.exe',
       size: 85 * 1024 * 1024,
     },
     {
-      name: 'Personal-OS-1.8.1.AppImage',
+      name: 'Nora-OS-1.8.1.AppImage',
       browser_download_url: 'https://example.com/app.AppImage',
       size: 95 * 1024 * 1024,
     },
     {
-      name: 'Personal-OS-1.8.1.dmg',
+      name: 'Nora-OS-1.8.1.dmg',
       browser_download_url: 'https://example.com/app.dmg',
       size: 100 * 1024 * 1024,
     },
@@ -77,7 +77,7 @@ describe('DownloadButton', () => {
     await waitFor(() => {
       expect(screen.getByRole('link')).toHaveAttribute(
         'href',
-        'https://github.com/na7hk3r/personal-os/releases',
+        'https://github.com/na7hk3r/nora-os/releases',
       )
     })
   })

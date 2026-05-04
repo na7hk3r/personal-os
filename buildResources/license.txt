@@ -1,4 +1,4 @@
-Personal OS
+Nora OS
 Copyright (c) 2026 na7hk3r
 
 Licensed under the ISC License.

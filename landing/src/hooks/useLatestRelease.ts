@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-const REPO = 'na7hk3r/personal-os'
+const REPO = 'na7hk3r/nora-os'
 const API_URL = `https://api.github.com/repos/${REPO}/releases/latest`
-const CACHE_KEY = 'personal-os:latest-release'
+const CACHE_KEY = 'nora-os:latest-release'
 const CACHE_TTL_MS = 10 * 60 * 1000 // 10 minutos
 
 export interface ReleaseAsset {

@@ -1,5 +1,5 @@
 # Genera buildResources/icon.png (512x512) e icon.ico (multi-res 16/32/48/64/128/256)
-# para Personal OS. Usa System.Drawing (Windows nativo, sin dependencias npm extra).
+# para Nora OS. Usa System.Drawing (Windows nativo, sin dependencias npm extra).
 #
 # Diseno:
 #   - Fondo gradiente diagonal grafito -> negro (paleta de la app)

@@ -1,9 +1,9 @@
 {
-  "name": "personal-os-landing",
+  "name": "nora-os-landing",
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Landing page pública de Personal OS",
+  "description": "Landing page pública de Nora OS",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

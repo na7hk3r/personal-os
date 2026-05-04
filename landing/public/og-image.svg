@@ -16,7 +16,7 @@
   <g transform="translate(80, 200)">
     <circle cx="40" cy="40" r="14" fill="url(#accent)"/>
     <text x="80" y="56" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="56" font-weight="700" fill="#e2e8f0">
-      Personal OS
+      Nora OS
     </text>
   </g>
   <text x="80" y="360" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="46" font-weight="600" fill="#e2e8f0">
@@ -29,6 +29,6 @@
     Productividad · Hábitos · Finanzas · Salud
   </text>
   <text x="80" y="560" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="22" fill="#7c3aed">
-    na7hk3r.github.io/personal-os
+    na7hk3r.github.io/nora-os
   </text>
 </svg>

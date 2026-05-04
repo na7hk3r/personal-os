@@ -1,7 +1,14 @@
 {
-  "name": "personal-os",
+  "name": "nora-os",
+  "productName": "Nora OS",
   "version": "1.12.0",
-  "description": "Personal OS - Modular Desktop App",
+  "description": "Nora OS - Modular Desktop App",
+  "homepage": "https://na7hk3r.github.io/nora-os/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/na7hk3r/nora-os.git"
+  },
+  "author": "na7hk3r",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
@@ -26,7 +33,6 @@
     "npm": ">=9.0.0"
   },
   "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
