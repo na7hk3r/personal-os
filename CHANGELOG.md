@@ -1,5 +1,20 @@
 # Changelog - Nora OS
 
+## [1.12.0] - 2026-05-04
+
+### 🎨 Identidad visual oficial Nora OS
+
+Aplicación de la identidad de marca oficial (carpeta `identidadVisual-noraOS/` como fuente de verdad) al app de escritorio, la landing y la documentación. Coherencia visual end-to-end entre login, splash, dashboard, footer y sitio público.
+
+- **Paleta Cosmic Purple**: tema `default` actualizado a `#6A39F6` (Cosmic Purple), `#DEBFD8` (Nebula Lavender), `#1B1B1F` (Deep Space Gray), `#F5F4FF` (Polar White) y `#111111` (Graphite). Tokens reflejados en [src/index.css](src/index.css) y [landing/src/styles/index.css](landing/src/styles/index.css).
+- **Logo Nora**: nuevo SVG vectorial [public/icons/NoraLogo.svg](public/icons/NoraLogo.svg) y componente React reactivo al theme `NoraLogoMark` en [src/core/ui/components/NoraLogo.tsx](src/core/ui/components/NoraLogo.tsx) y [landing/src/components/NoraLogo.tsx](landing/src/components/NoraLogo.tsx). Reemplaza al `CrystalBallEye` y a la imagen `GRUPO.png` en todos los puntos de marca.
+- **Tipografía display**: utility `font-display` con stack geométrico del sistema (CSP del app no permite Google Fonts; la landing usa Space Grotesk como sustituto público de la fuente custom *Nora Sans*).
+- **Coherencia visual**: el logo y el gradiente cosmic purple aparecen ahora en `Sidebar`, `SystemStatusHero` (saludo "Buenas noches…"), `AuthScreen`, `UnlockScreen`, `StepWelcome` (onboarding) y `DashboardFooter`. El favicon del app pasa a `NoraLogo.svg`.
+- **Tagline oficial**: *“Tu sistema. Tu vida. Una sola IA.”* incorporado al login y a la landing.
+- **Landing rebrandeado**: rediseño inspirado en inkdrop con Navbar, mockup tipo consola, secciones reorganizadas, Framer Motion y nueva paleta/tipografía.
+- **README**: badges actualizados a `#6A39F6`, sección **Identidad visual** con paleta, tipografías y enlaces a `identidadVisual-noraOS/`, hero con logo y tagline.
+- **Responsividad Finanzas**: arreglo de los grids de `QuickAddTransaction` (1↚sm:2↚lg:6 cols con spans), `AccountsManager` (1↚sm:2↚lg:5) y `RecurringPage` (1↚sm:2↚lg:4) que rompían en breakpoint medio.
+
 ## [1.11.0] - 2026-05-03
 
 ### 🎨 Rebrand a Nora OS + refactor UX completo

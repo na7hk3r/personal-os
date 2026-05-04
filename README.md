@@ -8,7 +8,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.10.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.12.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 > **Nota de marca y compatibilidad**: el repositorio, las URLs derivadas (sitio en GitHub Pages, API de releases) y los identificadores internos (`appId`, `productName`, paquete npm) mantienen el slug histórico **`personal-os`** por compatibilidad. El nombre de marca de la aplicación es **Nora OS** y se refleja en toda la documentación. La unificación del slug queda fuera del alcance de esta refresh y se planificará como cambio de infraestructura aparte.
 
