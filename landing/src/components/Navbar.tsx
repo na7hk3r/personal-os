@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Github, Menu, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ThemeToggle } from './ThemeToggle'
+import { NoraLogoMark } from './NoraLogo'
 import { useLatestRelease } from '../hooks/useLatestRelease'
 
 const REPO_URL = 'https://github.com/na7hk3r/personal-os'
@@ -56,14 +57,10 @@ export function Navbar() {
           className="font-bold text-foreground text-lg flex items-center gap-2.5 group"
           aria-label="Nora OS — inicio"
         >
-          <span
-            aria-hidden="true"
-            className="relative inline-flex w-2.5 h-2.5"
-          >
-            <span className="absolute inset-0 rounded-full bg-accent" />
-            <span className="absolute inset-0 rounded-full bg-accent animate-ping opacity-60" />
+          <NoraLogoMark size={32} className="text-foreground transition-transform group-hover:scale-105" />
+          <span className="font-display tracking-[0.14em] text-base">
+            NORA<span className="text-accent-light ml-0.5">OS</span>
           </span>
-          <span className="tracking-tight">Nora OS</span>
         </a>
 
         <nav

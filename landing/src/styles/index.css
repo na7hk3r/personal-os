@@ -1,49 +1,50 @@
-/* Tokens reformados: gradiente hero más dramático + --color-glow para halos accent. */
+/* Tokens alineados con la identidad visual oficial de Nora OS:
+ * Cosmic Purple (#6A39F6) · Nebula Lavender (#DEBFD8) · Deep Space Gray (#1B1B1F) · Polar White (#FFFFFF) · Graphite (#111111).
+ * Tipografía display: Space Grotesk (sustituto público de "Nora Sans"); body: Inter.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ===== DESIGN TOKENS — DARK (default) =====
- * Replica de la paleta del app principal (src/index.css).
- */
+/* ===== DESIGN TOKENS — DARK (default, identidad oficial) ===== */
 :root,
 [data-theme='dark'] {
-  --color-base: 7 13 20; /* #070d14 */
-  --color-surface: 30 30 46; /* #1e1e2e */
-  --color-surface-light: 42 42 62; /* #2a2a3e */
-  --color-surface-lighter: 54 54 80; /* #363650 */
-  --color-accent: 124 58 237; /* #7c3aed */
-  --color-accent-light: 167 139 250; /* #a78bfa */
-  --color-text: 226 232 240; /* #e2e8f0 */
-  --color-muted: 148 163 184; /* #94a3b8 */
-  --color-border: 51 65 85; /* #334155 */
-  --color-glow: 124 58 237; /* mismo accent, usado en box-shadow */
-  /* Gradiente más dramático: tensión azul → violeta sobre la base oscura */
+  --color-base: 11 11 18;            /* Deep Space casi negro */
+  --color-surface: 27 27 31;         /* Deep Space Gray #1B1B1F */
+  --color-surface-light: 38 38 46;
+  --color-surface-lighter: 54 54 64;
+  --color-accent: 106 57 246;        /* Cosmic Purple #6A39F6 */
+  --color-accent-light: 222 191 216; /* Nebula Lavender #DEBFD8 */
+  --color-text: 245 244 255;         /* Polar White con tinte lila */
+  --color-muted: 168 162 196;        /* lavanda apagada — coherente con la nebulosa */
+  --color-border: 60 55 90;
+  --color-glow: 106 57 246;
+  /* Gradiente cósmico: nebulosa violeta + tensión profunda */
   --bg-gradient:
-    radial-gradient(ellipse 90% 60% at 20% -10%, rgba(56, 24, 108, 0.55) 0%, transparent 60%),
-    radial-gradient(ellipse 80% 50% at 85% 5%, rgba(20, 60, 120, 0.45) 0%, transparent 60%),
-    radial-gradient(circle at 50% 100%, rgba(124, 58, 237, 0.18) 0%, transparent 55%),
-    linear-gradient(180deg, #0a1220 0%, #070d14 60%, #050811 100%);
+    radial-gradient(ellipse 90% 60% at 18% -8%, rgba(106, 57, 246, 0.45) 0%, transparent 60%),
+    radial-gradient(ellipse 75% 55% at 85% 8%, rgba(60, 25, 140, 0.45) 0%, transparent 60%),
+    radial-gradient(circle at 50% 105%, rgba(222, 191, 216, 0.12) 0%, transparent 55%),
+    linear-gradient(180deg, #0d0a1a 0%, #0b0b12 60%, #07060d 100%);
 }
 
-/* ===== TEMA: LIGHT =====
- * Contraste WCAG AA verificado:
- *   text on base    → 13:1   ✓ AAA
- *   muted on base   →  6.6:1 ✓ AA  (antes 4.0:1)
- *   muted on surface-light → 5.3:1 ✓ AA
- */
+/* ===== TEMA: LIGHT — interpretación clara, mantiene cosmic purple como acento ===== */
 [data-theme='light'] {
-  --color-base: 251 247 238;
-  --color-surface: 255 252 245;
-  --color-surface-light: 243 236 221;
-  --color-surface-lighter: 232 222 200;
-  --color-accent: 196 95 65;        /* terracota más profunda → contraste 4.6:1 sobre crema */
-  --color-accent-light: 217 119 87;
-  --color-text: 46 32 20;            /* marrón profundo, casi negro cálido */
-  --color-muted: 96 78 60;           /* legible sobre cremas y papel arroz */
-  --color-border: 218 204 178;       /* algo más oscuro para definir mejor las cards */
-  --color-glow: 196 95 65;
-  --bg-gradient: radial-gradient(circle at top left, #fff8ec 0%, #fbf7ee 60%, #f3ecdd 100%);
+  --color-base: 248 246 255;
+  --color-surface: 255 255 255;
+  --color-surface-light: 244 240 252;
+  --color-surface-lighter: 232 224 248;
+  --color-accent: 90 45 220;          /* Cosmic Purple oscurecido para contraste AA */
+  --color-accent-light: 168 130 230;
+  --color-text: 27 27 31;             /* Deep Space sobre Polar White */
+  --color-muted: 95 88 120;
+  --color-border: 220 214 238;
+  --color-glow: 106 57 246;
+  --bg-gradient:
+    radial-gradient(ellipse 80% 60% at 20% -10%, rgba(106, 57, 246, 0.18) 0%, transparent 60%),
+    radial-gradient(circle at 80% 110%, rgba(222, 191, 216, 0.45) 0%, transparent 55%),
+    linear-gradient(180deg, #faf8ff 0%, #f5f1ff 100%);
 }
 
 html,
@@ -53,6 +54,13 @@ body {
   background-image: var(--bg-gradient);
   background-attachment: fixed;
   min-height: 100vh;
+}
+
+/* Tipografía display (titulares) — coherente con el wordmark "NORA OS". */
+.font-display {
+  font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'ss01', 'cv11';
+  letter-spacing: -0.01em;
 }
 
 * {
@@ -251,17 +259,17 @@ html {
  * para mantener la metáfora visual de terminal y que el texto resalte.
  */
 .window-frame {
-  /* Override local de los tokens dentro del frame: paleta oscura fija. */
-  --color-base: 7 13 20;
-  --color-surface: 30 30 46;
-  --color-surface-light: 42 42 62;
-  --color-surface-lighter: 54 54 80;
-  --color-text: 226 232 240;
-  --color-muted: 148 163 184;
-  --color-border: 51 65 85;
-  --color-accent: 124 58 237;
-  --color-accent-light: 167 139 250;
-  --color-glow: 124 58 237;
+  /* Override local de los tokens dentro del frame: paleta cosmic dark fija. */
+  --color-base: 11 11 18;
+  --color-surface: 27 27 31;
+  --color-surface-light: 38 38 46;
+  --color-surface-lighter: 54 54 64;
+  --color-text: 245 244 255;
+  --color-muted: 168 162 196;
+  --color-border: 60 55 90;
+  --color-accent: 106 57 246;
+  --color-accent-light: 222 191 216;
+  --color-glow: 106 57 246;
 
   border-radius: 14px;
   border: 1px solid rgb(var(--color-border));

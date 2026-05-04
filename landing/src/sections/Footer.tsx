@@ -1,5 +1,6 @@
 // Reformado: filosofía visible en grande, links minimalistas estilo inkdrop.
 import { Github, FileText, BookOpen, Sparkles } from 'lucide-react'
+import { NoraLogoFull, NoraLogoMark } from '../components/NoraLogo'
 import { useLatestRelease } from '../hooks/useLatestRelease'
 
 const REPO = 'https://github.com/na7hk3r/personal-os'
@@ -12,7 +13,10 @@ export function Footer() {
     <footer className="relative border-t border-border bg-surface/30 backdrop-blur mt-20">
       {/* Filosofía como elemento visual central — no en letra chica. */}
       <div className="max-w-4xl mx-auto px-4 md:px-8 pt-16 pb-12 text-center">
-        <p className="text-2xl md:text-3xl font-medium text-foreground leading-snug max-w-2xl mx-auto">
+        <div className="flex justify-center mb-8">
+          <NoraLogoMark size={56} glow />
+        </div>
+        <p className="font-display text-2xl md:text-3xl font-medium text-foreground leading-snug max-w-2xl mx-auto">
           Hecho con convicción.{' '}
           <span className="text-gradient-accent">Local-first.</span>{' '}
           Sin telemetría. Sin VC money.
@@ -25,10 +29,7 @@ export function Footer() {
       <div className="border-t border-border/60">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-10 grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
-            <p className="text-xl font-bold text-foreground flex items-center gap-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-accent" aria-hidden="true" />
-              Nora OS
-            </p>
+            <NoraLogoFull size={28} showTagline />
             <p className="mt-3 text-sm text-muted leading-relaxed">
               Open source, multiplataforma y 100% local. Sin nube, sin cuenta, sin telemetría.
             </p>

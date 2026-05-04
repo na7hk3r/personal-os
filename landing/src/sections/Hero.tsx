@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Button } from '../components/Button'
 import { DownloadButton } from '../components/DownloadButton'
 import { BrandIcon } from '../components/BrandIcon'
+import { NoraLogoMark } from '../components/NoraLogo'
 import { useTypewriter } from '../hooks/useTypewriter'
 import { useLatestRelease } from '../hooks/useLatestRelease'
 
@@ -74,13 +75,22 @@ export function Hero() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.05]"
+          className="font-display text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground leading-[1.05]"
         >
           El copiloto que conoce
           <span className="block mt-2 text-gradient-accent animate-gradient-shift">
             toda tu vida.
           </span>
         </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mt-4 font-mono text-[11px] md:text-xs uppercase tracking-[0.4em] text-accent-light/80"
+        >
+          Tu sistema · Tu vida · Una sola IA
+        </motion.p>
 
         <motion.p
           initial={{ opacity: 0, y: 14 }}
@@ -177,7 +187,8 @@ export function Hero() {
             <span className="w-2.5 h-2.5 rounded-full bg-red-400/70" aria-hidden="true" />
             <span className="w-2.5 h-2.5 rounded-full bg-amber-400/70" aria-hidden="true" />
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400/70" aria-hidden="true" />
-            <span className="ml-3 text-[11px] font-mono text-muted tracking-wider">
+            <NoraLogoMark size={16} className="ml-3 text-foreground/80" />
+            <span className="text-[11px] font-mono text-muted tracking-wider">
               nora-os · daily brief
             </span>
           </div>

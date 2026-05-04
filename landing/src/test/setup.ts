@@ -14,8 +14,9 @@ class IntersectionObserverMock {
 }
 
 if (typeof globalThis.IntersectionObserver === 'undefined') {
-  // @ts-expect-error — asignamos el polyfill al global de jsdom
-  globalThis.IntersectionObserver = IntersectionObserverMock
+  // Asignación al global de jsdom (no hay tipo exacto disponible).
+  ;(globalThis as unknown as { IntersectionObserver: unknown }).IntersectionObserver =
+    IntersectionObserverMock
 }
 
 // matchMedia polyfill (algunos componentes pueden consultarlo)
