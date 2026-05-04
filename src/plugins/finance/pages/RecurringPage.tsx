@@ -125,7 +125,7 @@ export function RecurringPage() {
             <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Nota"
               className="md:col-span-2 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white" />
           </div>
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             <select value={freq} onChange={(e) => setFreq(e.target.value as Freq)}
               className="rounded-lg border border-border bg-surface px-2 py-2 text-sm text-white">
               <option value="DAILY">Diaria</option>

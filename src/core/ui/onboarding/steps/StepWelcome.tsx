@@ -1,5 +1,5 @@
 import { Brain, Dumbbell, BriefcaseBusiness, Sparkles } from 'lucide-react'
-import { BrandIcon } from '../../components/BrandIcon'
+import { NoraLogoMark } from '../../components/NoraLogo'
 
 interface Props {
   onNext: () => void
@@ -16,10 +16,10 @@ export function StepWelcome({ onNext }: Props) {
   return (
     <div className="flex flex-col items-center text-center gap-8 animate-fade-in">
       <div className="space-y-3">
-        {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
-        <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mx-auto" />
-        <p className="text-xs uppercase tracking-[0.25em] text-muted">Bienvenidx a</p>
-        <h1 className="text-5xl font-bold tracking-tight bg-gradient-to-r from-white via-accent-light to-accent bg-clip-text text-transparent">
+        {/* Logo oficial Nora OS — ver identidadVisual-noraOS/. */}
+        <NoraLogoMark size={72} glow className="mx-auto text-foreground/80" />
+        <p className="text-xs uppercase tracking-[0.25em] text-muted font-display">Bienvenidx a</p>
+        <h1 className="font-display text-5xl font-bold tracking-tight bg-gradient-to-r from-white via-accent-light to-accent bg-clip-text text-transparent">
           Nora OS
         </h1>
         <p className="text-sm text-muted max-w-sm mx-auto leading-relaxed">

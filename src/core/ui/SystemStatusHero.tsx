@@ -3,6 +3,7 @@ import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { buildSystemSuggestions, computeHeroState, subscribeGuidanceRefresh } from './systemGuidance'
+import { NoraLogoMark } from './components/NoraLogo'
 
 type DayState = 'on-track' | 'unstable' | 'disconnected'
 
@@ -94,9 +95,9 @@ export function SystemStatusHero() {
     <section
       className={`relative overflow-hidden rounded-2xl border ${cfg.border} bg-surface-light/90 p-6 shadow-2xl transition-all duration-300`}
     >
-      {/* Background decoration */}
-      <div className="absolute right-0 top-0 h-full w-1/3 opacity-20 pointer-events-none">
-        <img src="./GRUPO.png" alt="" className="h-full w-full object-cover" />
+      {/* Background decoration: logo oficial Nora OS — ver identidadVisual-noraOS/. */}
+      <div className="pointer-events-none absolute -right-6 -top-6 h-56 w-56 opacity-25">
+        <NoraLogoMark size={224} className="h-full w-full text-foreground/60" glow />
       </div>
 
       <div className="relative flex flex-col gap-4">
@@ -115,7 +116,7 @@ export function SystemStatusHero() {
             )}
           </div>
 
-          <h1 className="text-2xl font-semibold leading-tight">{getGreeting(profileName)}</h1>
+          <h1 className="font-display text-2xl font-semibold leading-tight">{getGreeting(profileName)}</h1>
           <p className="max-w-xl text-sm text-muted">{heroState.insight}</p>
         </div>
       </div>

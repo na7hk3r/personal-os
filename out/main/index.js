@@ -1054,7 +1054,7 @@ function decrypt$1(blob, passphrase) {
 async function pickSavePath$1(defaultName) {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Guardar backup de Personal OS",
+    title: "Guardar backup de Nora OS",
     defaultPath: defaultName
   });
   return result.canceled || !result.filePath ? null : result.filePath;
@@ -1062,7 +1062,7 @@ async function pickSavePath$1(defaultName) {
 async function pickOpenPath$1() {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Restaurar backup de Personal OS",
+    title: "Restaurar backup de Nora OS",
     properties: ["openFile"]
   });
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
@@ -1158,7 +1158,7 @@ function decrypt(blob, passphrase) {
     throw new Error("Archivo de perfil corrupto o demasiado chico");
   }
   if (!blob.subarray(0, MAGIC$1.length).equals(MAGIC$1)) {
-    throw new Error("Formato inválido: el archivo no es un perfil cifrado de Personal OS");
+    throw new Error("Formato inválido: el archivo no es un perfil cifrado de Nora OS");
   }
   let offset = MAGIC$1.length;
   const salt = blob.subarray(offset, offset + SALT_LEN$1);
@@ -1176,7 +1176,7 @@ function decrypt(blob, passphrase) {
 async function pickSavePath(defaultName) {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Exportar perfil de Personal OS",
+    title: "Exportar perfil de Nora OS",
     defaultPath: defaultName
   });
   return result.canceled || !result.filePath ? null : result.filePath;
@@ -1184,7 +1184,7 @@ async function pickSavePath(defaultName) {
 async function pickOpenPath() {
   const focused = electron.BrowserWindow.getFocusedWindow();
   const result = await electron.dialog.showOpenDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-    title: "Importar perfil de Personal OS",
+    title: "Importar perfil de Nora OS",
     properties: ["openFile"]
   });
   return result.canceled || result.filePaths.length === 0 ? null : result.filePaths[0];
@@ -1267,7 +1267,7 @@ function parseSnapshot(text) {
   if (!parsed || typeof parsed !== "object") throw new Error("Snapshot inválido");
   const snap = parsed;
   if (snap.app?.name !== "personal-os") {
-    throw new Error("El archivo no parece ser un perfil de Personal OS");
+    throw new Error("El archivo no parece ser un perfil de Nora OS");
   }
   return snap;
 }
@@ -1496,7 +1496,7 @@ function registerDiagnosticIpc() {
     const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const defaultName = `personal-os-diagnostic-${stamp}.json`;
     const result = await electron.dialog.showSaveDialog(focused ?? new electron.BrowserWindow({ show: false }), {
-      title: "Exportar diagnóstico de Personal OS",
+      title: "Exportar diagnóstico de Nora OS",
       defaultPath: path.join(electron.app.getPath("downloads"), defaultName),
       filters: [{ name: "JSON", extensions: ["json"] }]
     });

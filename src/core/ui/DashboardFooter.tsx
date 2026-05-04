@@ -1,15 +1,17 @@
 import { Database, Circle } from 'lucide-react'
 import { pluginManager } from '@core/plugins/PluginManager'
 import { APP_VERSION } from '@core/utils/version'
+import { NoraLogoMark } from './components/NoraLogo'
 
 export function DashboardFooter() {
   const activeCount = pluginManager.getAllPlugins().filter((p) => p.status === 'active').length
 
   return (
     <footer className="flex flex-col gap-3 pt-4 border-t border-border sm:flex-row sm:items-center sm:justify-between">
-      {/* Brand */}
-      <div className="flex items-center gap-3">
-        <img src="./GRUPO.png" alt="Nora OS" className="h-6 object-contain opacity-70" />
+      {/* Brand: logo oficial Nora OS + wordmark display. */}
+      <div className="flex items-center gap-2">
+        <NoraLogoMark size={20} className="text-foreground/60" />
+        <span className="font-display text-sm font-semibold tracking-tight text-foreground/80">Nora OS</span>
         <span className="text-xs text-muted" title={`Nora OS v${APP_VERSION}`}>v{APP_VERSION}</span>
       </div>
 

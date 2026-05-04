@@ -76,21 +76,21 @@ export function AccountsManager() {
       </header>
 
       {open && (
-        <div className="mb-3 grid grid-cols-1 gap-2 rounded-xl border border-border bg-surface p-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
+        <div className="mb-3 grid grid-cols-1 gap-2 rounded-xl border border-border bg-surface p-3 sm:grid-cols-2 lg:grid-cols-[1fr_auto_auto_auto_auto]">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre"
-            className="rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white" autoFocus />
+            className="min-w-0 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white sm:col-span-2 lg:col-span-1" autoFocus />
           <select value={type} onChange={(e) => setType(e.target.value as AccountType)}
-            className="rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white">
+            className="min-w-0 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white">
             {(Object.keys(TYPE_LABELS) as AccountType[]).map((t) => (
               <option key={t} value={t}>{TYPE_LABELS[t]}</option>
             ))}
           </select>
           <input value={currency} onChange={(e) => setCurrency(e.target.value)} placeholder="UYU"
-            className="w-20 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white" />
+            className="w-full rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white lg:w-20" />
           <input value={initial} onChange={(e) => setInitial(e.target.value)} placeholder="Saldo inicial" inputMode="decimal"
-            className="w-32 rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white" />
+            className="w-full rounded-lg border border-border bg-surface-light px-2 py-1.5 text-sm text-white lg:w-32" />
           <button type="button" onClick={() => void onCreate()} disabled={busy || !name.trim()}
-            className="rounded-lg border border-accent bg-accent/15 px-3 py-1.5 text-xs text-accent-light hover:bg-accent/25 disabled:opacity-40">
+            className="rounded-lg border border-accent bg-accent/15 px-3 py-1.5 text-xs text-accent-light hover:bg-accent/25 disabled:opacity-40 sm:col-span-2 lg:col-span-1">
             Crear
           </button>
         </div>

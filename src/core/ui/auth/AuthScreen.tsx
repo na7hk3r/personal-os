@@ -1,7 +1,7 @@
 import { FormEvent, useMemo, useState } from 'react'
 import { AlertCircle, CheckCircle2 } from 'lucide-react'
 import { useAuthStore } from '@core/state/authStore'
-import { BrandIcon } from '@core/ui/components/BrandIcon'
+import { NoraLogoMark } from '@core/ui/components/NoraLogo'
 
 type AuthMode = 'login' | 'register' | 'recovery'
 
@@ -92,13 +92,16 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#1a3a52_0%,_#102536_48%,_#0a1420_100%)] px-4 text-white">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_#1d0e3d_0%,_#110a24_42%,_#07060d_100%)] px-4 text-white">
+      {/* Decoración de marca: aura cosmic purple coherente con identidad oficial. */}
+      <div className="pointer-events-none absolute -left-32 top-1/4 h-[480px] w-[480px] rounded-full bg-accent/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-32 bottom-0 h-[420px] w-[420px] rounded-full bg-accent-light/10 blur-3xl" />
       <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-surface-light/80 p-6 shadow-2xl backdrop-blur">
         <div className="mb-5 flex flex-col items-center text-center">
-          {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
-          <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mb-3" />
-          <h1 className="text-2xl font-bold">{title}</h1>
-          <p className="mt-1 text-sm text-muted">Tu espacio se carga por usuario con sesión local segura.</p>
+          {/* Logo oficial Nora OS — ver identidadVisual-noraOS/. */}
+          <NoraLogoMark size={64} glow className="mb-3 text-foreground/80" />
+          <h1 className="font-display text-2xl font-bold">{title}</h1>
+          <p className="mt-1 text-sm text-muted">Tu sistema. Tu vida. Una sola IA.</p>
         </div>
 
         <div className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-surface p-1 text-xs">

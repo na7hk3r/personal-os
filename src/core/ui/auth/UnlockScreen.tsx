@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Lock, ShieldAlert } from 'lucide-react'
 import { useAuthStore } from '../../state/authStore'
 import { messages } from '../messages'
-import { BrandIcon } from '../components/BrandIcon'
+import { NoraLogoMark } from '../components/NoraLogo'
 
 interface UnlockScreenProps {
   onUnlocked: () => void
@@ -43,14 +43,17 @@ export function UnlockScreen({ onUnlocked }: UnlockScreenProps) {
   }
 
   return (
-    <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,_#16324f_0%,_#101923_45%,_#070d14_100%)] text-white">
+    <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_#1d0e3d_0%,_#110a24_42%,_#07060d_100%)] text-white">
+      {/* Aura de marca — identidad oficial Nora OS. */}
+      <div className="pointer-events-none absolute -left-32 top-1/4 h-[480px] w-[480px] rounded-full bg-accent/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-32 bottom-0 h-[420px] w-[420px] rounded-full bg-accent-light/10 blur-3xl" />
       <form
         onSubmit={submit}
         className="relative w-full max-w-md rounded-2xl border border-white/10 bg-surface-light/80 p-8 shadow-2xl backdrop-blur"
       >
         <div className="mb-4 flex flex-col items-center text-center">
-          {/* Logo: CrystalBallEye.svg — marca oficial de Nora OS. */}
-          <BrandIcon name="CrystalBallEye" size={64} tile={false} className="mb-3" />
+          {/* Logo oficial Nora OS — ver identidadVisual-noraOS/. */}
+          <NoraLogoMark size={64} glow className="mb-3 text-foreground/80" />
         </div>
         <div className="flex items-center gap-2">
           <Lock size={20} className="text-accent-light" aria-hidden />

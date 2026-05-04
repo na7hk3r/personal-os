@@ -141,19 +141,19 @@ export function QuickAddTransaction() {
 
   return (
     <div
-      className="grid grid-cols-1 gap-2 rounded-2xl border border-border bg-surface-light/90 p-3 shadow-xl md:grid-cols-[auto_1fr_1fr_1fr_2fr_auto]"
+      className="grid grid-cols-1 gap-2 rounded-2xl border border-border bg-surface-light/90 p-3 shadow-xl sm:grid-cols-2 lg:grid-cols-[auto_1fr_1fr_1fr_2fr_auto]"
       onKeyDown={onKeyDown}
     >
-      <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1 text-xs">
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-surface p-1 text-xs sm:col-span-2 lg:col-span-1">
         <button
           type="button"
           onClick={() => setKind('expense')}
-          className={`rounded-md px-2 py-1 ${kind === 'expense' ? 'bg-rose-500/20 text-rose-100' : 'text-muted hover:text-white'}`}
+          className={`flex-1 rounded-md px-2 py-1 lg:flex-none ${kind === 'expense' ? 'bg-rose-500/20 text-rose-100' : 'text-muted hover:text-white'}`}
         >Gasto</button>
         <button
           type="button"
           onClick={() => setKind('income')}
-          className={`rounded-md px-2 py-1 ${kind === 'income' ? 'bg-emerald-500/20 text-emerald-100' : 'text-muted hover:text-white'}`}
+          className={`flex-1 rounded-md px-2 py-1 lg:flex-none ${kind === 'income' ? 'bg-emerald-500/20 text-emerald-100' : 'text-muted hover:text-white'}`}
         >Ingreso</button>
       </div>
       <input
@@ -163,13 +163,13 @@ export function QuickAddTransaction() {
         value={amount}
         onChange={(e) => setAmount(e.target.value)}
         placeholder="Monto"
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-accent"
         autoFocus
       />
       <select
         value={categoryId}
         onChange={(e) => setCategoryId(e.target.value)}
-        className="rounded-lg border border-border bg-surface px-2 py-2 text-sm text-white outline-none focus:border-accent"
+        className="min-w-0 rounded-lg border border-border bg-surface px-2 py-2 text-sm text-white outline-none focus:border-accent"
       >
         <option value="">Sin categoría</option>
         {filteredCategories.map((c) => (
@@ -179,7 +179,7 @@ export function QuickAddTransaction() {
       <select
         value={accountId}
         onChange={(e) => setAccountId(e.target.value)}
-        className="rounded-lg border border-border bg-surface px-2 py-2 text-sm text-white outline-none focus:border-accent"
+        className="min-w-0 rounded-lg border border-border bg-surface px-2 py-2 text-sm text-white outline-none focus:border-accent"
       >
         {accounts.map((a) => (
           <option key={a.id} value={a.id}>{a.name}</option>
@@ -190,13 +190,13 @@ export function QuickAddTransaction() {
         value={note}
         onChange={(e) => setNote(e.target.value)}
         placeholder="Nota (opcional)"
-        className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-accent"
+        className="min-w-0 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-accent sm:col-span-2 lg:col-span-1"
       />
       <button
         type="button"
         onClick={() => void submit()}
         disabled={busy}
-        className="inline-flex items-center justify-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-sm text-accent-light hover:bg-accent/25 disabled:opacity-40"
+        className="inline-flex items-center justify-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-sm text-accent-light hover:bg-accent/25 disabled:opacity-40 sm:col-span-2 lg:col-span-1"
       >
         <Plus size={14} /> Cargar
       </button>
