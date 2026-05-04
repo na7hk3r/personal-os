@@ -2,35 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ========== DESIGN TOKENS — TEMA DEFAULT (dark) ========== */
+/* ========== DESIGN TOKENS — TEMA DEFAULT (Nora OS — identidad oficial)
+ * Paleta de marca: Cosmic Purple #6A39F6, Nebula Lavender #DEBFD8,
+ * Deep Space Gray #1B1B1F, Polar White con tinte lila.
+ * Ver identidadVisual-noraOS/ para la guía completa.
+ * ========== */
 :root,
 [data-theme="default"] {
   /* Backgrounds — RGB para compatibilidad con opacidades Tailwind */
-  --color-base:             7 13 20;       /* #070d14 */
-  --color-surface:          30 30 46;      /* #1e1e2e */
-  --color-surface-light:    42 42 62;      /* #2a2a3e */
-  --color-surface-lighter:  54 54 80;      /* #363650 */
+  --color-base:             11 11 18;      /* Deep Space casi negro */
+  --color-surface:          27 27 31;      /* Deep Space Gray #1B1B1F */
+  --color-surface-light:    38 38 46;
+  --color-surface-lighter:  54 54 64;
 
-  /* Accent */
-  --color-accent:           124 58 237;    /* #7c3aed */
-  --color-accent-light:     167 139 250;   /* #a78bfa */
+  /* Accent — Cosmic Purple + Nebula Lavender */
+  --color-accent:           106 57 246;    /* #6A39F6 */
+  --color-accent-light:     222 191 216;   /* #DEBFD8 */
 
   /* Typography */
-  --color-text:             226 232 240;   /* #e2e8f0 */
-  --color-muted:            148 163 184;   /* #94a3b8 */
+  --color-text:             245 244 255;   /* Polar White con tinte lila */
+  --color-muted:            168 162 196;   /* Lavanda apagada */
 
   /* Border */
-  --color-border:           51 65 85;      /* #334155 */
+  --color-border:           60 55 90;
 
-  /* Gradient del fondo principal */
-  --bg-gradient: radial-gradient(circle at top left, #17314e 0%, #0e1723 42%, #070d14 100%);
+  /* Gradient del fondo principal — nebulosa cósmica */
+  --bg-gradient: radial-gradient(circle at top left, #1d0e3d 0%, #110a24 42%, #07060d 100%);
 
   /* Chart (vars de CSS para Recharts) */
-  --chart-grid:           #334155;
-  --chart-axis:           #94a3b8;
-  --chart-tooltip-bg:     #1e1e2e;
-  --chart-tooltip-border: #334155;
-  --chart-weight:         #7c3aed;
+  --chart-grid:           #3c3760;
+  --chart-axis:           #a8a2c4;
+  --chart-tooltip-bg:     #1b1b1f;
+  --chart-tooltip-border: #3c3760;
+  --chart-weight:         #6a39f6;
   --chart-meal-good:      #22c55e;
   --chart-meal-warn:      #eab308;
   --chart-meal-bad:       #ef4444;
@@ -38,8 +42,8 @@
 
   /* Scrollbars */
   --scrollbar-size:        6px;
-  --scrollbar-thumb:       #3b3b56;
-  --scrollbar-thumb-hover: #7c3aed;
+  --scrollbar-thumb:       #3c3760;
+  --scrollbar-thumb-hover: #6a39f6;
   --scrollbar-track:       transparent;
 }
 

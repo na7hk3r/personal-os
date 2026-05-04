@@ -3,6 +3,24 @@ export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
+      fontFamily: {
+        /**
+         * Display: stack geométrico de sistema. La identidad oficial pide
+         * "Nora Sans" (custom no pública) y como sustituto Space Grotesk; la
+         * CSP del app no permite cargar fuentes externas, así que se prioriza
+         * un fallback geométrico con letras como Inter Display / SF Pro Display.
+         */
+        display: [
+          'Inter Display',
+          'SF Pro Display',
+          'Inter',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          'Segoe UI',
+          'system-ui',
+          'sans-serif',
+        ],
+      },
       colors: {
         /* Colores con CSS vars — soportan modificadores de opacidad (bg-surface/50) */
         surface: {

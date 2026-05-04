@@ -20,6 +20,7 @@ import { useAuthStore } from '@core/state/authStore'
 import { APP_VERSION } from '@core/utils/version'
 import { PluginIcon } from './components/PluginIcon'
 import { BrandIcon } from './components/BrandIcon'
+import { NoraLogoMark } from './components/NoraLogo'
 import { SystemSuggestions } from './SystemSuggestions'
 
 function renderNavIcon(iconName: string, size = 18) {
@@ -113,17 +114,16 @@ export function Sidebar() {
       <div className="flex h-16 items-center justify-between border-b border-border px-4">
         {!sidebarCollapsed && (
           <div className="flex min-w-0 items-center gap-2.5">
-            {/* Logo: CrystalBallEye.svg — elegido como marca de Nora OS por evocar
-                visión / sistema personal con personalidad y leerse bien a 28-32px. */}
-            <BrandIcon name="CrystalBallEye" size={28} tile={false} className="shrink-0" />
+            {/* Logo oficial Nora OS — ver identidadVisual-noraOS/. */}
+            <NoraLogoMark size={28} className="shrink-0 text-foreground/80" />
             <div className="min-w-0">
-              <p className="truncate text-xs uppercase tracking-eyebrow text-muted">Nora OS</p>
+              <p className="truncate text-xs uppercase tracking-eyebrow text-muted font-display">Nora OS</p>
               <p className="truncate text-sm font-bold text-white">{headerTitle}</p>
             </div>
           </div>
         )}
         {sidebarCollapsed && (
-          <BrandIcon name="CrystalBallEye" size={32} tile={false} className="shrink-0" />
+          <NoraLogoMark size={32} className="shrink-0 text-foreground/80" />
         )}
         <button
           onClick={toggleCollapse}

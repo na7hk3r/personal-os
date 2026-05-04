@@ -1,8 +1,10 @@
 <div align="center">
 
+<img src="public/icons/NoraLogo.svg" alt="Nora OS" width="96" height="96" />
+
 # Nora OS
 
-**Tu sistema operativo de vida — productividad, salud y foco en una sola app.**
+**Tu sistema. Tu vida. Una sola IA.**
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
@@ -10,11 +12,11 @@
 
 > **Nota de marca y compatibilidad**: el repositorio, las URLs derivadas (sitio en GitHub Pages, API de releases) y los identificadores internos (`appId`, `productName`, paquete npm) mantienen el slug histórico **`personal-os`** por compatibilidad. El nombre de marca de la aplicación es **Nora OS** y se refleja en toda la documentación. La unificación del slug queda fuera del alcance de esta refresh y se planificará como cambio de infraestructura aparte.
 
-[![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-7c3aed?style=flat-square)](https://na7hk3r.github.io/personal-os/)
-[![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=7c3aed)](https://github.com/na7hk3r/personal-os/releases)
-[![License](https://img.shields.io/badge/license-ISC-7c3aed?style=flat-square)](LICENSE)
+[![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fpersonal--os-6A39F6?style=flat-square)](https://na7hk3r.github.io/personal-os/)
+[![Releases](https://img.shields.io/github/v/release/na7hk3r/personal-os?style=flat-square&color=6A39F6)](https://github.com/na7hk3r/personal-os/releases)
+[![License](https://img.shields.io/badge/license-ISC-6A39F6?style=flat-square)](LICENSE)
 
-[Sitio web](https://na7hk3r.github.io/personal-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Roadmap](#roadmap)
+[Sitio web](https://na7hk3r.github.io/personal-os/) · [Características](#características) · [Instalación](#instalación) · [Stack](#stack-técnico) · [Documentación](#documentación) · [Identidad visual](#identidad-visual) · [Roadmap](#roadmap)
 
 <br />
 
@@ -329,6 +331,34 @@ Para detalle: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/PLUGIN_API.md]
 | [RELEASES](docs/RELEASES.md) | Cómo cortar un release y publicar binarios |
 | [KNOWLEDGE_BASE_PLAN](docs/KNOWLEDGE_BASE_PLAN.md) | Plan para llevar la doc a un sitio web |
 | [CHANGELOG](CHANGELOG.md) | Historial de versiones |
+
+---
+
+## Identidad visual
+
+La fuente de verdad del sistema visual vive en **`identidadVisual-noraOS/`** (logos, paleta, tipografías y PDF de especificación).
+
+**Paleta oficial**
+
+| Token | Hex | Uso |
+|-------|-----|-----|
+| Cosmic Purple | `#6A39F6` | Acento primario, CTAs, focus rings |
+| Nebula Lavender | `#DEBFD8` | Acento claro, highlights, gradientes |
+| Deep Space Gray | `#1B1B1F` | Superficies oscuras, cards |
+| Polar White | `#F5F4FF` | Texto principal sobre fondo oscuro |
+| Graphite | `#111111` | Bordes, separadores |
+
+**Tipografía**
+
+- **Display**: *Nora Sans* (custom, no pública). Sustituto público: **Space Grotesk**. Usado para H1/H2 y wordmark.
+- **Body**: **Inter**, regular/medium/semibold.
+- **Mono**: **JetBrains Mono** para código y tipografía técnica.
+
+**Tagline oficial**: _Tu sistema. Tu vida. Una sola IA._
+
+Los tokens están reflejados en el tema `default` del app ([src/index.css](src/index.css)) y en la landing ([landing/src/styles/index.css](landing/src/styles/index.css)). El logo vectorial reutilizable está en [public/icons/NoraLogo.svg](public/icons/NoraLogo.svg) y como componente React en [src/core/ui/components/NoraLogo.tsx](src/core/ui/components/NoraLogo.tsx) y [landing/src/components/NoraLogo.tsx](landing/src/components/NoraLogo.tsx).
+
+> **Criterio de uso**: la identidad no es decorativa. Si hay conflicto entre estilo y claridad/legibilidad/conversión, gana siempre la legibilidad. Ver el PDF de especificación en `identidadVisual-noraOS/` para guía completa de tono y aplicación.
 
 ---
 
