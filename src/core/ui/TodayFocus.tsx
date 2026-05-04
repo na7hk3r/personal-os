@@ -15,6 +15,7 @@ import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { getXpMultiplierForStreak } from '@core/gamification/gamificationUtils'
 import { useCoreStore } from '@core/state/coreStore'
 import { useWorkStore } from '@plugins/work/store'
+import { usePlannerTasksToday } from './hooks/usePlannerTasksToday'
 import {
   isDoneColumn,
   isInProgressColumn,
@@ -80,6 +81,9 @@ export function TodayFocus() {
   const isWorkActive = activePlugins.includes('work')
   const { cards, columns } = useWorkStore()
 
+  // Tareas del Planner core (no plugin)
+  const plannerTasks = usePlannerTasksToday(3)
+
   const taskGroup = useMemo(
     () => computePriorityTasks(cards, columns),
     [cards, columns],
@@ -87,8 +91,9 @@ export function TodayFocus() {
 
   const hasMissions = dailyMissions.length > 0
   const hasTasks = isWorkActive && cards.length > 0
+  const hasPlanner = plannerTasks.length > 0
 
-  if (!hasMissions && !hasTasks) return null
+  if (!hasMissions && !hasTasks && !hasPlanner) return null
 
   const pendingMissions = dailyMissions.filter((m) => !m.completed).length
   const allMissionsCompleted = hasMissions && pendingMissions === 0
@@ -160,7 +165,12 @@ export function TodayFocus() {
                     onClick={() => navigate('/work')}
                     className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface/70 px-3 py-2.5 text-left transition-all hover:border-accent/40 hover:bg-surface"
                   >
-                    <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">{task.title}</p>
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      <span className="rounded-md border border-violet-500/35 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
+                        Work
+                      </span>
+                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">{task.title}</p>
+                    </div>
                     <div className="flex shrink-0 items-center gap-1.5">
                       {dateLabel && (
                         <span
@@ -190,8 +200,50 @@ export function TodayFocus() {
         </div>
       )}
 
-      {/* Separador entre secciones */}
-      {hasTasks && hasMissions && <div className="my-4 border-t border-border/60" />}
+      {/* Separador después de Tareas si hay Planner o Misiones */}
+      {hasTasks && (hasPlanner || hasMissions) && <div className="my-4 border-t border-border/60" />}
+
+      {/* Sección Planner: tareas del calendario core (no plugin) */}
+      {hasPlanner && (
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-caption uppercase tracking-eyebrow text-muted">Planner</p>
+            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-caption font-semibold text-amber-300">
+              <CalendarClock size={11} />
+              {plannerTasks.length}
+            </span>
+          </div>
+          <div className="mt-3 space-y-2">
+            {plannerTasks.map((task) => (
+              <button
+                key={task.id}
+                onClick={() => navigate('/planner')}
+                className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface/70 px-3 py-2.5 text-left transition-all hover:border-amber-500/40 hover:bg-surface"
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className="rounded-md border border-amber-500/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
+                    Planner
+                  </span>
+                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">{task.title}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <span
+                    className={`text-caption font-medium ${
+                      task.isOverdue ? 'text-danger' : 'text-warning'
+                    }`}
+                  >
+                    {task.isOverdue ? 'Atrasada' : 'Hoy'}
+                  </span>
+                  <ArrowRight size={13} className="text-muted/60" />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Separador antes de Misiones si hay Planner */}
+      {hasPlanner && hasMissions && <div className="my-4 border-t border-border/60" />}
 
       {/* Sección 2: Misiones diarias */}
       {hasMissions && (
