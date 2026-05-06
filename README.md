@@ -7,7 +7,7 @@
 
 100 % local · Multiusuario · Modular · Con IA opcional vía Ollama
 
-`v1.12.0` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
+`v1.13.2` · Electron 41 · React 19 · TypeScript 5.7 · SQLite
 
 
 [![Website](https://img.shields.io/badge/Website-na7hk3r.github.io%2Fnora--os-6A39F6?style=flat-square)](https://na7hk3r.github.io/nora-os/)

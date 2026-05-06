@@ -1,5 +1,27 @@
 # Changelog - Nora OS
 
+## [1.13.2] - 2026-05-06
+
+### Fixes de onboarding, navegacion, auth, Ollama y landing
+
+Patch de calidad que consolida la experiencia inicial de Nora OS, reduce friccion en la configuracion de IA local y pule la landing publica multilenguaje.
+
+#### App
+
+- Onboarding Fitness: si el usuario elige mantener peso, ya no se solicita peso objetivo y el flujo puede avanzar sin bloquearse por datos innecesarios.
+- Navegacion: se agrega un boton flotante para volver atras, visible solo cuando existe historial disponible para evitar bloqueos de clic o ruido visual.
+- Auth: login y registro incorporan boton de ojo para mostrar u ocultar la contrasena.
+- Ollama: la habilitacion inicial facilita la descarga/configuracion de modelos para usuarios no tecnicos, evitando depender de abrir una terminal manualmente.
+- Configuracion: los iconos de modulos activos, widgets y tarjetas de marca dejan de usar fondo blanco para conservar contraste correcto en todos los temas.
+
+#### Landing
+
+- Sitio multilenguaje con textos centralizados para ES/EN/PT y selector de idioma mas discreto.
+- Responsividad revisada para tipografia, espaciados, alineacion y lectura en mobile, tablet y desktop.
+- Navbar: CTAs mas sutiles, selector de idioma sin borde violeta en foco y comportamiento sticky restaurado en desktop.
+- Hero: se mantiene el isotipo `mark-original` con glow como senal principal de marca.
+- Footer, pasos y bloques principales ajustados para conservar centrado y jerarquia visual aun cuando los textos cambian de idioma.
+
 ## [1.13.1] - 2026-05-04
 
 ### 🩹 Fixes de marca, descarga y notas
