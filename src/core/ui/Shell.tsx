@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { useCoreStore } from '../state/coreStore'
 import { GamificationNotificationHub } from './GamificationNotificationHub'
@@ -10,6 +11,8 @@ import { GlobalShortcuts } from './GlobalShortcuts'
 const COPILOT_COLLAPSED_KEY = 'core:copilotPanel:collapsed'
 
 export function Shell() {
+  const navigate = useNavigate()
+  const location = useLocation()
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const theme = useCoreStore((s) => s.settings.theme)
   const [copilotCollapsed, setCopilotCollapsed] = useState<boolean>(() => {
@@ -64,6 +67,15 @@ export function Shell() {
     })
   }
 
+  const canGoBack = location.key !== 'default' || location.pathname !== '/'
+  const goBack = () => {
+    if (location.key !== 'default') {
+      navigate(-1)
+    } else if (location.pathname !== '/') {
+      navigate('/')
+    }
+  }
+
   return (
     <div
       className="flex h-screen overflow-hidden text-white"
@@ -87,6 +99,20 @@ export function Shell() {
           sidebarCollapsed ? 'ml-16' : 'ml-56'
         }`}
       >
+        {canGoBack && (
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="Volver atras"
+            title="Volver atras"
+            className={`fixed top-4 z-30 inline-flex items-center gap-2 rounded-full border border-border bg-surface-light/90 px-3 py-2 text-xs font-medium text-muted shadow-lg shadow-black/20 backdrop-blur transition-all hover:border-accent/50 hover:text-white ${
+              sidebarCollapsed ? 'left-20' : 'left-60'
+            }`}
+          >
+            <ArrowLeft size={15} />
+            Volver
+          </button>
+        )}
         <div className="mx-auto max-w-7xl p-4 md:p-6">
           <Outlet />
         </div>

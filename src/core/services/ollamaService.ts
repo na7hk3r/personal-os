@@ -57,6 +57,11 @@ export const ollamaService = {
     return window.ollama.listModels()
   },
 
+  async pullModel(model: string): Promise<void> {
+    if (!window.ollama) throw new Error('Ollama bridge no disponible')
+    await window.ollama.pullModel(model)
+  },
+
   async generate(prompt: string, opts?: { systemOverride?: string; modelOverride?: string }): Promise<string> {
     if (!window.ollama) throw new Error('Ollama bridge no disponible')
     const settings = await loadSettings()

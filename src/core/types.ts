@@ -125,9 +125,16 @@ export interface OllamaGenerateResponse {
   durationMs?: number
 }
 
+export interface OllamaPullResponse {
+  ok: boolean
+  model: string
+  status?: string
+}
+
 export interface OllamaBridge {
   health: () => Promise<OllamaHealth>
   listModels: () => Promise<OllamaModel[]>
+  pullModel: (model: string) => Promise<OllamaPullResponse>
   generate: (req: OllamaGenerateRequest) => Promise<OllamaGenerateResponse>
 }
 

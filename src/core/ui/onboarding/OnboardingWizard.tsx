@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { ArrowLeft } from 'lucide-react'
 import { useCoreStore } from '../../state/coreStore'
 import { pluginManager } from '../../plugins/PluginManager'
 import { eventBus } from '../../events/EventBus'
@@ -19,6 +20,13 @@ function makeId(): string {
   return `id-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 }
 
+function parsePositiveNumber(value: string): number | null {
+  const normalized = value.trim().replace(',', '.')
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
 export function OnboardingWizard() {
   const { updateProfile, setActivePlugins, completeOnboarding, persistProfile } = useCoreStore()
 
@@ -35,6 +43,16 @@ export function OnboardingWizard() {
   const [firstAction, setFirstAction] = useState<FirstActionResult | null>(null)
 
   const goTo = (s: Step) => setStep(s)
+  const goBack = () => {
+    setStep((current) => {
+      if (current === 'name') return 'welcome'
+      if (current === 'plugins') return 'name'
+      if (current === 'fitness') return 'plugins'
+      if (current === 'first-action') return plugins.fitness ? 'fitness' : 'plugins'
+      if (current === 'summary') return 'first-action'
+      return current
+    })
+  }
 
   const handleName = (data: { name: string; bigGoal: string }) => {
     setName(data.name)
@@ -53,9 +71,17 @@ export function OnboardingWizard() {
   }
 
   const handleFitness = async (cfg: FitnessConfig) => {
-    setFitnessConfig(cfg)
+    const currentWeight = parsePositiveNumber(cfg.currentWeight)
+    const targetWeight = cfg.goal === 'consistency' ? null : parsePositiveNumber(cfg.weightGoal)
+    const normalizedConfig = {
+      ...cfg,
+      currentWeight: currentWeight ? String(currentWeight) : '',
+      weightGoal: targetWeight ? String(targetWeight) : '',
+    }
+
+    setFitnessConfig(normalizedConfig)
     updateProfile({
-      weightGoal: parseFloat(cfg.weightGoal) || 0,
+      weightGoal: targetWeight ?? 0,
     })
 
     // Persist fitness preferences in plugin_state
@@ -68,12 +94,12 @@ export function OnboardingWizard() {
         `INSERT OR REPLACE INTO plugin_state (plugin_id, key, value) VALUES ('fitness', 'smokingTracker', ?)`,
         [cfg.smokingTracker ? 'true' : 'false'],
       )
-      if (cfg.currentWeight) {
+      if (currentWeight) {
         // Insert initial weight entry
         await window.storage.execute(
           `INSERT OR IGNORE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
            VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
-          [parseFloat(cfg.currentWeight)],
+          [currentWeight],
         )
       }
     }
@@ -97,16 +123,19 @@ export function OnboardingWizard() {
             { source: 'work', persist: true },
           )
         } else if (result.kind === 'fitness_weight' && result.value && plugins.fitness) {
-          await window.storage.execute(
-            `INSERT OR REPLACE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
-             VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
-            [parseFloat(result.value)],
-          )
-          eventBus.emit(
-            'FITNESS_WEIGHT_LOGGED',
-            { source: 'onboarding' },
-            { source: 'fitness', persist: true },
-          )
+          const weight = parsePositiveNumber(result.value)
+          if (weight) {
+            await window.storage.execute(
+              `INSERT OR REPLACE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
+               VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
+              [weight],
+            )
+            eventBus.emit(
+              'FITNESS_WEIGHT_LOGGED',
+              { source: 'onboarding' },
+              { source: 'fitness', persist: true },
+            )
+          }
         }
       } catch (err) {
         console.warn('[Onboarding] first-action insert failed', err)
@@ -172,16 +201,26 @@ export function OnboardingWizard() {
     >
       {/* Progress dots */}
       {step !== 'welcome' && (
-        <div className="absolute top-8 flex gap-2">
-          {DOTS_STEPS.map((s, i) => (
-            <span
-              key={s}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === dotIndex ? 'w-6 bg-accent' : i < dotIndex ? 'w-3 bg-accent/40' : 'w-3 bg-border'
-              }`}
-            />
-          ))}
-        </div>
+        <>
+          <button
+            type="button"
+            onClick={goBack}
+            className="absolute left-6 top-6 z-10 flex items-center gap-2 rounded-full border border-border bg-surface-light/85 px-3 py-2 text-xs font-medium text-muted shadow-lg backdrop-blur transition-colors hover:border-accent/50 hover:text-white"
+          >
+            <ArrowLeft size={15} />
+            Volver
+          </button>
+          <div className="absolute top-8 flex gap-2">
+            {DOTS_STEPS.map((s, i) => (
+              <span
+                key={s}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === dotIndex ? 'w-6 bg-accent' : i < dotIndex ? 'w-3 bg-accent/40' : 'w-3 bg-border'
+                }`}
+              />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Step content */}

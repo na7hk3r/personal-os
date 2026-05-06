@@ -1,22 +1,41 @@
 import { useEffect, useState } from 'react'
-import { Sparkles, RefreshCw, Save } from 'lucide-react'
+import { Download, ExternalLink, Sparkles, RefreshCw, Save } from 'lucide-react'
 import { ollamaService, type OllamaSettings } from '@core/services/ollamaService'
+
+const RECOMMENDED_MODELS = [
+  {
+    name: 'llama3.2:3b',
+    label: 'Recomendado',
+    detail: 'Liviano y suficiente para empezar.',
+  },
+  {
+    name: 'mistral:7b',
+    label: 'Mas capaz',
+    detail: 'Mejor calidad, requiere mas recursos.',
+  },
+]
 
 export function OllamaSection() {
   const [settings, setSettings] = useState<OllamaSettings | null>(null)
   const [models, setModels] = useState<string[]>([])
   const [busy, setBusy] = useState(false)
+  const [pullingModel, setPullingModel] = useState('')
   const [status, setStatus] = useState<string>('')
 
   useEffect(() => {
     void ollamaService.getSettings().then(setSettings)
   }, [])
 
+  const loadModels = async () => {
+    const list = await ollamaService.listModels()
+    setModels(list.map((m) => m.name))
+    return list
+  }
+
   const refreshModels = async () => {
     setBusy(true); setStatus('Buscando modelos...')
     try {
-      const list = await ollamaService.listModels()
-      setModels(list.map((m) => m.name))
+      const list = await loadModels()
       setStatus(`${list.length} modelos disponibles`)
     } catch (err) {
       setStatus(`Error: ${(err as Error).message}`)
@@ -34,6 +53,32 @@ export function OllamaSection() {
       setStatus(`Error: ${(err as Error).message}`)
     } finally {
       setBusy(false)
+    }
+  }
+
+  const pullModel = async (modelName?: string) => {
+    if (!settings) return
+    const model = (modelName ?? settings.model).trim()
+    if (!model) {
+      setStatus('Elegí un modelo antes de descargar.')
+      return
+    }
+
+    setBusy(true)
+    setPullingModel(model)
+    setStatus(`Descargando ${model} desde Ollama...`)
+    try {
+      await ollamaService.pullModel(model)
+      const nextSettings = { ...settings, enabled: true, model }
+      setSettings(nextSettings)
+      await ollamaService.saveSettings(nextSettings)
+      await loadModels()
+      setStatus(`Modelo ${model} listo y seleccionado.`)
+    } catch (err) {
+      setStatus(`No se pudo descargar ${model}: ${(err as Error).message}`)
+    } finally {
+      setBusy(false)
+      setPullingModel('')
     }
   }
 
@@ -73,6 +118,68 @@ export function OllamaSection() {
             className="h-4 w-4"
           />
         </label>
+
+        {settings.enabled && (
+          <div className="rounded-lg border border-accent/30 bg-accent/5 px-4 py-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-white">Configuracion inicial del modelo</p>
+                <p className="mt-0.5 text-xs text-muted">
+                  Descarga el modelo desde Nora OS. Solo necesitas tener Ollama instalado y abierto.
+                </p>
+              </div>
+              <a
+                href="https://ollama.com/download"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-muted hover:border-accent/50 hover:text-white"
+              >
+                Instalar Ollama
+                <ExternalLink size={12} />
+              </a>
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {RECOMMENDED_MODELS.map((model) => (
+                <button
+                  key={model.name}
+                  type="button"
+                  onClick={() => void pullModel(model.name)}
+                  disabled={busy}
+                  className={`rounded-lg border p-3 text-left transition-colors disabled:opacity-60 ${
+                    settings.model === model.name
+                      ? 'border-accent/60 bg-accent/10'
+                      : 'border-border bg-surface/70 hover:border-accent/40'
+                  }`}
+                >
+                  <span className="block text-xs font-semibold text-white">{model.label}</span>
+                  <span className="mt-0.5 block text-caption text-muted">{model.name}</span>
+                  <span className="mt-1 block text-caption text-muted/85">{model.detail}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void pullModel()}
+                disabled={busy}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-accent/50 bg-accent/10 px-3 py-2 text-xs font-medium text-accent-light hover:bg-accent/15 disabled:opacity-60"
+              >
+                <Download size={13} className={pullingModel ? 'animate-pulse' : ''} />
+                {pullingModel ? 'Descargando...' : 'Descargar modelo seleccionado'}
+              </button>
+              <button
+                type="button"
+                onClick={() => void refreshModels()}
+                disabled={busy}
+                className="rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted hover:text-white disabled:opacity-60"
+              >
+                Detectar instalados
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="space-y-1">

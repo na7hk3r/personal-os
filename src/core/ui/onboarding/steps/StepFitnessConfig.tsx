@@ -16,11 +16,20 @@ interface Props {
 const GOALS = [
   { id: 'lose_weight' as const, label: 'Bajar de peso', icon: TrendingDown },
   { id: 'gain_weight' as const, label: 'Subir de peso', icon: TrendingUp },
-  { id: 'consistency' as const, label: 'Mantener constancia', icon: Target },
+  { id: 'consistency' as const, label: 'Mantener peso', icon: Target },
 ]
 
 export function StepFitnessConfig({ initial, onNext }: Props) {
   const [config, setConfig] = useState<FitnessConfig>(initial)
+  const requiresWeightGoal = config.goal !== 'consistency'
+
+  const selectGoal = (goal: FitnessConfig['goal']) => {
+    setConfig((current) => ({
+      ...current,
+      goal,
+      weightGoal: goal === 'consistency' ? '' : current.weightGoal,
+    }))
+  }
 
   return (
     <div className="flex flex-col items-center text-center gap-8 animate-fade-in">
@@ -38,7 +47,7 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
             {GOALS.map((g) => (
               <button
                 key={g.id}
-                onClick={() => setConfig((c) => ({ ...c, goal: g.id }))}
+                onClick={() => selectGoal(g.id)}
                 className={`rounded-xl border p-3 text-center transition-all ${
                   config.goal === g.id
                     ? 'border-accent/60 bg-accent/10 text-white'
@@ -55,7 +64,7 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
         </div>
 
         {/* Weight inputs */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className={`grid gap-3 ${requiresWeightGoal ? 'grid-cols-2' : 'grid-cols-1'}`}>
           <div className="space-y-1">
             <label className="text-xs text-muted px-1">Peso actual (kg)</label>
             <input
@@ -66,17 +75,22 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
               className="w-full rounded-xl border border-border bg-surface/80 px-4 py-2.5 text-sm placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-muted px-1">Peso objetivo (kg)</label>
-            <input
-              type="number"
-              value={config.weightGoal}
-              onChange={(e) => setConfig((c) => ({ ...c, weightGoal: e.target.value }))}
-              placeholder="65"
-              className="w-full rounded-xl border border-border bg-surface/80 px-4 py-2.5 text-sm placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
-            />
-          </div>
+          {requiresWeightGoal && (
+            <div className="space-y-1">
+              <label className="text-xs text-muted px-1">Peso objetivo (kg)</label>
+              <input
+                type="number"
+                value={config.weightGoal}
+                onChange={(e) => setConfig((c) => ({ ...c, weightGoal: e.target.value }))}
+                placeholder="65"
+                className="w-full rounded-xl border border-border bg-surface/80 px-4 py-2.5 text-sm placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
+              />
+            </div>
+          )}
         </div>
+        {!requiresWeightGoal && (
+          <p className="px-1 text-xs text-muted">Para mantener tu peso, Nora usa el peso actual como referencia y no pide una meta aparte.</p>
+        )}
 
         {/* Smoking tracker */}
         <button

@@ -46,6 +46,7 @@ const profileBridge: ProfileBridge = {
 const ollamaBridge: OllamaBridge = {
   health: () => ipcRenderer.invoke('ollama:health'),
   listModels: () => ipcRenderer.invoke('ollama:list-models'),
+  pullModel: (model) => ipcRenderer.invoke('ollama:pull-model', model),
   generate: (req) => ipcRenderer.invoke('ollama:generate', req),
 }
 

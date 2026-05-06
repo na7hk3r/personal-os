@@ -1,5 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { type FormEvent, useMemo, useState } from 'react'
+import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
 import { useAuthStore } from '@core/state/authStore'
 import { NoraLogoMark } from '@core/ui/components/NoraLogo'
 
@@ -17,6 +17,7 @@ export function AuthScreen() {
   const [mode, setMode] = useState<AuthMode>('login')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [registerQuestion, setRegisterQuestion] = useState('')
   const [registerAnswer, setRegisterAnswer] = useState('')
@@ -24,6 +25,7 @@ export function AuthScreen() {
   const [recoveryQuestion, setRecoveryQuestion] = useState<string | null>(null)
   const [recoveryAnswer, setRecoveryAnswer] = useState('')
   const [newPassword, setNewPassword] = useState('')
+  const [showNewPassword, setShowNewPassword] = useState(false)
   const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null)
 
   const title = useMemo(() => {
@@ -42,6 +44,8 @@ export function AuthScreen() {
     setRecoveryQuestion(null)
     setRecoveryAnswer('')
     setNewPassword('')
+    setShowPassword(false)
+    setShowNewPassword(false)
     resetLocalMessages()
   }
 
@@ -135,14 +139,13 @@ export function AuthScreen() {
               autoComplete="username"
               required
             />
-            <input
+            <PasswordField
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="Contraseña"
-              type="password"
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
               autoComplete="current-password"
-              required
+              visible={showPassword}
+              onToggle={() => setShowPassword((visible) => !visible)}
             />
             <button
               type="submit"
@@ -164,14 +167,13 @@ export function AuthScreen() {
               autoComplete="username"
               required
             />
-            <input
+            <PasswordField
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="Contraseña (mín 8 caracteres)"
-              type="password"
-              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
               autoComplete="new-password"
-              required
+              visible={showPassword}
+              onToggle={() => setShowPassword((visible) => !visible)}
             />
             <input
               value={registerQuestion}
@@ -228,13 +230,13 @@ export function AuthScreen() {
                   className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
                   required
                 />
-                <input
+                <PasswordField
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  type="password"
+                  onChange={setNewPassword}
                   placeholder="Nueva contraseña (mín 8 caracteres)"
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:border-accent"
-                  required
+                  autoComplete="new-password"
+                  visible={showNewPassword}
+                  onToggle={() => setShowNewPassword((visible) => !visible)}
                 />
                 <button
                   type="submit"
@@ -268,6 +270,45 @@ export function AuthScreen() {
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+function PasswordField({
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+  visible,
+  onToggle,
+}: {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  autoComplete: string
+  visible: boolean
+  onToggle: () => void
+}) {
+  return (
+    <div className="relative">
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        type={visible ? 'text' : 'password'}
+        className="w-full rounded-lg border border-border bg-surface px-3 py-2 pr-10 text-sm outline-none focus:border-accent"
+        autoComplete={autoComplete}
+        required
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={visible ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+        title={visible ? 'Ocultar contrasena' : 'Mostrar contrasena'}
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-muted transition-colors hover:text-white focus:outline-none focus:ring-1 focus:ring-accent/40"
+      >
+        {visible ? <EyeOff size={16} aria-hidden /> : <Eye size={16} aria-hidden />}
+      </button>
     </div>
   )
 }

@@ -4,6 +4,7 @@ const CHANNELS = {
   health: 'ollama:health',
   generate: 'ollama:generate',
   listModels: 'ollama:list-models',
+  pullModel: 'ollama:pull-model',
 } as const
 
 const DEFAULT_BASE = 'http://127.0.0.1:11434'
@@ -98,6 +99,18 @@ export function registerOllamaIpc(): void {
   ipcMain.handle(CHANNELS.listModels, async () => {
     const data = await getJson<{ models: { name: string; size: number; modified_at: string }[] }>('/api/tags', 5_000)
     return data.models?.map((m) => ({ name: m.name, size: m.size, modifiedAt: m.modified_at })) ?? []
+  })
+
+  ipcMain.handle(CHANNELS.pullModel, async (_event, payload: unknown) => {
+    if (typeof payload !== 'string' || payload.trim().length === 0) {
+      throw new Error('model requerido')
+    }
+    const model = payload.trim()
+    const result = await postJson<{ status?: string }>('/api/pull', {
+      model,
+      stream: false,
+    }, 600_000)
+    return { ok: true, model, status: result.status }
   })
 
   ipcMain.handle(CHANNELS.generate, async (_event, payload: unknown) => {
