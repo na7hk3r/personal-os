@@ -26,7 +26,7 @@ export default function App() {
 
       <Navbar />
 
-      <main id="main" className="flex-1">
+      <main id="main" className="flex-1 scroll-mt-20 sm:scroll-mt-24">
         <Hero />
         <Features />
         <HowItWorks />

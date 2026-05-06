@@ -23,7 +23,7 @@ export function Section({
   return (
     <section
       id={id}
-      className={`mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 md:px-8 md:py-28 ${className}`}
+      className={`mx-auto max-w-6xl scroll-mt-20 px-4 py-16 sm:scroll-mt-24 sm:px-6 sm:py-20 md:px-8 md:py-28 ${className}`}
     >
       {(title || eyebrow || description) && (
         <header className={`mb-10 md:mb-16 ${centered ? 'text-left sm:text-center' : ''}`}>

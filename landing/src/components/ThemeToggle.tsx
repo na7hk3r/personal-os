@@ -6,6 +6,10 @@ const STORAGE_KEY = 'nora-os:theme'
 
 type Theme = 'dark' | 'light'
 
+interface ThemeToggleProps {
+  className?: string
+}
+
 function readInitial(): Theme {
   if (typeof window === 'undefined') return 'dark'
   const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null
@@ -14,7 +18,7 @@ function readInitial(): Theme {
   return prefersLight ? 'light' : 'dark'
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = '' }: ThemeToggleProps) {
   const [theme, setTheme] = useState<Theme>('dark')
   const { t } = useI18n()
 
@@ -37,12 +41,12 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(next)}
       aria-label={next === 'dark' ? t.common.switchToDark : t.common.switchToLight}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-surface/60 text-muted transition-colors hover:bg-surface-light hover:text-foreground"
+      className={`inline-flex items-center justify-center rounded-md border border-border bg-surface/60 text-muted transition-colors hover:bg-surface-light hover:text-foreground ${className}`}
     >
       {theme === 'dark' ? (
-        <Sun className="h-3.5 w-3.5" aria-hidden="true" />
+        <Sun className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
       ) : (
-        <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+        <Moon className="h-3 w-3 sm:h-3.5 sm:w-3.5" aria-hidden="true" />
       )}
     </button>
   )
