@@ -255,7 +255,7 @@ export function ControlCenter() {
       {/* KPIs */}
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="Chip" size={40} />
+          <BrandIcon name="Chip" size={40} tile={false} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Módulos activos</p>
             <p className="mt-1 text-3xl font-semibold">{activePlugins}</p>
@@ -263,7 +263,7 @@ export function ControlCenter() {
           </div>
         </article>
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="Cards" size={40} />
+          <BrandIcon name="Cards" size={40} tile={false} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Widgets en dashboard</p>
             <p className="mt-1 text-3xl font-semibold">{metrics.widgets}</p>
@@ -271,7 +271,7 @@ export function ControlCenter() {
           </div>
         </article>
         <article className="flex items-center gap-4 rounded-2xl border border-border bg-surface-light/80 p-5">
-          <BrandIcon name="TomeAtlas" size={40} />
+          <BrandIcon name="TomeAtlas" size={40} tile={false} />
           <div className="min-w-0">
             <p className="truncate text-xs uppercase tracking-wide text-muted">Rutas de operación</p>
             <p className="mt-1 text-3xl font-semibold">{metrics.pages}</p>
