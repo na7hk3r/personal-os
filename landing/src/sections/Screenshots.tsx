@@ -18,11 +18,11 @@ export function Screenshots() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: '-80px' }}
         transition={{ duration: 0.6 }}
-        className="relative"
+        className="relative mx-auto max-w-4xl"
       >
         <div
           aria-hidden="true"
-          className="absolute inset-x-4 bottom-0 top-12 -z-10 rounded-full bg-accent/15 blur-3xl sm:inset-x-12"
+          className="absolute inset-x-8 bottom-4 top-16 -z-10 rounded-full bg-accent/20 blur-3xl sm:inset-x-20"
         />
         <ScreenshotTabs
           tabs={t.screenshots.tabs}

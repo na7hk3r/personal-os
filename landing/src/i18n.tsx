@@ -99,7 +99,15 @@ interface LandingCopy {
     description: string
     tabAria: string
     missing: string
-    tabs: Array<{ id: string; label: string; src: string; alt: string; caption: string }>
+    tabs: Array<{
+      id: string
+      label: string
+      src: string
+      compareSrc?: string
+      alt: string
+      compareAlt?: string
+      caption: string
+    }>
   }
   devs: {
     eyebrow: string
@@ -420,14 +428,14 @@ export const copy = {
         {
           id: 'dashboard',
           label: 'Dashboard',
-          src: 'screenshots/dashboard.png',
+          src: 'screenshots/screenshot-dashboard.png',
           alt: 'Dashboard de Nora OS con Daily Score y misiones',
           caption: 'Daily Score, misiones del día y resumen de hábitos en una sola vista.',
         },
         {
           id: 'copilot',
           label: 'Copiloto',
-          src: 'screenshots/copilot.png',
+          src: 'screenshots/screenshot-copiloto.png',
           alt: 'Panel del copiloto IA local',
           caption:
             'Copiloto IA local. Respuestas en lenguaje natural sobre tus datos reales, sin enviar nada a la nube.',
@@ -435,14 +443,16 @@ export const copy = {
         {
           id: 'themes',
           label: 'Temas',
-          src: 'screenshots/themes.png',
-          alt: 'Galería de temas dark y light',
+          src: 'screenshots/screenshot-temas.png',
+          compareSrc: 'screenshots/screenshot-temas-light.png',
+          alt: 'Tema oscuro de Nora OS',
+          compareAlt: 'Tema claro de Nora OS',
           caption: 'Galería de temas: dark y light cuidados al detalle, switch instantáneo.',
         },
         {
           id: 'work',
           label: 'Work',
-          src: 'screenshots/work.png',
+          src: 'screenshots/screenshot-work.png',
           alt: 'Plugin Work con kanban y Focus Engine',
           caption: 'Plugin Work: kanban con WIP limit y Focus Engine 2.0 con Pomodoro nativo.',
         },
@@ -809,14 +819,14 @@ export const copy = {
         {
           id: 'dashboard',
           label: 'Dashboard',
-          src: 'screenshots/dashboard.png',
+          src: 'screenshots/screenshot-dashboard.png',
           alt: 'Nora OS dashboard with Daily Score and missions',
           caption: 'Daily Score, daily missions, and habit summaries in one view.',
         },
         {
           id: 'copilot',
           label: 'Copilot',
-          src: 'screenshots/copilot.png',
+          src: 'screenshots/screenshot-copiloto.png',
           alt: 'Local AI copilot panel',
           caption:
             'Local AI copilot. Natural-language answers about your real data, without sending anything to the cloud.',
@@ -824,14 +834,16 @@ export const copy = {
         {
           id: 'themes',
           label: 'Themes',
-          src: 'screenshots/themes.png',
-          alt: 'Dark and light theme gallery',
+          src: 'screenshots/screenshot-temas.png',
+          compareSrc: 'screenshots/screenshot-temas-light.png',
+          alt: 'Nora OS dark theme',
+          compareAlt: 'Nora OS light theme',
           caption: 'Theme gallery: dark and light modes, carefully designed and switched instantly.',
         },
         {
           id: 'work',
           label: 'Work',
-          src: 'screenshots/work.png',
+          src: 'screenshots/screenshot-work.png',
           alt: 'Work plugin with kanban and Focus Engine',
           caption: 'Work plugin: kanban with WIP limits and Focus Engine 2.0 with native Pomodoro.',
         },
@@ -1199,14 +1211,14 @@ export const copy = {
         {
           id: 'dashboard',
           label: 'Dashboard',
-          src: 'screenshots/dashboard.png',
+          src: 'screenshots/screenshot-dashboard.png',
           alt: 'Dashboard do Nora OS com Daily Score e missões',
           caption: 'Daily Score, missões do dia e resumo de hábitos em uma só vista.',
         },
         {
           id: 'copilot',
           label: 'Copiloto',
-          src: 'screenshots/copilot.png',
+          src: 'screenshots/screenshot-copiloto.png',
           alt: 'Painel do copiloto IA local',
           caption:
             'Copiloto IA local. Respostas em linguagem natural sobre seus dados reais, sem enviar nada para a nuvem.',
@@ -1214,14 +1226,16 @@ export const copy = {
         {
           id: 'themes',
           label: 'Temas',
-          src: 'screenshots/themes.png',
-          alt: 'Galeria de temas dark e light',
+          src: 'screenshots/screenshot-temas.png',
+          compareSrc: 'screenshots/screenshot-temas-light.png',
+          alt: 'Tema escuro do Nora OS',
+          compareAlt: 'Tema claro do Nora OS',
           caption: 'Galeria de temas: dark e light bem cuidados, com troca instantânea.',
         },
         {
           id: 'work',
           label: 'Work',
-          src: 'screenshots/work.png',
+          src: 'screenshots/screenshot-work.png',
           alt: 'Plugin Work com kanban e Focus Engine',
           caption: 'Plugin Work: kanban com WIP limit e Focus Engine 2.0 com Pomodoro nativo.',
         },
