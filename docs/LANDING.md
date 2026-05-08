@@ -48,17 +48,6 @@ npm run dev          # http://localhost:5173/nora-os/
 
 > El sitio usa `base: '/nora-os/'` para GitHub Pages, por eso la URL local incluye el prefijo.
 
-### Variables de entorno
-
-El landing puede correr sin estas variables, pero algunas funciones quedan en no-op o muestran estado no configurado.
-
-| Variable | Uso | Ejemplo |
-| --- | --- | --- |
-| `VITE_FEEDBACK_ENDPOINT` | Endpoint HTTP del formulario beta. Se usa desde `#feedback` para enviar opiniones por email. | `https://formsubmit.co/elmathi7@gmail.com` |
-| `VITE_GOATCOUNTER_ENDPOINT` | Endpoint de GoatCounter para visitas y eventos de descarga. | `https://noraos.goatcounter.com/count` |
-
-Para desarrollo local, copiá `landing/.env.example` a `landing/.env`.
-
 ### Otros scripts
 
 | Script | Qué hace |
