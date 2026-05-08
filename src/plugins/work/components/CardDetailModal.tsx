@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { type KeyboardEvent as ReactKeyboardEvent, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Card, CardPriority, ChecklistItem } from '../types'
 import { useWorkStore } from '../store'
@@ -41,7 +41,7 @@ export function CardDetailModal({ card, onClose }: Props) {
 
   // Close on ESC
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
+    const handler = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', handler)
@@ -49,6 +49,7 @@ export function CardDetailModal({ card, onClose }: Props) {
   }, [onClose])
 
   const save = async () => {
+    if (saving || !title.trim()) return
     setSaving(true)
     const patch = {
       title,
@@ -80,6 +81,12 @@ export function CardDetailModal({ card, onClose }: Props) {
     eventBus.emit(WORK_EVENTS.TASK_UPDATED, { taskId: card.id, title, description })
     setSaving(false)
     onClose()
+  }
+
+  const saveOnEnter = (event: ReactKeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter' || event.nativeEvent.isComposing) return
+    event.preventDefault()
+    void save()
   }
 
   const addChecklistItem = () => {
@@ -151,6 +158,7 @@ export function CardDetailModal({ card, onClose }: Props) {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={saveOnEnter}
               className="w-full rounded-xl border border-border bg-surface-light/60 px-4 py-2.5 text-sm font-medium text-white placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
           </div>
@@ -162,6 +170,7 @@ export function CardDetailModal({ card, onClose }: Props) {
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              onKeyDown={saveOnEnter}
               placeholder="Descripción opcional..."
               className="w-full rounded-xl border border-border bg-surface-light/60 px-4 py-2.5 text-sm text-white/80 placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
             />
@@ -210,6 +219,7 @@ export function CardDetailModal({ card, onClose }: Props) {
                   const v = e.target.value
                   setEstimateMinutes(v === '' ? null : Math.max(0, Number(v)))
                 }}
+                onKeyDown={saveOnEnter}
                 placeholder="e.g. 30"
                 className="w-full rounded-xl border border-border bg-surface-light/60 px-3 py-2 text-sm text-white/80 placeholder:text-muted/40 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
               />
@@ -221,6 +231,7 @@ export function CardDetailModal({ card, onClose }: Props) {
                   type="date"
                   value={dueDate ?? ''}
                   onChange={(e) => setDueDate(e.target.value || null)}
+                  onKeyDown={saveOnEnter}
                   className="flex-1 rounded-xl border border-border bg-surface-light/60 px-3 py-2 text-sm text-white/80 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/20"
                 />
                 {dueDate && (
