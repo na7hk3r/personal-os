@@ -48,6 +48,7 @@ import { FeedbackLauncher } from './FeedbackLauncher'
 import {
   DEFAULT_SIDEBAR_NAV_STATE,
   SIDEBAR_NAV_SETTINGS_KEY,
+  canReorderSidebarModules,
   groupPluginNavItems,
   sanitizeSidebarNavState,
   type SidebarModuleGroup,
@@ -221,9 +222,9 @@ export function Sidebar() {
   const sidebarCollapsed = useCoreStore((s) => s.settings.sidebarCollapsed)
   const updateSettings = useCoreStore((s) => s.updateSettings)
   const profileName = useCoreStore((s) => s.profile.name)
-  // Subscribed to force re-render when plugins are activated/deactivated; the
-  // resulting `getActiveNavItems()` call below reads fresh data from PluginManager.
+  // These are the actual signals that PluginManager navigation changed.
   const activePlugins = useCoreStore((s) => s.activePlugins)
+  const pluginUiVersion = useCoreStore((s) => s.pluginUiVersion)
   const { points, level, streak } = useGamificationStore()
   const logout = useAuthStore((s) => s.logout)
   const [sidebarNavState, setSidebarNavState] = useState<SidebarNavState>(DEFAULT_SIDEBAR_NAV_STATE)
@@ -240,14 +241,15 @@ export function Sidebar() {
     platinum: 'from-xp-platinum to-cyan-200 text-[#08212f]',
   }
 
-  // Re-derive nav items whenever activePlugins changes; PluginManager registers/unregisters
-  // navItems inside initPlugin/deactivatePlugin, so we use activePlugins as the trigger.
+  // Re-derive nav items only when plugin UI changes. Keeping this array stable
+  // prevents the sidebar layout loader from replaying stale persisted state
+  // after a local submenu collapse/expand click.
   const navItems = useMemo(
     () =>
       pluginManager
         .getActiveNavItems()
         .filter((item, index, arr) => arr.findIndex((candidate) => candidate.path === item.path) === index),
-    [activePlugins],
+    [activePlugins, pluginUiVersion],
   )
   const defaultNavGroups = useMemo(() => groupPluginNavItems(navItems), [navItems])
   const modulePluginIds = useMemo(
@@ -259,6 +261,8 @@ export function Sidebar() {
     () => groupPluginNavItems(navItems, sidebarNavState.moduleOrder),
     [navItems, sidebarNavState.moduleOrder],
   )
+  const canReorderModules = canReorderSidebarModules(navGroups.length)
+  const effectiveOrderLocked = sidebarNavState.moduleOrderLocked || !canReorderModules
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -321,6 +325,7 @@ export function Sidebar() {
   }
 
   const toggleModuleOrderLock = () => {
+    if (!canReorderModules) return
     setSidebarNavState((prev) => ({
       ...prev,
       moduleOrderLocked: !prev.moduleOrderLocked,
@@ -345,7 +350,7 @@ export function Sidebar() {
 
   const handleModuleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-    if (sidebarNavState.moduleOrderLocked || !over || active.id === over.id) return
+    if (effectiveOrderLocked || !over || active.id === over.id) return
 
     setSidebarNavState((prev) => {
       const current = sanitizeSidebarNavState(prev, modulePluginIds).moduleOrder
@@ -414,15 +419,17 @@ export function Sidebar() {
             {!sidebarCollapsed && (
               <div className="flex items-center justify-between gap-2 px-3 pb-1 pt-3">
                 <p className="text-micro uppercase tracking-eyebrow text-muted">Módulos</p>
-                <button
-                  type="button"
-                  onClick={toggleModuleOrderLock}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-surface text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
-                  aria-label={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento de modulos' : 'Bloquear reordenamiento de modulos'}
-                  title={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento' : 'Bloquear reordenamiento'}
-                >
-                  {sidebarNavState.moduleOrderLocked ? <Lock size={13} /> : <Unlock size={13} />}
-                </button>
+                {canReorderModules && (
+                  <button
+                    type="button"
+                    onClick={toggleModuleOrderLock}
+                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-surface text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                    aria-label={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento de modulos' : 'Bloquear reordenamiento de modulos'}
+                    title={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento' : 'Bloquear reordenamiento'}
+                  >
+                    {sidebarNavState.moduleOrderLocked ? <Lock size={13} /> : <Unlock size={13} />}
+                  </button>
+                )}
               </div>
             )}
             <DndContext
@@ -440,7 +447,7 @@ export function Sidebar() {
                       key={group.parent.id}
                       group={group}
                       sidebarCollapsed={sidebarCollapsed}
-                      orderLocked={sidebarNavState.moduleOrderLocked}
+                      orderLocked={effectiveOrderLocked}
                       childrenCollapsed={sidebarNavState.collapsedPluginIds.includes(group.parent.pluginId)}
                       hasActivity={hasPluginActivityToday(group.parent.pluginId)}
                       onToggleChildren={togglePluginChildren}

@@ -134,6 +134,32 @@ class PluginManager {
     return [...this.navItems].sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
   }
 
+  replacePluginUi(
+    pluginId: string,
+    ui: {
+      widgets?: WidgetDefinition[]
+      pages?: PageDefinition[]
+      navItems?: NavItemDefinition[]
+    },
+  ): void {
+    const entry = this.plugins.get(pluginId)
+    if (!entry || entry.status !== 'active') return
+
+    this.widgets = this.widgets.filter((widget) => widget.pluginId !== pluginId)
+    this.pages = this.pages.filter((page) => page.pluginId !== pluginId)
+    this.navItems = this.navItems.filter((item) => item.pluginId !== pluginId)
+
+    if (ui.widgets) {
+      this.widgets = this.upsertById(this.widgets, ui.widgets.map((widget) => ({ ...widget, pluginId })))
+    }
+    if (ui.pages) {
+      this.pages = this.upsertById(this.pages, ui.pages.map((page) => ({ ...page, pluginId })))
+    }
+    if (ui.navItems) {
+      this.navItems = this.upsertById(this.navItems, ui.navItems.map((item) => ({ ...item, pluginId })))
+    }
+  }
+
   // Private
 
   private setStatus(pluginId: string, status: PluginStatus): void {

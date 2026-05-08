@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Shell } from './core/ui/Shell'
 import { Dashboard } from './core/ui/Dashboard'
@@ -99,12 +99,13 @@ export function App() {
   const authStatus = useAuthStore((s) => s.status)
   const initializeSession = useAuthStore((s) => s.initializeSession)
   const currentUser = useAuthStore((s) => s.currentUser)
-  const activePluginIds = useCoreStore((s) => s.activePlugins)
+  useCoreStore((s) => s.activePlugins)
+  useCoreStore((s) => s.pluginUiVersion)
   const onboardingComplete = useCoreStore((s) => s.onboardingComplete)
   const loadFromStorage = useCoreStore((s) => s.loadFromStorage)
   const loadGamificationFromStorage = useGamificationStore((s) => s.loadFromStorage)
 
-  const pluginPages = useMemo(() => pluginManager.getActivePages(), [activePluginIds, ready])
+  const pluginPages = pluginManager.getActivePages()
 
   useEffect(() => {
     void initializeSession()

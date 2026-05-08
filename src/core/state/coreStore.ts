@@ -20,6 +20,8 @@ interface CoreState {
 
   // Plugins
   activePlugins: string[]
+  pluginUiVersion: number
+  bumpPluginUiVersion: () => void
   togglePlugin: (pluginId: string) => void
   setActivePlugins: (ids: string[]) => void
   /**
@@ -104,6 +106,8 @@ export const useCoreStore = create<CoreState>((set, get) => ({
   },
 
   activePlugins: [],
+  pluginUiVersion: 0,
+  bumpPluginUiVersion: () => set((state) => ({ pluginUiVersion: state.pluginUiVersion + 1 })),
   togglePlugin: (pluginId) =>
     set((state) => {
       const isActive = state.activePlugins.includes(pluginId)

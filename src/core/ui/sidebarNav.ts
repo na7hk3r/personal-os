@@ -19,6 +19,10 @@ export const DEFAULT_SIDEBAR_NAV_STATE: SidebarNavState = {
   collapsedPluginIds: [],
 }
 
+export function canReorderSidebarModules(moduleCount: number): boolean {
+  return moduleCount > 1
+}
+
 function sortByOrder(left: NavItemDefinition, right: NavItemDefinition): number {
   return (left.order ?? 99) - (right.order ?? 99)
 }

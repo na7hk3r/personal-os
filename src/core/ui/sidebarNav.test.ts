@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { NavItemDefinition } from '@core/types'
-import { groupPluginNavItems, sanitizeSidebarNavState } from './sidebarNav'
+import { canReorderSidebarModules, groupPluginNavItems, sanitizeSidebarNavState } from './sidebarNav'
 
 const navItems: NavItemDefinition[] = [
   { id: 'work-notes-nav', pluginId: 'work', label: 'Notas', icon: 'SquarePen', path: '/work/notes', order: 22, parentId: 'work-nav' },
@@ -44,5 +44,11 @@ describe('sidebarNav helpers', () => {
       moduleOrderLocked: false,
       collapsedPluginIds: ['work'],
     })
+  })
+
+  it('only allows module reorder controls when two or more modules exist', () => {
+    expect(canReorderSidebarModules(0)).toBe(false)
+    expect(canReorderSidebarModules(1)).toBe(false)
+    expect(canReorderSidebarModules(2)).toBe(true)
   })
 })
