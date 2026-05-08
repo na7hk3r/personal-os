@@ -43,7 +43,7 @@ export function TimeDashboard() {
   const recent = useMemo(() => entries.slice(0, 30), [entries])
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6">
+    <div className="w-full space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <BrandIcon name="HourGlass" size={44} />
@@ -88,7 +88,7 @@ export function TimeDashboard() {
             <p className="text-xs">Iniciá una entrada arriba o completá una sesión de Focus.</p>
           </div>
         )}
-        <div className="divide-y divide-border rounded-2xl border border-border bg-surface-light/40">
+        <div className="max-h-[420px] divide-y divide-border overflow-y-auto rounded-2xl border border-border bg-surface-light/40">
           {recent.map((entry) => {
             const project = projects.find((p) => p.id === entry.projectId)
             const isRunning = entry.end === null
@@ -150,7 +150,7 @@ export function TimeDashboard() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface-light/40 p-4">
+    <div className="min-h-[96px] rounded-2xl border border-border bg-surface-light/40 p-4">
       <p className="text-xs uppercase tracking-wider text-muted">{label}</p>
       <p className="text-2xl font-bold tabular-nums mt-1">{value}</p>
     </div>

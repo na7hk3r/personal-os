@@ -1,35 +1,37 @@
 import { useFitnessStore } from '../store'
+import { useFitnessSettings } from '../settings'
 
 export function DailyTable() {
   const entries = useFitnessStore((s) => s.entries)
-  const recent = [...entries].reverse().slice(0, 10)
+  const { settings } = useFitnessSettings()
+  const recent = [...entries].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10)
 
   if (recent.length === 0) {
-    return <p className="text-sm text-muted">No hay registros aún.</p>
+    return <p className="text-sm text-muted">No hay registros aun.</p>
   }
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+      <table className="min-w-[680px] w-full text-sm">
         <thead>
-          <tr className="border-b border-border text-muted text-left">
-            <th className="py-2 px-2">Fecha</th>
-            <th className="py-2 px-2">Peso</th>
-            <th className="py-2 px-2">Comidas</th>
-            <th className="py-2 px-2">Entreno</th>
-            <th className="py-2 px-2">Cig.</th>
-            <th className="py-2 px-2">Sueño</th>
+          <tr className="border-b border-border text-left text-xs uppercase tracking-wider text-muted">
+            <th className="px-3 py-3">Fecha</th>
+            <th className="px-3 py-3">Peso</th>
+            <th className="px-3 py-3">Comidas</th>
+            <th className="px-3 py-3">Entreno</th>
+            {settings.smokingCessationEnabled && <th className="px-3 py-3">Cig.</th>}
+            <th className="px-3 py-3">Sueno</th>
           </tr>
         </thead>
         <tbody>
-          {recent.map((e) => (
-            <tr key={e.date} className="border-b border-border/50">
-              <td className="py-1.5 px-2">{e.date.slice(5)}</td>
-              <td className="py-1.5 px-2">{e.weight ?? '—'}</td>
-              <td className="py-1.5 px-2">{e.breakfast + e.lunch + e.snack + e.dinner}/4</td>
-              <td className="py-1.5 px-2">{e.workout || '—'}</td>
-              <td className="py-1.5 px-2">{e.cigarettes}</td>
-              <td className="py-1.5 px-2">{e.sleep}h</td>
+          {recent.map((entry) => (
+            <tr key={entry.date} className="border-b border-border/50 hover:bg-surface/60">
+              <td className="px-3 py-2 font-medium text-white">{entry.date.slice(5)}</td>
+              <td className="px-3 py-2">{entry.weight != null ? `${entry.weight} kg` : '--'}</td>
+              <td className="px-3 py-2">{entry.breakfast + entry.lunch + entry.snack + entry.dinner}/4</td>
+              <td className="px-3 py-2">{entry.workout || '--'}</td>
+              {settings.smokingCessationEnabled && <td className="px-3 py-2">{entry.cigarettes}</td>}
+              <td className="px-3 py-2">{entry.sleep != null ? `${entry.sleep}h` : '--'}</td>
             </tr>
           ))}
         </tbody>

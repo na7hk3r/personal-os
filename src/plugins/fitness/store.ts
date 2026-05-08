@@ -32,8 +32,9 @@ export const useFitnessStore = create<FitnessState>((set) => ({
 
   addMeasurement: (measurement) =>
     set((state) => ({
-      measurements: [...state.measurements, measurement].sort((a, b) =>
-        a.date.localeCompare(b.date),
-      ),
+      measurements: [
+        ...state.measurements.filter((item) => item.date !== measurement.date),
+        measurement,
+      ].sort((a, b) => a.date.localeCompare(b.date)),
     })),
 }))

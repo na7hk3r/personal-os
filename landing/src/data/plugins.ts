@@ -41,7 +41,7 @@ export const plugins: PluginCard[] = [
     id: 'fitness',
     name: 'Fitness',
     description:
-      'Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Medidas corporales y resúmenes mensuales.',
+      'Tracking diario de peso, comidas, ejercicios y sueño. Medidas corporales, resúmenes mensuales y seguimiento opcional para dejar de fumar.',
     domain: 'fitness',
     domainLabel: 'Fitness',
     icon: Dumbbell,

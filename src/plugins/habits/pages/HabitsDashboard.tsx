@@ -81,7 +81,7 @@ export function HabitsDashboard() {
           <p className="text-xs">Tocá “Nuevo hábito” para arrancar tu primera racha.</p>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" role="list" aria-label="Lista de hábitos">
+        <ul className="grid max-h-[520px] grid-cols-1 gap-2 overflow-y-auto pr-1 md:grid-cols-2" role="list" aria-label="Lista de hábitos">
           {active.map((h) => (
             <li key={h.id}>
               <HabitCard habit={h} />

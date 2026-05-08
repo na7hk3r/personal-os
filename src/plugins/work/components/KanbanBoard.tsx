@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Pencil, Plus, Trash2, CheckCircle2 } from 'lucide-react'
+import { Flag, Pencil, Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -10,8 +10,15 @@ import {
   useSensor,
   useSensors,
   closestCorners,
+  getFirstCollision,
+  MeasuringStrategy,
+  pointerWithin,
+  rectIntersection,
+  type CollisionDetection,
+  type DragOverEvent,
   type DragStartEvent,
   type DragEndEvent,
+  type UniqueIdentifier,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -25,6 +32,15 @@ import { useToast } from '@core/ui/components/ToastProvider'
 import { messages } from '@core/ui/messages'
 import { interruptWorkFocusSession, startWorkFocusSession, completeWorkFocusSession, completeWorkTask, stopWorkTask } from '../focus'
 import { isDoneColumn as isDoneColumnUtil } from '../utils/columnUtils'
+import {
+  getChangedReorderUpdates,
+  getColumnIdForTarget,
+  getInsertionIndex,
+  getVisibleCardsForColumn,
+  isColumnId,
+  moveVisibleCard,
+  sortVisibleCardsByPriority,
+} from '../utils/kanbanDnD'
 import { SortableCard } from './SortableCard'
 import { CardDetailModal } from './CardDetailModal'
 import type { Card, Column } from '../types'
@@ -36,7 +52,10 @@ interface ColumnDropZoneProps {
 }
 
 function ColumnDropZone({ id, className, children }: ColumnDropZoneProps) {
-  const { setNodeRef, isOver } = useDroppable({ id })
+  const { setNodeRef, isOver } = useDroppable({
+    id,
+    data: { type: 'column', columnId: id },
+  })
 
   return (
     <div
@@ -53,11 +72,27 @@ export function KanbanBoard() {
   const { toast } = useToast()
   const [newCardTitle, setNewCardTitle] = useState<Record<string, string>>({})
   const [activeCard, setActiveCard] = useState<Card | null>(null)
+  const [dragCards, setDragCards] = useState<Card[] | null>(null)
   const [selectedCard, setSelectedCard] = useState<Card | null>(null)
   const [editingColumnId, setEditingColumnId] = useState<string | null>(null)
   const [columnDraft, setColumnDraft] = useState<{ name: string; wipLimit: string }>({ name: '', wipLimit: '' })
   const [creatingColumn, setCreatingColumn] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
+  const dragStartCardsRef = useRef<Card[] | null>(null)
+  const lastOverId = useRef<UniqueIdentifier | null>(null)
+  const recentlyMovedToNewColumn = useRef(false)
+
+  const displayCards = dragCards ?? cards
+  const sortedColumns = useMemo(() => [...columns].sort((a, b) => a.position - b.position), [columns])
+  const columnIds = useMemo(() => sortedColumns.map((column) => column.id), [sortedColumns])
+  const columnIdSet = useMemo(() => new Set(columnIds), [columnIds])
+  const visibleCardIdsByColumn = useMemo(() => {
+    const map = new Map<string, string[]>()
+    columnIds.forEach((columnId) => {
+      map.set(columnId, getVisibleCardsForColumn(displayCards, columnId).map((card) => card.id))
+    })
+    return map
+  }, [columnIds, displayCards])
 
   // Conteo de sesiones de foco por tarea (solo sesiones finalizadas).
   const focusCountByTask = focusSessions.reduce<Map<string, number>>((acc, session) => {
@@ -79,76 +114,119 @@ export function KanbanBoard() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
+  useEffect(() => {
+    if (!activeCard) return undefined
+    const frame = window.requestAnimationFrame(() => {
+      recentlyMovedToNewColumn.current = false
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [activeCard, displayCards])
+
+  const collisionDetectionStrategy = useCallback<CollisionDetection>((args) => {
+    if (!activeCard) return closestCorners(args)
+
+    const pointerCollisions = pointerWithin(args)
+    const intersections = pointerCollisions.length > 0 ? pointerCollisions : rectIntersection(args)
+    let overId = getFirstCollision(intersections, 'id')
+
+    if (overId != null) {
+      const overKey = String(overId)
+
+      if (columnIdSet.has(overKey)) {
+        const columnCardIds = visibleCardIdsByColumn.get(overKey) ?? []
+        if (columnCardIds.length > 0) {
+          overId = closestCorners({
+            ...args,
+            droppableContainers: args.droppableContainers.filter((container) =>
+              columnCardIds.includes(String(container.id)),
+            ),
+          })[0]?.id ?? overId
+        }
+      }
+
+      lastOverId.current = overId
+      return [{ id: overId }]
+    }
+
+    if (recentlyMovedToNewColumn.current) {
+      lastOverId.current = args.active.id
+    }
+
+    return lastOverId.current != null ? [{ id: lastOverId.current }] : []
+  }, [activeCard, columnIdSet, visibleCardIdsByColumn])
+
+  const isBelowOverItem = (event: DragOverEvent | DragEndEvent) => {
+    if (!event.over || isColumnId(columnIds, event.over.id)) return false
+    const activeRect = event.active.rect.current.translated
+    if (!activeRect) return false
+    const activeCenterY = activeRect.top + activeRect.height / 2
+    const overCenterY = event.over.rect.top + event.over.rect.height / 2
+    return activeCenterY > overCenterY
+  }
+
+  const getMoveResult = useCallback((event: DragOverEvent | DragEndEvent, sourceCards: Card[]) => {
+    if (!event.over) return null
+
+    const activeId = String(event.active.id)
+    const targetColumnId = getColumnIdForTarget(sourceCards, columnIds, event.over.id)
+    if (!targetColumnId) return null
+
+    const insertIndex = getInsertionIndex({
+      cards: sourceCards,
+      activeId,
+      targetColumnId,
+      overId: event.over.id,
+      isBelowOverItem: isBelowOverItem(event),
+    })
+
+    return moveVisibleCard(sourceCards, activeId, targetColumnId, insertIndex)
+  }, [columnIds])
+
   const handleDragStart = (event: DragStartEvent) => {
     const card = cards.find((c) => c.id === event.active.id)
-    if (card) setActiveCard(card)
+    if (!card) return
+    dragStartCardsRef.current = cards
+    lastOverId.current = event.active.id
+    setDragCards(cards)
+    setActiveCard(card)
+  }
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const result = getMoveResult(event, dragCards ?? cards)
+    if (!result || result.updates.length === 0) return
+
+    if (result.sourceColumnId && result.sourceColumnId !== result.targetColumnId) {
+      recentlyMovedToNewColumn.current = true
+    }
+
+    setDragCards(result.cards)
+  }
+
+  const clearDragState = () => {
+    setActiveCard(null)
+    setDragCards(null)
+    dragStartCardsRef.current = null
+    lastOverId.current = null
+    recentlyMovedToNewColumn.current = false
   }
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
-    setActiveCard(null)
-    if (!over) return
+    const beforeCards = dragStartCardsRef.current ?? cards
+    const finalResult = over ? getMoveResult(event, dragCards ?? cards) : null
+    const finalCards = finalResult?.cards ?? (dragCards ?? cards)
+    clearDragState()
 
-    const draggedCard = cards.find((c) => c.id === active.id)
+    if (!over || !finalResult) return
+
+    const draggedCard = beforeCards.find((c) => c.id === active.id)
+    const finalDraggedCard = finalCards.find((c) => c.id === active.id)
     if (!draggedCard) return
 
     const sourceColumnId = draggedCard.columnId
 
-    // Determinar columna destino e índice de inserción
-    let targetColumnId: string
-    let overCardId: string | null = null
-
-    const overIsColumn = columns.some((col) => col.id === over.id)
-    if (overIsColumn) {
-      targetColumnId = String(over.id)
-    } else {
-      const overCard = cards.find((c) => c.id === over.id)
-      if (!overCard) return
-      targetColumnId = overCard.columnId
-      overCardId = overCard.id
-    }
-
-    // Si no hay cambio real (misma columna + misma posición), abortar
-    if (sourceColumnId === targetColumnId && overCardId === draggedCard.id) return
-
-    // Construir nuevo orden para columna destino
-    const targetSiblings = cards
-      .filter((c) => c.columnId === targetColumnId && c.id !== draggedCard.id)
-      .sort((a, b) => a.position - b.position)
-
-    let insertIndex = targetSiblings.length
-    if (overCardId) {
-      const idx = targetSiblings.findIndex((c) => c.id === overCardId)
-      if (idx >= 0) insertIndex = idx
-    }
-
-    const newTargetOrder = [
-      ...targetSiblings.slice(0, insertIndex),
-      draggedCard,
-      ...targetSiblings.slice(insertIndex),
-    ]
-
-    const updates: Array<{ id: string; columnId: string; position: number }> = newTargetOrder.map(
-      (card, idx) => ({ id: card.id, columnId: targetColumnId, position: idx }),
-    )
-
-    // Si cambió de columna, también re-sloteamos la columna origen
-    if (sourceColumnId !== targetColumnId) {
-      const sourceSiblings = cards
-        .filter((c) => c.columnId === sourceColumnId && c.id !== draggedCard.id)
-        .sort((a, b) => a.position - b.position)
-      sourceSiblings.forEach((card, idx) => {
-        updates.push({ id: card.id, columnId: sourceColumnId, position: idx })
-      })
-    }
-
-    // Filtrar updates que no cambian nada (optimización)
-    const existingById = new Map(cards.map((c) => [c.id, c]))
-    const realUpdates = updates.filter((u) => {
-      const prev = existingById.get(u.id)
-      return !prev || prev.columnId !== u.columnId || prev.position !== u.position
-    })
-
+    const targetColumnId = finalDraggedCard?.columnId ?? finalResult.targetColumnId
+    const realUpdates = getChangedReorderUpdates(beforeCards, finalCards)
     if (realUpdates.length === 0) return
 
     // Apply atomic store update
@@ -191,6 +269,10 @@ export function KanbanBoard() {
         })
       }
     }
+  }
+
+  const handleDragCancel = () => {
+    clearDragState()
   }
 
   const handleAddCard = async (columnId: string) => {
@@ -453,26 +535,44 @@ export function KanbanBoard() {
     }
   }
 
-  const sortedColumns = [...columns].sort((a, b) => a.position - b.position)
+  const handleSortColumnByPriority = async (columnId: string) => {
+    const result = sortVisibleCardsByPriority(cards, columnId)
+    if (result.updates.length === 0) return
+
+    reorderCards(result.updates)
+
+    if (window.storage) {
+      await Promise.all(
+        result.updates.map((u) =>
+          window.storage.execute(
+            `UPDATE work_cards SET column_id = ?, position = ? WHERE id = ?`,
+            [u.columnId, u.position, u.id],
+          ),
+        ),
+      )
+    }
+  }
+
   // Layout uniforme: scroll horizontal SIEMPRE con anchos fijos predecibles.
   // El layout equitativo deformaba columnas al competir con el botón "Nueva
   // columna" (w-44 fijo) y al achicar el viewport con sidebar+copilot abiertos.
-  const trackClass = 'scrollbar-kanban flex gap-4 overflow-x-auto pb-4'
-  const columnSizingClass = 'flex-shrink-0 w-[280px] md:w-[300px]'
+  const trackClass = 'scrollbar-kanban flex items-start gap-4 overflow-x-auto overflow-y-hidden pb-4'
+  const columnSizingClass = 'work-kanban-column flex flex-shrink-0 flex-col overflow-hidden w-[280px] md:w-[300px] 2xl:w-[320px]'
 
   return (
     <>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetectionStrategy}
+        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
       >
         <div className={trackClass}>
           {sortedColumns.map((col) => {
-            const colCards = cards
-              .filter((c) => c.columnId === col.id && !c.archived)
-              .sort((a, b) => a.position - b.position)
+            const colCards = getVisibleCardsForColumn(displayCards, col.id)
 
             const overWip = col.wipLimit != null && col.wipLimit > 0 && colCards.length > col.wipLimit
             const isDone = isDoneColumnUtil(col)
@@ -553,6 +653,16 @@ export function KanbanBoard() {
                         </button>
                         <button
                           type="button"
+                          onClick={() => { void handleSortColumnByPriority(col.id) }}
+                          title="Ordenar tareas por prioridad"
+                          aria-label={`Ordenar ${col.name} por prioridad`}
+                          className="text-muted/40 transition-colors hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-30"
+                          disabled={colCards.length < 2}
+                        >
+                          <Flag size={12} />
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => handleDeleteColumn(col)}
                           title="Eliminar columna"
                           className="text-muted/40 hover:text-red-400 transition-colors"
@@ -575,7 +685,7 @@ export function KanbanBoard() {
 
                 {/* Cards */}
                 <SortableContext items={colCards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-                  <div className="space-y-2 p-2 min-h-[100px]" id={col.id}>
+                  <div className="work-kanban-card-list min-h-0 flex-1 space-y-2 overflow-y-auto p-2" id={col.id}>
                     {colCards.map((card) => (
                       <SortableCard
                         key={card.id}
@@ -591,7 +701,7 @@ export function KanbanBoard() {
                     ))}
 
                     {colCards.length === 0 && (
-                      <div className="flex h-16 items-center justify-center rounded-lg border border-dashed border-border/40 text-xs text-muted/50">
+                      <div className="flex h-full min-h-[180px] items-center justify-center rounded-lg border border-dashed border-border/40 text-xs text-muted/50">
                         Sin tareas
                       </div>
                     )}

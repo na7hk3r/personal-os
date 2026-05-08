@@ -83,7 +83,7 @@ export function FinanceDashboard() {
         </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <section className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3">
         <Kpi label="Ingresos del mes" value={formatCents(stats.income, stats.currency, { compact: true })} accent="text-emerald-300" icon={<ArrowDownRight size={14} />} />
         <Kpi label="Gastos del mes" value={formatCents(stats.expense, stats.currency, { compact: true })} accent="text-rose-300" icon={<ArrowUpRight size={14} />} hint={stats.deltaPct != null ? `${stats.deltaPct > 0 ? '+' : ''}${stats.deltaPct}% vs mes anterior` : undefined} />
         <Kpi label="Saldo neto del mes" value={formatCents(stats.income - stats.expense, stats.currency, { compact: true })} accent={stats.income - stats.expense >= 0 ? 'text-emerald-300' : 'text-rose-300'} icon={<BarChart3 size={14} />} />
@@ -93,7 +93,7 @@ export function FinanceDashboard() {
 
       <AccountsManager />
 
-      <section className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
+      <section className="flex max-h-[520px] min-h-[360px] flex-col rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
         <header className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-white">Movimientos del mes</h2>
           <button
@@ -105,7 +105,7 @@ export function FinanceDashboard() {
         {grouped.length === 0 && (
           <p className="text-sm text-muted">{messages.empty.financeTransactions}</p>
         )}
-        <div className="divide-y divide-border/40">
+        <div className="min-h-0 flex-1 divide-y divide-border/40 overflow-y-auto pr-1">
           {grouped.map(([date, txs]) => (
             <div key={date} className="py-2">
               <p className="mb-1 text-micro uppercase tracking-wider text-muted">{formatHumanDate(date)}</p>
@@ -144,7 +144,7 @@ export function FinanceDashboard() {
 
 function Kpi({ label, value, accent, icon, hint }: { label: string; value: string; accent: string; icon: React.ReactNode; hint?: string }) {
   return (
-    <div className="rounded-xl border border-border bg-surface px-4 py-3">
+    <div className="min-h-[96px] rounded-xl border border-border bg-surface px-4 py-3">
       <div className={`mb-1 flex items-center gap-1.5 text-caption uppercase tracking-wider ${accent}`}>
         {icon}<span>{label}</span>
       </div>

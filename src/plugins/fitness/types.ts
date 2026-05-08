@@ -9,7 +9,7 @@ export interface DailyEntry {
   dinner: 0 | 1
   workout: 'A' | 'B' | 'R' | ''
   cigarettes: number
-  sleep: number
+  sleep: number | null
   notes: string
 }
 

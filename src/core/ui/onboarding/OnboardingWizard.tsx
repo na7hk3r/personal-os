@@ -10,6 +10,7 @@ import { StepFitnessConfig, type FitnessConfig } from './steps/StepFitnessConfig
 import { StepFirstAction, type FirstActionResult } from './steps/StepFirstAction'
 import { StepSummary } from './steps/StepSummary'
 import { seedDemoData } from './seedDemoData'
+import { DEFAULT_FITNESS_SETTINGS, saveFitnessSettings } from '@plugins/fitness/settings'
 
 type Step = 'welcome' | 'name' | 'plugins' | 'fitness' | 'first-action' | 'summary'
 
@@ -94,11 +95,16 @@ export function OnboardingWizard() {
         `INSERT OR REPLACE INTO plugin_state (plugin_id, key, value) VALUES ('fitness', 'smokingTracker', ?)`,
         [cfg.smokingTracker ? 'true' : 'false'],
       )
+      await saveFitnessSettings({
+        ...DEFAULT_FITNESS_SETTINGS,
+        smokingCessationEnabled: cfg.smokingTracker,
+      })
       if (currentWeight) {
         // Insert initial weight entry
         await window.storage.execute(
-          `INSERT OR IGNORE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
-           VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
+          `INSERT INTO fitness_daily_entries (date, weight, created_at)
+           VALUES (date('now'), ?, datetime('now'))
+           ON CONFLICT(date) DO UPDATE SET weight = excluded.weight`,
           [currentWeight],
         )
       }
@@ -126,8 +132,9 @@ export function OnboardingWizard() {
           const weight = parsePositiveNumber(result.value)
           if (weight) {
             await window.storage.execute(
-              `INSERT OR REPLACE INTO fitness_daily_entries (id, date, weight, created_at, updated_at)
-               VALUES (lower(hex(randomblob(8))), date('now'), ?, datetime('now'), datetime('now'))`,
+              `INSERT INTO fitness_daily_entries (date, weight, created_at)
+               VALUES (date('now'), ?, datetime('now'))
+               ON CONFLICT(date) DO UPDATE SET weight = excluded.weight`,
               [weight],
             )
             eventBus.emit(

@@ -101,7 +101,7 @@ export function GoalsDashboard() {
           <p className="text-xs">Definí tu primer objetivo del trimestre con “Nuevo objetivo”.</p>
         </div>
       ) : (
-        <ul className="space-y-3" role="list" aria-label="Lista de objetivos">
+        <ul className="max-h-[560px] space-y-3 overflow-y-auto pr-1" role="list" aria-label="Lista de objetivos">
           {visible.map((g) => (
             <li key={g.id}>
               <GoalCard goal={g} />

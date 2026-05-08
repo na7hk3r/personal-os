@@ -77,7 +77,7 @@ export function ReviewPage() {
               {summarizeNumber('Días con datos (7d)', snapshot.fitness?.daysWithDataLast7 ?? null)}
               {summarizeNumber('Entrenos (7d)', snapshot.fitness?.workoutsLast7 ?? null)}
               {summarizeNumber('Sueño promedio', snapshot.fitness?.avgSleepLast7 ?? null, 'h')}
-              {summarizeNumber('Cigarrillos (7d)', snapshot.fitness?.cigarettesLast7 ?? null)}
+              {snapshot.fitness?.cigarettesLast7 != null && summarizeNumber('Cigarrillos (7d)', snapshot.fitness.cigarettesLast7)}
               {summarizeNumber('Días sin entrenar', snapshot.fitness?.daysSinceLastWorkout ?? null)}
             </div>
           </section>

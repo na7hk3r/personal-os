@@ -12,7 +12,7 @@ const fitnessPlugin: PluginManifest = {
   id: 'fitness',
   name: 'Fitness',
   version: '1.0.0',
-  description: 'Control de peso, comidas, entrenos y hábitos de salud',
+  description: 'Control de peso, comidas, entrenos, sueño y medidas corporales',
   icon: 'Dumbbell',
   domain: 'fitness',
   domainKeywords: ['workout', 'weight', 'measurements', 'sleep'],
@@ -127,8 +127,8 @@ const fitnessPlugin: PluginManifest = {
           snack: row.snack as 0 | 1,
           dinner: row.dinner as 0 | 1,
           workout: row.workout as DailyEntry['workout'],
-          cigarettes: row.cigarettes as number,
-          sleep: row.sleep as number,
+          cigarettes: (row.cigarettes ?? 0) as number,
+          sleep: typeof row.sleep === 'number' && row.sleep > 0 ? row.sleep : null,
           notes: (row.notes ?? '') as string,
         }
       })

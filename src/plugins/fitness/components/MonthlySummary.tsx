@@ -1,9 +1,11 @@
+import { BarChart3, CalendarCheck2, Dumbbell, Moon, Utensils } from 'lucide-react'
 import { useFitnessStore } from '../store'
-import { getMealCompliancePercent, countWorkoutsMonth, averageField } from '../utils'
-import { BarChart3 } from 'lucide-react'
+import { averageField, countWorkoutsMonth, getMealCompliancePercent } from '../utils'
+import { useFitnessSettings } from '../settings'
 
 export function MonthlySummary() {
   const entries = useFitnessStore((s) => s.entries)
+  const { settings } = useFitnessSettings()
 
   const now = new Date()
   const month = now.getMonth()
@@ -15,34 +17,41 @@ export function MonthlySummary() {
 
   const mealPct = getMealCompliancePercent(entries)
   const workouts = countWorkoutsMonth(entries)
-  const avgSleep = averageField(monthEntries.slice(-30), 'sleep')
-  const avgCigs = averageField(monthEntries.slice(-30), 'cigarettes')
+  const avgSleep = averageField(monthEntries, 'sleep', 30)
+  const avgCigs = averageField(monthEntries, 'cigarettes', 30)
   const totalDays = monthEntries.length
-
   const monthName = now.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })
 
-  return (
-    <div className="bg-surface-light rounded-xl border border-border p-4">
-      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
-        <BarChart3 size={16} />
-        Resumen - {monthName}
-      </h4>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <Stat label="Días registrados" value={totalDays} />
-        <Stat label="Cumplimiento comidas" value={`${mealPct}%`} />
-        <Stat label="Entrenos del mes" value={workouts} />
-        <Stat label="Promedio sueño" value={`${avgSleep.toFixed(1)}h`} />
-        <Stat label="Promedio cigarrillos" value={avgCigs.toFixed(1)} />
-      </div>
-    </div>
-  )
-}
+  const stats = [
+    { label: 'Dias registrados', value: String(totalDays), icon: CalendarCheck2, tone: 'text-accent-light' },
+    { label: 'Comidas', value: `${mealPct}%`, icon: Utensils, tone: 'text-emerald-300' },
+    { label: 'Entrenos', value: String(workouts), icon: Dumbbell, tone: 'text-warning' },
+    { label: 'Sueno promedio', value: avgSleep > 0 ? `${avgSleep.toFixed(1)}h` : '--', icon: Moon, tone: 'text-sky-300' },
+    ...(settings.smokingCessationEnabled
+      ? [{ label: 'Cigarrillos prom.', value: avgCigs.toFixed(1), icon: BarChart3, tone: 'text-orange-300' }]
+      : []),
+  ]
 
-function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="text-center">
-      <p className="text-xl font-bold">{value}</p>
-      <p className="text-xs text-muted">{label}</p>
-    </div>
+    <section className="plugin-panel p-4">
+      <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <h4 className="flex items-center gap-2 text-sm font-semibold">
+          <BarChart3 size={16} />
+          Resumen de {monthName}
+        </h4>
+        <span className="text-caption text-muted">Ultimos datos consolidados</span>
+      </div>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(132px,1fr))] gap-3">
+        {stats.map((stat) => (
+          <article key={stat.label} className="rounded-xl border border-border bg-surface px-3 py-3">
+            <div className={`mb-2 flex items-center gap-1.5 text-caption uppercase tracking-wider ${stat.tone}`}>
+              <stat.icon size={14} />
+              <span>{stat.label}</span>
+            </div>
+            <p className="text-xl font-semibold text-white tabular-nums">{stat.value}</p>
+          </article>
+        ))}
+      </div>
+    </section>
   )
 }

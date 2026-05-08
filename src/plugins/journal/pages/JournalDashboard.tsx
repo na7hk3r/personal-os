@@ -74,7 +74,7 @@ export function JournalDashboard() {
             <p className="text-xs">Empezá escribiendo qué te pasó hoy en el editor de arriba.</p>
           </div>
         ) : (
-          <ul className="space-y-1" role="list">
+          <ul className="max-h-[320px] space-y-1 overflow-y-auto pr-1" role="list">
             {recentEntries.map((e) => (
               <li key={e.id}>
                 <button

@@ -499,28 +499,28 @@ export function WorkDashboard() {
       </section>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <div className="plugin-panel p-4">
+        <div className="plugin-panel min-h-[96px] p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <ClipboardList size={14} />
             Tableros
           </p>
           <p className="text-2xl font-bold">{boards.length}</p>
         </div>
-        <div className="plugin-panel p-4">
+        <div className="plugin-panel min-h-[96px] p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <ListChecks size={14} />
             Tareas
           </p>
           <p className="text-2xl font-bold">{totalCards}</p>
         </div>
-        <div className="plugin-panel p-4">
+        <div className="plugin-panel min-h-[96px] p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <NotebookPen size={14} />
             Notas
           </p>
           <p className="text-2xl font-bold">{totalNotes}</p>
         </div>
-        <div className="plugin-panel p-4">
+        <div className="plugin-panel min-h-[96px] p-4">
           <p className="text-xs text-muted mb-1 flex items-center gap-1.5">
             <TimerReset size={14} />
             Foco hoy
@@ -539,8 +539,8 @@ export function WorkDashboard() {
         <KanbanBoard />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-success/70 shadow-[inset_1px_0_0_0_rgba(34,197,94,0.18)]">
+      <div className="grid items-stretch gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+        <section className="plugin-panel flex min-h-[380px] flex-col rounded-2xl p-5 xl:h-[420px] border-l-4 border-l-success/70 shadow-[inset_1px_0_0_0_rgba(34,197,94,0.18)]">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs uppercase tracking-eyebrow text-success flex items-center gap-2"><ListChecks size={12} /> Active Tasks</p>
@@ -549,7 +549,7 @@ export function WorkDashboard() {
             <span className="rounded-full bg-success/10 border border-success/20 px-2 py-1 text-xs text-success">{activeTasks.length}</span>
           </div>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {activeTasks.length === 0 && (
               <div className="rounded-xl border border-dashed border-border/60 px-4 py-6 text-sm text-muted">
                 No hay tareas en progreso. Iniciá una desde el tablero para activar el flujo.
@@ -579,10 +579,10 @@ export function WorkDashboard() {
                   : 'border-border bg-surface'
 
               return (
-                <div key={card.id} className={`rounded-xl border px-4 py-3 transition-colors ${cardClass}`}>
-                  <div className="flex items-center justify-between gap-3">
+                <div key={card.id} className={`min-h-[76px] rounded-xl border px-4 py-3 transition-colors ${cardClass}`}>
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate text-sm font-medium text-white">{card.title}</p>
                         <span className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro uppercase tracking-wide ${stateClass}`}>
                           {isFocusedPaused ? <Pause size={10} /> : isFocused ? <Play size={10} /> : <ListChecks size={10} />}
@@ -594,7 +594,7 @@ export function WorkDashboard() {
                       </div>
                       {card.description && <p className="mt-1 text-xs text-muted line-clamp-2">{card.description}</p>}
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                    <div className="flex flex-shrink-0 flex-wrap items-center gap-1.5">
                       <button
                         onClick={() => completeWorkTask(card.id)}
                         title="Completar tarea (mueve a Hecho y detiene el foco)"
@@ -651,11 +651,11 @@ export function WorkDashboard() {
           </div>
         </section>
 
-        <section className="plugin-panel rounded-2xl p-5 border-l-4 border-l-purple-400/60 shadow-[inset_1px_0_0_0_rgba(168,85,247,0.18)]">
+        <section className="plugin-panel flex min-h-[380px] flex-col rounded-2xl p-5 xl:h-[420px] border-l-4 border-l-purple-400/60 shadow-[inset_1px_0_0_0_rgba(168,85,247,0.18)]">
           <p className="text-xs uppercase tracking-eyebrow text-purple-300 flex items-center gap-2"><History size={12} /> Recent Work Activity</p>
           <h3 className="mt-1 text-lg font-semibold text-white">Actividad reciente</h3>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-1">
             {recentEvents.length === 0 && (
               <div className="rounded-xl border border-dashed border-border/60 px-4 py-6 text-sm text-muted">
                 Todavía no hay actividad registrada para work.

@@ -311,7 +311,7 @@ export const copy = {
           name: 'Fitness',
           domainLabel: 'Fitness',
           description:
-            'Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Medidas corporales y resúmenes mensuales.',
+            'Tracking diario de peso, comidas, ejercicios y sueño. Medidas corporales, resúmenes mensuales y seguimiento opcional para dejar de fumar.',
         },
         finance: {
           name: 'Finanzas',
@@ -702,7 +702,7 @@ export const copy = {
           name: 'Fitness',
           domainLabel: 'Fitness',
           description:
-            'Daily tracking for weight, meals, workouts, sleep, and cigarettes. Body measurements and monthly summaries.',
+            'Daily tracking for weight, meals, workouts, and sleep. Body measurements, monthly summaries, and optional quit-smoking tracking.',
         },
         finance: {
           name: 'Finance',
@@ -1094,7 +1094,7 @@ export const copy = {
           name: 'Fitness',
           domainLabel: 'Fitness',
           description:
-            'Tracking diário de peso, refeições, exercícios, sono e cigarros. Medidas corporais e resumos mensais.',
+            'Tracking diário de peso, refeições, exercícios e sono. Medidas corporais, resumos mensais e acompanhamento opcional para parar de fumar.',
         },
         finance: {
           name: 'Finanças',

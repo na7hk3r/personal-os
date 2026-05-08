@@ -72,7 +72,7 @@ export function KnowledgeDashboard() {
             <p className="text-xs">Empezá un recurso desde la biblioteca.</p>
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-2 md:grid-cols-2" role="list">
+          <ul className="grid max-h-[360px] grid-cols-1 gap-2 overflow-y-auto pr-1 md:grid-cols-2" role="list">
             {summary.inProgress.map((r) => (
               <li key={r.id}>
                 <button
@@ -102,7 +102,7 @@ export function KnowledgeDashboard() {
           <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-muted">
             <PlayCircle size={14} aria-hidden="true" /> Cola ({summary.queued.length})
           </h2>
-          <ul className="flex flex-wrap gap-2" role="list">
+          <ul className="flex max-h-[112px] flex-wrap gap-2 overflow-y-auto pr-1" role="list">
             {summary.queued.slice(0, 8).map((r) => (
               <li key={r.id}>
                 <button

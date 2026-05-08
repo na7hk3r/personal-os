@@ -69,7 +69,10 @@ export function SortableCard({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.id })
+  } = useSortable({
+    id: card.id,
+    data: { type: 'card', cardId: card.id, columnId: card.columnId },
+  })
 
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -113,7 +116,7 @@ export function SortableCard({
       style={style}
       {...attributes}
       {...listeners}
-      className="group rounded-lg border border-border/50 bg-surface p-3 animate-fade-in select-none touch-none"
+      className="group flex min-h-[116px] flex-col rounded-lg border border-border/50 bg-surface p-3 animate-fade-in select-none touch-none"
       onClick={(e) => {
         if (!(e.target as HTMLElement).closest('[data-delete], [data-focus]')) {
           onOpen(card)
@@ -121,7 +124,7 @@ export function SortableCard({
       }}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm leading-snug">{card.title}</p>
+        <p className="line-clamp-2 text-sm leading-snug">{card.title}</p>
         <button
           data-delete="true"
           onClick={handleDeleteClick}
@@ -137,7 +140,7 @@ export function SortableCard({
       </div>
 
       {card.description && (
-        <p className="mt-1 truncate text-xs text-muted">{card.description}</p>
+        <p className="mt-1 line-clamp-2 text-xs text-muted">{card.description}</p>
       )}
 
       {card.content && (
@@ -148,7 +151,7 @@ export function SortableCard({
       )}
 
       {(visibleLabels.length > 0 || due || focusSessionCount > 0 || priorityStyle || card.estimateMinutes || checklistTotal > 0) && (
-        <div className="mt-2 flex flex-wrap items-center gap-1">
+        <div className="mt-2 flex max-h-[3.75rem] flex-wrap items-center gap-1 overflow-hidden">
           {priorityStyle && (
             <span
               className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-micro ${priorityStyle.className}`}
@@ -217,7 +220,7 @@ export function SortableCard({
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between gap-2">
+      <div className="mt-auto flex items-center justify-between gap-2 pt-3">
         <span className={`text-micro uppercase tracking-[0.16em] ${isFocusActive ? 'text-success' : 'text-muted/40'}`}>
           {isFocusActive ? 'En foco' : 'Listo para foco'}
         </span>

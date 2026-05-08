@@ -104,9 +104,9 @@ export function StepFitnessConfig({ initial, onNext }: Props) {
           <div className="text-left">
             <p className="text-sm font-medium text-white inline-flex items-center gap-1.5">
               <Cigarette size={14} />
-              Contador de cigarrillos
+              Soy fumador y quiero dejarlo
             </p>
-            <p className="text-xs text-muted mt-0.5">Registrá cuántos fumás por día</p>
+            <p className="text-xs text-muted mt-0.5">Activa registro y meta diaria de reduccion.</p>
           </div>
           <span
             className={`flex-shrink-0 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all ${

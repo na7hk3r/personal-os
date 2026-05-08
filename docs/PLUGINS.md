@@ -189,7 +189,7 @@ Hoy hay **8 plugins oficiales** distribuidos por dominio. Cada uno declara `doma
 - **Tablas**: `fitness_daily_entries`, `fitness_measurements`
 - **Páginas**: `/fitness`, `/fitness/tracking`, `/fitness/measurements`
 - **Eventos emitidos**: `WEIGHT_RECORDED`, `MEAL_LOGGED`, `WORKOUT_COMPLETED`, `DAILY_ENTRY_SAVED`, `MEASUREMENT_SAVED` (ver [EVENTS.md](EVENTS.md#fitness))
-- **Configuración core**: `pluginSettings:fitness` (entrenos/sem, sueño objetivo, cigarrillos, comidas, recordatorio mediciones)
+- **Configuración core**: `pluginSettings:fitness` (entrenos/sem, sueño objetivo, comidas, recordatorio mediciones y seguimiento opcional para dejar de fumar)
 - **AI Provider**: no
 - **Gamificación**: +5 entrada diaria, +25 entrenamiento
 
@@ -264,7 +264,7 @@ Hoy hay **8 plugins oficiales** distribuidos por dominio. Cada uno declara `doma
 
 Desde `Control Center`, el core permite guardar preferencias por plugin sin modificar código del plugin:
 
-- `pluginSettings:fitness`: entrenos/semana, sueño objetivo, límite de cigarrillos, objetivo de comidas, recordatorio de mediciones.
+- `pluginSettings:fitness`: entrenos/semana, sueño objetivo, objetivo de comidas, recordatorio de mediciones y `smokingCessationEnabled` para mostrar el seguimiento de cigarrillos solo si el usuario lo activa.
 - `pluginSettings:work`: duración de foco y break, alerta de vencimiento, límite WIP, vista predeterminada de tablero.
 - `pluginSettings:finance`: moneda default, opciones de presupuesto e insights.
 

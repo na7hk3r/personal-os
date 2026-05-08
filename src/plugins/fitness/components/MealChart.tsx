@@ -1,6 +1,6 @@
+import { Bar, CartesianGrid, Cell, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useFitnessStore } from '../store'
 import { getMealChartData } from '../utils'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 const CHART_STYLE = {
   grid: 'var(--chart-grid)',
@@ -17,7 +17,11 @@ export function MealChart() {
   const data = getMealChartData(entries, 14)
 
   if (data.length === 0) {
-    return <p className="text-sm text-muted">Sin datos de comidas aún.</p>
+    return (
+      <div className="flex h-[250px] items-center justify-center rounded-xl border border-dashed border-border bg-surface/40 text-sm text-muted">
+        Sin datos de comidas aun.
+      </div>
+    )
   }
 
   const getColor = (meals: number) => {
@@ -28,20 +32,29 @@ export function MealChart() {
 
   return (
     <ResponsiveContainer width="100%" height={250}>
-      <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} />
-        <XAxis dataKey="date" stroke={CHART_STYLE.axis} fontSize={12} />
-        <YAxis stroke={CHART_STYLE.axis} fontSize={12} domain={[0, 4]} />
+      <ComposedChart data={data} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke={CHART_STYLE.grid} vertical={false} />
+        <XAxis dataKey="date" stroke={CHART_STYLE.axis} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <YAxis stroke={CHART_STYLE.axis} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} domain={[0, 4]} />
         <Tooltip
-          contentStyle={{ backgroundColor: CHART_STYLE.tooltipBg, border: `1px solid ${CHART_STYLE.tooltipBorder}` }}
+          contentStyle={{ backgroundColor: CHART_STYLE.tooltipBg, border: `1px solid ${CHART_STYLE.tooltipBorder}`, borderRadius: 10 }}
           labelStyle={{ color: CHART_STYLE.axis }}
         />
-        <Bar dataKey="meals" radius={[4, 4, 0, 0]}>
-          {data.map((entry, i) => (
-            <Cell key={i} fill={getColor(entry.meals)} />
+        <Bar dataKey="meals" name="Comidas" radius={[6, 6, 0, 0]} maxBarSize={26}>
+          {data.map((entry) => (
+            <Cell key={entry.date} fill={getColor(entry.meals)} />
           ))}
         </Bar>
-      </BarChart>
+        <Line
+          dataKey="target"
+          name="Objetivo"
+          type="monotone"
+          stroke={CHART_STYLE.axis}
+          strokeDasharray="4 4"
+          strokeWidth={2}
+          dot={false}
+        />
+      </ComposedChart>
     </ResponsiveContainer>
   )
 }

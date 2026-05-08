@@ -72,7 +72,7 @@ Sistema de plugins de primera clase. Hoy vienen incluidos **8 plugins oficiales*
 | Plugin | Dominio | Qué resuelve |
 | --- | --- | --- |
 | **Work** | productivity | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, archivado automático. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
-| **Fitness** | fitness | Tracking diario de peso, comidas, ejercicios, sueño y cigarrillos. Tabla de medidas corporales, gráficos históricos y resumen mensual. |
+| **Fitness** | fitness | Tracking diario de peso, comidas, ejercicios y sueño. Tabla de medidas corporales, gráficos históricos, resumen mensual y seguimiento opcional para dejar de fumar. |
 | **Finance** | finance | Cuentas, transacciones, categorías, presupuestos mensuales y gastos recurrentes con motor RRULE-light. **Insights IA opcionales**: detección de gastos inusuales, resumen mensual narrativo y sugerencia de presupuestos por mediana 3 meses. Default UYU, multi-moneda. |
 | **Habits** | habits | Tracking de hábitos con metas diarias / semanales / mensuales, rachas reales, detección de "en riesgo" y proveedor IA con top streaks. Eventos `LOGGED` / `GOAL_MET` integrados a gamificación. |
 | **Journal** | knowledge | Diario con prompts builtin, mood (1–5), tags, búsqueda y pin. Una entrada por día, undo en borrado. Privacy-first: el LLM sólo recibe agregados, nunca el contenido. |

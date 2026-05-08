@@ -1,34 +1,63 @@
-import { useState } from 'react'
-import { format, addDays, subDays } from 'date-fns'
+import { useEffect, useState } from 'react'
+import { addDays, format, subDays } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Save } from 'lucide-react'
 import { useFitnessStore } from '../store'
 import { FITNESS_EVENTS } from '../events'
 import { eventBus } from '@core/events/EventBus'
 import type { DailyEntry } from '../types'
+import { useFitnessSettings } from '../settings'
 
-const DAYS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado']
+type MealField = 'breakfast' | 'lunch' | 'snack' | 'dinner'
+
+interface DailyEntryForm {
+  breakfast: 0 | 1
+  lunch: 0 | 1
+  snack: 0 | 1
+  dinner: 0 | 1
+  workout: DailyEntry['workout']
+  cigarettes: number
+  sleep: number | null
+  weight: number | null
+  notes: string
+}
+
+const EMPTY_FORM: DailyEntryForm = {
+  breakfast: 0,
+  lunch: 0,
+  snack: 0,
+  dinner: 0,
+  workout: '',
+  cigarettes: 0,
+  sleep: null,
+  weight: null,
+  notes: '',
+}
+
+const MEALS: Array<{ field: MealField; label: string }> = [
+  { field: 'breakfast', label: 'Desayuno' },
+  { field: 'lunch', label: 'Almuerzo' },
+  { field: 'snack', label: 'Merienda' },
+  { field: 'dinner', label: 'Cena' },
+]
 
 export function DailyEntry() {
   const { entries, addEntry, updateEntry } = useFitnessStore()
+  const { settings } = useFitnessSettings()
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [savedMessage, setSavedMessage] = useState('')
 
   const dateStr = format(currentDate, 'yyyy-MM-dd')
-  const dayName = DAYS[currentDate.getDay()]
+  const dayName = format(currentDate, 'EEEE', { locale: es })
   const existing = entries.find((e) => e.date === dateStr)
+  const [form, setForm] = useState<DailyEntryForm>(entryToForm(existing))
 
-  const [form, setForm] = useState({
-    breakfast: existing?.breakfast ?? 0,
-    lunch: existing?.lunch ?? 0,
-    snack: existing?.snack ?? 0,
-    dinner: existing?.dinner ?? 0,
-    workout: existing?.workout ?? '',
-    cigarettes: existing?.cigarettes ?? 0,
-    sleep: existing?.sleep ?? 0,
-    weight: existing?.weight ?? null,
-    notes: existing?.notes ?? '',
-  })
+  useEffect(() => {
+    setForm(entryToForm(existing))
+    setSavedMessage('')
+  }, [existing, dateStr])
 
-  const toggleMeal = (field: 'breakfast' | 'lunch' | 'snack' | 'dinner') => {
+  const toggleMeal = (field: MealField) => {
     setForm((prev) => ({ ...prev, [field]: prev[field] ? 0 : 1 }))
   }
 
@@ -37,11 +66,9 @@ export function DailyEntry() {
       date: dateStr,
       dayName,
       ...form,
-      breakfast: form.breakfast as 0 | 1,
-      lunch: form.lunch as 0 | 1,
-      snack: form.snack as 0 | 1,
-      dinner: form.dinner as 0 | 1,
-      workout: form.workout as DailyEntry['workout'],
+      cigarettes: settings.smokingCessationEnabled ? clamp(form.cigarettes, 0, 60) : existing?.cigarettes ?? 0,
+      sleep: form.sleep == null ? null : clamp(form.sleep, 0, 24),
+      weight: form.weight == null ? null : clamp(form.weight, 0, 500),
     }
 
     if (existing) {
@@ -50,13 +77,20 @@ export function DailyEntry() {
       addEntry(entry)
     }
 
-    // Persist via storage
     const cols = 'date, day_name, weight, breakfast, lunch, snack, dinner, workout, cigarettes, sleep, notes'
     const placeholders = '?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?'
     const values = [
-      entry.date, entry.dayName, entry.weight,
-      entry.breakfast, entry.lunch, entry.snack, entry.dinner,
-      entry.workout, entry.cigarettes, entry.sleep, entry.notes,
+      entry.date,
+      entry.dayName,
+      entry.weight,
+      entry.breakfast,
+      entry.lunch,
+      entry.snack,
+      entry.dinner,
+      entry.workout,
+      entry.cigarettes,
+      entry.sleep,
+      entry.notes,
     ]
 
     await window.storage.execute(
@@ -69,106 +103,195 @@ export function DailyEntry() {
     if (entry.workout === 'A' || entry.workout === 'B') {
       eventBus.emit(FITNESS_EVENTS.WORKOUT_COMPLETED, { type: entry.workout, date: dateStr })
     }
+    setSavedMessage('Registro guardado')
   }
 
   return (
-    <div className="bg-surface-light rounded-xl border border-border p-5 space-y-4">
-      <h3 className="text-lg font-semibold">Registro Diario</h3>
-
-      {/* Date nav */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => setCurrentDate((d) => subDays(d, 1))} className="px-2 py-1 bg-surface rounded hover:bg-surface-lighter">←</button>
-        <span className="text-sm font-medium">{format(currentDate, "EEEE d 'de' MMMM", { locale: es })}</span>
-        <button onClick={() => setCurrentDate((d) => addDays(d, 1))} className="px-2 py-1 bg-surface rounded hover:bg-surface-lighter">→</button>
-      </div>
-
-      {/* Meals */}
-      <div>
-        <p className="text-xs text-muted mb-2">Comidas</p>
-        <div className="flex gap-2">
-          {(['breakfast', 'lunch', 'snack', 'dinner'] as const).map((meal) => (
-            <button
-              key={meal}
-              onClick={() => toggleMeal(meal)}
-              className={`px-3 py-1.5 rounded text-sm ${
-                form[meal] ? 'bg-success text-white' : 'bg-surface text-muted'
-              }`}
-            >
-              {meal === 'breakfast' ? 'Desayuno' : meal === 'lunch' ? 'Almuerzo' : meal === 'snack' ? 'Merienda' : 'Cena'}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Workout */}
-      <div>
-        <p className="text-xs text-muted mb-2">Entreno</p>
-        <div className="flex gap-2">
-          {(['A', 'B', 'R'] as const).map((opt) => (
-            <button
-              key={opt}
-              onClick={() => setForm((p) => ({ ...p, workout: opt }))}
-              className={`px-3 py-1.5 rounded text-sm ${
-                form.workout === opt ? 'bg-accent text-white' : 'bg-surface text-muted'
-              }`}
-            >
-              {opt === 'R' ? 'Descanso' : `Día ${opt}`}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Numeric fields */}
-      <div className="grid grid-cols-3 gap-3">
+    <section className="plugin-panel p-5">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <label className="text-xs text-muted">Cigarrillos</label>
-          <input
-            type="number"
-            min={0}
-            value={form.cigarettes}
-            onChange={(e) => setForm((p) => ({ ...p, cigarettes: Number(e.target.value) }))}
-            className="w-full mt-1 bg-surface border border-border rounded px-3 py-1.5 text-sm"
-          />
+          <h3 className="text-lg font-semibold text-white">Registro diario</h3>
+          <p className="text-xs text-muted">Comidas, entreno, sueno, peso y notas.</p>
         </div>
-        <div>
-          <label className="text-xs text-muted">Sueño (h)</label>
-          <input
-            type="number"
+        <div className="flex items-center gap-2">
+          <IconButton label="Dia anterior" onClick={() => setCurrentDate((d) => subDays(d, 1))}>
+            <ChevronLeft size={15} />
+          </IconButton>
+          <div className="min-w-[190px] rounded-lg border border-border bg-surface px-3 py-2 text-center">
+            <p className="flex items-center justify-center gap-1.5 text-caption uppercase tracking-wider text-muted">
+              <CalendarDays size={12} />
+              {dayName}
+            </p>
+            <p className="text-sm font-medium text-white">{format(currentDate, "d 'de' MMMM", { locale: es })}</p>
+          </div>
+          <IconButton label="Dia siguiente" onClick={() => setCurrentDate((d) => addDays(d, 1))}>
+            <ChevronRight size={15} />
+          </IconButton>
+        </div>
+      </div>
+
+      <div className="space-y-5">
+        <FieldGroup label="Comidas">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            {MEALS.map((meal) => (
+              <button
+                key={meal.field}
+                type="button"
+                onClick={() => toggleMeal(meal.field)}
+                className={`flex min-h-[42px] items-center justify-between rounded-lg border px-3 py-2 text-sm ${
+                  form[meal.field]
+                    ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
+                    : 'border-border bg-surface text-muted hover:text-white'
+                }`}
+              >
+                <span>{meal.label}</span>
+                {form[meal.field] ? <Check size={14} /> : null}
+              </button>
+            ))}
+          </div>
+        </FieldGroup>
+
+        <FieldGroup label="Entreno">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { value: 'A', label: 'Dia A' },
+              { value: 'B', label: 'Dia B' },
+              { value: 'R', label: 'Descanso' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setForm((p) => ({ ...p, workout: p.workout === opt.value ? '' : opt.value as DailyEntry['workout'] }))}
+                className={`min-h-[42px] rounded-lg border px-3 py-2 text-sm ${
+                  form.workout === opt.value
+                    ? 'border-accent/50 bg-accent/20 text-white'
+                    : 'border-border bg-surface text-muted hover:text-white'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </FieldGroup>
+
+        <div className={`grid grid-cols-1 gap-3 ${settings.smokingCessationEnabled ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+          {settings.smokingCessationEnabled && (
+            <NumberField
+              label="Cigarrillos"
+              value={form.cigarettes}
+              min={0}
+              step={1}
+              onChange={(value) => setForm((p) => ({ ...p, cigarettes: value ?? 0 }))}
+            />
+          )}
+          <NumberField
+            label="Sueno (h)"
+            value={form.sleep}
             min={0}
             step={0.5}
-            value={form.sleep}
-            onChange={(e) => setForm((p) => ({ ...p, sleep: Number(e.target.value) }))}
-            className="w-full mt-1 bg-surface border border-border rounded px-3 py-1.5 text-sm"
+            onChange={(value) => setForm((p) => ({ ...p, sleep: value }))}
           />
-        </div>
-        <div>
-          <label className="text-xs text-muted">Peso (kg)</label>
-          <input
-            type="number"
+          <NumberField
+            label="Peso (kg)"
+            value={form.weight}
+            min={0}
             step={0.1}
-            value={form.weight ?? ''}
-            onChange={(e) => setForm((p) => ({ ...p, weight: e.target.value ? Number(e.target.value) : null }))}
-            className="w-full mt-1 bg-surface border border-border rounded px-3 py-1.5 text-sm"
+            onChange={(value) => setForm((p) => ({ ...p, weight: value }))}
           />
         </div>
-      </div>
 
-      {/* Notes */}
-      <div>
-        <label className="text-xs text-muted">Notas</label>
-        <textarea
-          value={form.notes}
-          onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
-          className="w-full mt-1 bg-surface border border-border rounded px-3 py-2 text-sm h-16 resize-none"
-        />
-      </div>
+        <label className="block space-y-1">
+          <span className="text-xs text-muted">Notas</span>
+          <textarea
+            value={form.notes}
+            onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+            className="h-20 w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+          />
+        </label>
 
-      <button
-        onClick={handleSave}
-        className="w-full bg-accent hover:bg-accent/80 text-white rounded-lg py-2 text-sm font-medium transition-colors"
-      >
-        Guardar
-      </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void handleSave()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-accent/85"
+          >
+            <Save size={15} />
+            Guardar registro
+          </button>
+          {savedMessage && <span className="text-xs text-emerald-300">{savedMessage}</span>}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function entryToForm(entry: DailyEntry | undefined): DailyEntryForm {
+  if (!entry) return EMPTY_FORM
+  return {
+    breakfast: entry.breakfast,
+    lunch: entry.lunch,
+    snack: entry.snack,
+    dinner: entry.dinner,
+    workout: entry.workout,
+    cigarettes: entry.cigarettes,
+    sleep: entry.sleep,
+    weight: entry.weight,
+    notes: entry.notes,
+  }
+}
+
+function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs text-muted">{label}</p>
+      {children}
     </div>
   )
+}
+
+function NumberField({
+  label,
+  value,
+  min,
+  step,
+  onChange,
+}: {
+  label: string
+  value: number | null
+  min: number
+  step: number
+  onChange: (value: number | null) => void
+}) {
+  return (
+    <label className="space-y-1">
+      <span className="text-xs text-muted">{label}</span>
+      <input
+        type="number"
+        min={min}
+        step={step}
+        value={value ?? ''}
+        onChange={(e) => onChange(e.target.value ? Number(e.target.value) : null)}
+        className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm"
+      />
+    </label>
+  )
+}
+
+function IconButton({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface text-muted hover:text-white"
+    >
+      {children}
+    </button>
+  )
+}
+
+function clamp(value: number, min: number, max: number): number {
+  if (!Number.isFinite(value)) return min
+  return Math.min(max, Math.max(min, value))
 }

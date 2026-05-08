@@ -19,6 +19,13 @@ import { NoraLogoMark } from './components/NoraLogo'
 import { AuditPanel } from './AuditPanel'
 import { useAuditStore } from '@core/audit/store'
 import {
+  DEFAULT_FITNESS_SETTINGS,
+  FITNESS_SETTINGS_KEY,
+  loadFitnessSettings,
+  normalizeFitnessSettings,
+  type FitnessPluginSettings,
+} from '@plugins/fitness/settings'
+import {
   ShieldAlert,
   User,
   SlidersHorizontal,
@@ -28,14 +35,6 @@ import {
   ClipboardList,
   Zap,
 } from 'lucide-react'
-
-interface FitnessPluginSettings {
-  workoutTargetPerWeek: number
-  sleepTargetHours: number
-  maxCigarettesPerDay: number
-  mealComplianceTarget: number
-  remindMeasurements: boolean
-}
 
 interface WorkPluginSettings {
   focusSessionMinutes: number
@@ -47,16 +46,7 @@ interface WorkPluginSettings {
   workdayHours: number
 }
 
-const FITNESS_SETTINGS_KEY = 'pluginSettings:fitness'
 const WORK_SETTINGS_KEY = 'pluginSettings:work'
-
-const DEFAULT_FITNESS_SETTINGS: FitnessPluginSettings = {
-  workoutTargetPerWeek: 4,
-  sleepTargetHours: 8,
-  maxCigarettesPerDay: 6,
-  mealComplianceTarget: 80,
-  remindMeasurements: true,
-}
 
 const DEFAULT_WORK_SETTINGS: WorkPluginSettings = {
   focusSessionMinutes: 25,
@@ -147,7 +137,7 @@ export function ControlCenter() {
       if (activePluginIds.includes('fitness')) {
         await window.storage.execute(
           `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
-          [FITNESS_SETTINGS_KEY, JSON.stringify(fitnessSettings)],
+          [FITNESS_SETTINGS_KEY, JSON.stringify(normalizeFitnessSettings(fitnessSettings))],
         )
       }
       if (activePluginIds.includes('work')) {
@@ -171,20 +161,22 @@ export function ControlCenter() {
         `SELECT key, value FROM settings WHERE key IN (?, ?)` ,
         [FITNESS_SETTINGS_KEY, WORK_SETTINGS_KEY],
       )
-      .then((rows) => {
+      .then(async (rows) => {
         const list = rows as { key: string; value: string }[]
         const map = Object.fromEntries(list.map((entry) => [entry.key, entry.value]))
 
         if (map[FITNESS_SETTINGS_KEY]) {
           try {
             const parsed = JSON.parse(map[FITNESS_SETTINGS_KEY]) as Partial<FitnessPluginSettings>
-            setFitnessSettings((prev) => ({
-              ...prev,
-              ...parsed,
-            }))
+            if (parsed.smokingCessationEnabled === undefined) {
+              parsed.smokingCessationEnabled = (await loadFitnessSettings()).smokingCessationEnabled
+            }
+            setFitnessSettings((prev) => normalizeFitnessSettings({ ...prev, ...parsed }))
           } catch {
             // ignore malformed value
           }
+        } else {
+          void loadFitnessSettings().then(setFitnessSettings).catch(() => {})
         }
 
         if (map[WORK_SETTINGS_KEY]) {
@@ -482,20 +474,22 @@ export function ControlCenter() {
                 />
               </label>
 
-              <label className="space-y-1">
-                <span className="text-xs text-muted">Máx cigarrillos/día</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={60}
-                  value={fitnessSettings.maxCigarettesPerDay}
-                  onChange={(e) => setFitnessSettings((prev) => ({
-                    ...prev,
-                    maxCigarettesPerDay: Number(e.target.value) || 0,
-                  }))}
-                  className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
-                />
-              </label>
+              {fitnessSettings.smokingCessationEnabled && (
+                <label className="space-y-1">
+                  <span className="text-xs text-muted">Max cigarrillos/dia</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={60}
+                    value={fitnessSettings.maxCigarettesPerDay}
+                    onChange={(e) => setFitnessSettings((prev) => ({
+                      ...prev,
+                      maxCigarettesPerDay: Number(e.target.value) || 0,
+                    }))}
+                    className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                  />
+                </label>
+              )}
 
               <label className="space-y-1">
                 <span className="text-xs text-muted">Cumplimiento comidas (%)</span>
@@ -523,6 +517,18 @@ export function ControlCenter() {
                   remindMeasurements: e.target.checked,
                 }))}
                 className="h-4 w-4"
+              />
+            </label>
+            <label className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-light px-3 py-2">
+              <span className="text-xs text-muted">Soy fumador y quiero dejarlo</span>
+              <input
+                type="checkbox"
+                checked={fitnessSettings.smokingCessationEnabled}
+                onChange={(e) => setFitnessSettings((prev) => ({
+                  ...prev,
+                  smokingCessationEnabled: e.target.checked,
+                }))}
+                className="h-4 w-4 shrink-0"
               />
             </label>
               </article>

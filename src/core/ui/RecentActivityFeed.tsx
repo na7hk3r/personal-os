@@ -5,6 +5,7 @@ import { useCoreStore } from '@core/state/coreStore'
 import type { EventLogEntry } from '@core/types'
 import { Bell, BriefcaseBusiness, Dumbbell, Inbox } from 'lucide-react'
 import { CORE_EVENTS } from '@core/events/events'
+import { loadFitnessSettings } from '@plugins/fitness/settings'
 
 type ActivitySourceFilter = 'all' | 'fitness' | 'work' | 'core'
 type ActivityTimeFilter = 'all' | '24h'
@@ -147,9 +148,12 @@ const EVENT_LABELS: Record<string, (payload: Record<string, unknown>) => string>
   },
 }
 
-function humanizeEvent(entry: EventLogEntry): string {
+function humanizeEvent(entry: EventLogEntry, showSmoking: boolean): string {
   try {
-    const payload = JSON.parse(entry.payload || '{}') as Record<string, unknown>
+    let payload = JSON.parse(entry.payload || '{}') as Record<string, unknown>
+    if (!showSmoking && (entry.event_type === 'DAILY_ENTRY_SAVED' || entry.event_type === 'FITNESS_DAILY_ENTRY_SAVED')) {
+      payload = { ...payload, cigarettes: undefined }
+    }
     const fn = EVENT_LABELS[entry.event_type]
     if (fn) return fn(payload)
   } catch {
@@ -174,6 +178,7 @@ export function RecentActivityFeed({ compact = false, maxItems }: { compact?: bo
   const [loading, setLoading] = useState(true)
   const [sourceFilter, setSourceFilter] = useState<ActivitySourceFilter>('all')
   const [timeFilter, setTimeFilter] = useState<ActivityTimeFilter>('all')
+  const [showSmoking, setShowSmoking] = useState(false)
   const activePlugins = useCoreStore((s) => s.activePlugins)
   const limit = maxItems ?? (compact ? 3 : 5)
 
@@ -188,6 +193,9 @@ export function RecentActivityFeed({ compact = false, maxItems }: { compact?: bo
   }
 
   useEffect(() => {
+    void loadFitnessSettings()
+      .then((settings) => setShowSmoking(settings.smokingCessationEnabled))
+      .catch(() => setShowSmoking(false))
     load()
 
     // Refresh feed when new events are emitted
@@ -324,7 +332,7 @@ export function RecentActivityFeed({ compact = false, maxItems }: { compact?: bo
               </span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-foreground leading-snug truncate">
-                  {humanizeEvent(entry)}
+                  {humanizeEvent(entry, showSmoking)}
                 </p>
                 <p className="text-micro text-muted mt-0.5">{relativeTime(entry.created_at)}</p>
               </div>

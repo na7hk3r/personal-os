@@ -1,13 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowRight,
   CalendarClock,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Circle,
   CircleAlert,
   Eraser,
-  ListTodo,
+  Flame,
+  Gauge,
+  ListChecks,
   Sparkles,
   Sun,
   Zap,
@@ -17,12 +21,11 @@ import { getXpMultiplierForStreak } from '@core/gamification/gamificationUtils'
 import { useCoreStore } from '@core/state/coreStore'
 import { useToast } from './components/ToastProvider'
 import { useWorkStore } from '@plugins/work/store'
-import { usePlannerTasksToday } from './hooks/usePlannerTasksToday'
+import { usePlannerTasksToday, type PlannerTaskTodayItem } from './hooks/usePlannerTasksToday'
 import {
+  getColumnIds,
   isDoneColumn,
   isInProgressColumn,
-  isTodoColumn,
-  getColumnIds,
 } from '@plugins/work/utils/columnUtils'
 import {
   formatDueDate,
@@ -31,50 +34,149 @@ import {
 } from '@core/utils/dateUtils'
 import type { Card, Column } from '@plugins/work/types'
 
-interface PriorityGroup {
-  priorityTasks: Card[]
-  overdueCount: number
-  dueTodayCount: number
-  totalPending: number
+type Difficulty = 'alta' | 'media' | 'baja'
+type FocusTaskSource = 'work' | 'planner'
+
+interface FocusTask {
+  id: string
+  title: string
+  source: FocusTaskSource
+  path: string
+  difficulty: Difficulty
+  isPrimary: boolean
+  isOverdue: boolean
+  isDueToday: boolean
+  meta: string
 }
 
-function computePriorityTasks(cards: Card[], columns: Column[]): PriorityGroup {
-  const doneIds = getColumnIds(columns, isDoneColumn)
-  const inProgressIds = getColumnIds(columns, isInProgressColumn)
-  const todoIds = getColumnIds(columns, isTodoColumn)
+const COLLAPSED_KEY = 'dashboard:todayFocusCollapsed:v1'
 
-  const activeCards = cards.filter((c) => !doneIds.has(c.columnId))
-  const inProgressCards = activeCards.filter((c) => inProgressIds.has(c.columnId))
-  const todoCardsWithDate = activeCards
-    .filter((c) => todoIds.has(c.columnId) && c.dueDate)
-    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+const DIFFICULTY_LABEL: Record<Difficulty, string> = {
+  alta: 'Alta',
+  media: 'Media',
+  baja: 'Baja',
+}
 
-  const priorityTasks = [...inProgressCards, ...todoCardsWithDate].slice(0, 3)
+const DIFFICULTY_STYLE: Record<Difficulty, string> = {
+  alta: 'border-danger/35 bg-danger/10 text-danger',
+  media: 'border-warning/35 bg-warning/10 text-warning',
+  baja: 'border-emerald-500/35 bg-emerald-500/10 text-emerald-300',
+}
 
-  const overdueCount = activeCards.filter((c) => c.dueDate && isDueDateOverdue(c.dueDate)).length
-  const dueTodayCount = activeCards.filter((c) => c.dueDate && isDueDateToday(c.dueDate)).length
+function getInitialCollapsed(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(COLLAPSED_KEY) === '1'
+}
 
-  return {
-    priorityTasks,
-    overdueCount,
-    dueTodayCount,
-    totalPending: activeCards.length,
+function setPersistedCollapsed(value: boolean): void {
+  try {
+    window.localStorage.setItem(COLLAPSED_KEY, value ? '1' : '0')
+  } catch {
+    // ignore storage failures
   }
 }
 
+function buildFocusTasks({
+  cards,
+  columns,
+  plannerTasks,
+  includeWork,
+}: {
+  cards: Card[]
+  columns: Column[]
+  plannerTasks: PlannerTaskTodayItem[]
+  includeWork: boolean
+}): FocusTask[] {
+  const doneIds = getColumnIds(columns, isDoneColumn)
+  const inProgressIds = getColumnIds(columns, isInProgressColumn)
+  const workTasks = includeWork
+    ? cards
+      .filter((card) => !card.archived && !doneIds.has(card.columnId))
+      .map((card) => toWorkFocusTask(card, inProgressIds))
+      .sort(compareFocusTasks)
+      .slice(0, 8)
+    : []
+
+  const planner = plannerTasks.map(toPlannerFocusTask)
+
+  return [...workTasks, ...planner].sort(compareFocusTasks)
+}
+
+function toWorkFocusTask(card: Card, inProgressIds: Set<string>): FocusTask {
+  const overdue = isDueDateOverdue(card.dueDate)
+  const dueToday = isDueDateToday(card.dueDate)
+  const inProgress = inProgressIds.has(card.columnId)
+  const checklistSize = card.checklist?.length ?? 0
+  const estimate = card.estimateMinutes ?? 0
+
+  const difficulty: Difficulty =
+    card.priority === 'urgent' ||
+    card.priority === 'high' ||
+    overdue ||
+    estimate >= 90 ||
+    checklistSize >= 8
+      ? 'alta'
+      : card.priority === 'medium' || dueToday || inProgress || estimate >= 45 || checklistSize >= 4
+        ? 'media'
+        : 'baja'
+
+  return {
+    id: `work:${card.id}`,
+    title: card.title,
+    source: 'work',
+    path: '/work',
+    difficulty,
+    isPrimary: difficulty === 'alta' || dueToday || overdue || inProgress,
+    isOverdue: overdue,
+    isDueToday: dueToday,
+    meta: buildWorkMeta(card, inProgress),
+  }
+}
+
+function toPlannerFocusTask(task: PlannerTaskTodayItem): FocusTask {
+  const difficulty = task.complexity
+  return {
+    id: `planner:${task.id}`,
+    title: task.title,
+    source: 'planner',
+    path: '/planner',
+    difficulty,
+    isPrimary: difficulty === 'alta' || task.isOverdue,
+    isOverdue: task.isOverdue,
+    isDueToday: !task.isOverdue,
+    meta: task.isOverdue ? 'Atrasada' : 'Hoy',
+  }
+}
+
+function buildWorkMeta(card: Card, inProgress: boolean): string {
+  if (isDueDateOverdue(card.dueDate)) return 'Atrasada'
+  if (isDueDateToday(card.dueDate)) return 'Vence hoy'
+  if (inProgress) return 'En progreso'
+  const due = formatDueDate(card.dueDate)
+  if (due) return due
+  if (card.estimateMinutes && card.estimateMinutes > 0) return `${card.estimateMinutes} min`
+  return 'Pendiente'
+}
+
+function compareFocusTasks(a: FocusTask, b: FocusTask): number {
+  if (a.isPrimary !== b.isPrimary) return a.isPrimary ? -1 : 1
+  if (a.isOverdue !== b.isOverdue) return a.isOverdue ? -1 : 1
+  if (a.isDueToday !== b.isDueToday) return a.isDueToday ? -1 : 1
+  const rank: Record<Difficulty, number> = { alta: 0, media: 1, baja: 2 }
+  const difficultyDelta = rank[a.difficulty] - rank[b.difficulty]
+  if (difficultyDelta !== 0) return difficultyDelta
+  return a.title.localeCompare(b.title)
+}
+
 /**
- * Vista única "¿Qué hago hoy?" — combina las tareas prioritarias del día (Work)
- * y las misiones diarias (gamificación) en una sola tarjeta con dos secciones
- * apiladas. Sin tabs: ambas secciones siempre visibles.
- *
- * Renderiza solo las secciones aplicables al usuario (si no hay plugin work
- * activo, oculta tareas; si no hay misiones generadas, oculta misiones).
+ * Vista "que hago hoy": combina tareas Work + Planner y misiones XP.
+ * Se puede colapsar a un resumen denso para reducir altura del Dashboard.
  */
 export function TodayFocus() {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const [collapsed, setCollapsed] = useState(getInitialCollapsed)
 
-  // Misiones (gamificación)
   const dailyMissions = useGamificationStore((s) => s.dailyMissions)
   const missionsCompletedDate = useGamificationStore((s) => s.missionsCompletedDate)
   const sweptMissionIds = useGamificationStore((s) => s.sweptMissionIds)
@@ -82,18 +184,17 @@ export function TodayFocus() {
   const restoreSweptMissions = useGamificationStore((s) => s.restoreSweptMissions)
   const streak = useGamificationStore((s) => s.streak)
 
-  // Tareas (work)
   const activePlugins = useCoreStore((s) => s.activePlugins)
   const isWorkActive = activePlugins.includes('work')
   const { cards, columns } = useWorkStore()
+  const plannerTasks = usePlannerTasksToday(8)
 
-  // Tareas del Planner core (no plugin)
-  const plannerTasks = usePlannerTasksToday(3)
-
-  const taskGroup = useMemo(
-    () => computePriorityTasks(cards, columns),
-    [cards, columns],
+  const focusTasks = useMemo(
+    () => buildFocusTasks({ cards, columns, plannerTasks, includeWork: isWorkActive }),
+    [cards, columns, plannerTasks, isWorkActive],
   )
+  const primaryTasks = focusTasks.filter((task) => task.isPrimary)
+  const secondaryTasks = focusTasks.filter((task) => !task.isPrimary)
 
   const visibleMissions = useMemo(() => {
     const swept = new Set(sweptMissionIds)
@@ -101,10 +202,8 @@ export function TodayFocus() {
   }, [dailyMissions, sweptMissionIds])
 
   const hasMissions = visibleMissions.length > 0
-  const hasTasks = isWorkActive && cards.length > 0
-  const hasPlanner = plannerTasks.length > 0
-
-  if (!hasMissions && !hasTasks && !hasPlanner) return null
+  const hasFocusTasks = focusTasks.length > 0
+  if (!hasMissions && !hasFocusTasks) return null
 
   const pendingMissions = dailyMissions.filter((m) => !m.completed).length
   const allMissionsCompleted = hasMissions && pendingMissions === 0
@@ -115,8 +214,9 @@ export function TodayFocus() {
   const totalXp = baseXp + bonusXp
   const multiplier = getXpMultiplierForStreak(streak)
   const hasMultiplier = multiplier > 1
-
-  const taskBadges = hasTasks && (taskGroup.overdueCount > 0 || taskGroup.dueTodayCount > 0)
+  const overdueCount = focusTasks.filter((task) => task.isOverdue).length
+  const dueTodayCount = focusTasks.filter((task) => task.isDueToday).length
+  const topTask = primaryTasks[0] ?? secondaryTasks[0]
 
   const clearCompletedMissions = () => {
     sweepCompletedMissions()
@@ -127,8 +227,16 @@ export function TodayFocus() {
     })
   }
 
+  const toggleCollapsed = () => {
+    setCollapsed((current) => {
+      const next = !current
+      setPersistedCollapsed(next)
+      return next
+    })
+  }
+
   return (
-    <section className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-lg">
+    <section className={`rounded-2xl border border-border bg-surface-light/90 shadow-lg ${collapsed ? 'p-4' : 'p-5'}`}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-surface">
@@ -136,212 +244,306 @@ export function TodayFocus() {
           </span>
           <div>
             <p className="text-xs uppercase tracking-eyebrow text-muted">Hoy</p>
-            <h3 className="text-lg font-semibold text-white">Tu foco del día</h3>
+            <h3 className="text-lg font-semibold text-white">Tu foco del dia</h3>
           </div>
         </div>
-        {hasMissions && hasMultiplier && (
-          <span className="inline-flex items-center gap-1 rounded-full border border-accent/35 bg-accent/10 px-2.5 py-1 text-caption font-semibold text-accent-light">
-            <Zap size={11} />
-            ×{multiplier.toFixed(2)} XP
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {hasMissions && hasMultiplier && (
+            <span className="hidden items-center gap-1 rounded-full border border-accent/35 bg-accent/10 px-2.5 py-1 text-caption font-semibold text-accent-light sm:inline-flex">
+              <Zap size={11} />
+              x{multiplier.toFixed(2)} XP
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 py-1.5 text-caption font-semibold text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+            title={collapsed ? 'Expandir foco del dia' : 'Colapsar foco del dia'}
+          >
+            {collapsed ? <ChevronDown size={13} /> : <ChevronUp size={13} />}
+            {collapsed ? 'Expandir' : 'Compactar'}
+          </button>
+        </div>
       </div>
 
-      {/* Sección 1: Tareas principales */}
-      {hasTasks && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-caption uppercase tracking-eyebrow text-muted">Tareas</p>
-            <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
-              {taskGroup.overdueCount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-danger/35 bg-danger/10 px-2 py-0.5 text-caption font-semibold text-danger">
-                  <CircleAlert size={11} />
-                  {taskGroup.overdueCount} atrasada{taskGroup.overdueCount > 1 ? 's' : ''}
-                </span>
-              )}
-              {taskGroup.dueTodayCount > 0 && (
-                <span className="inline-flex items-center gap-1 rounded-full border border-warning/35 bg-warning/10 px-2 py-0.5 text-caption font-semibold text-warning">
-                  <CalendarClock size={11} />
-                  {taskGroup.dueTodayCount} vence{taskGroup.dueTodayCount > 1 ? 'n' : ''} hoy
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className={`space-y-2 ${taskBadges ? 'mt-2' : 'mt-3'}`}>
-            {taskGroup.priorityTasks.length === 0 ? (
-              <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-3 py-2.5 text-sm text-success">
-                <ListTodo size={15} />
-                Sin tareas principales hoy. Buen trabajo.
-              </div>
-            ) : (
-              taskGroup.priorityTasks.map((task) => {
-                const dateLabel = formatDueDate(task.dueDate)
-                const overdue = isDueDateOverdue(task.dueDate)
-                const dueToday = isDueDateToday(task.dueDate)
-
-                return (
-                  <button
-                    key={task.id}
-                    onClick={() => navigate('/work')}
-                    className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface/70 px-3 py-2.5 text-left transition-all hover:border-accent/40 hover:bg-surface"
-                  >
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      <span className="rounded-md border border-violet-500/35 bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-300">
-                        Work
-                      </span>
-                      <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">{task.title}</p>
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {dateLabel && (
-                        <span
-                          className={`text-caption font-medium ${
-                            overdue ? 'text-danger' : dueToday ? 'text-warning' : 'text-muted'
-                          }`}
-                        >
-                          {dateLabel}
-                        </span>
-                      )}
-                      <ArrowRight size={13} className="text-muted/60" />
-                    </div>
-                  </button>
-                )
-              })
-            )}
-          </div>
-
-          {taskGroup.totalPending > 3 && taskGroup.priorityTasks.length > 0 && (
-            <button
-              onClick={() => navigate('/work')}
-              className="mt-2 w-full text-center text-caption text-muted transition-colors hover:text-accent-light"
-            >
-              +{taskGroup.totalPending - 3} más pendientes → Ver tablero
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Separador después de Tareas si hay Planner o Misiones */}
-      {hasTasks && (hasPlanner || hasMissions) && <div className="my-4 border-t border-border/60" />}
-
-      {/* Sección Planner: tareas del calendario core (no plugin) */}
-      {hasPlanner && (
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-caption uppercase tracking-eyebrow text-muted">Planner</p>
-            <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/35 bg-amber-500/10 px-2 py-0.5 text-caption font-semibold text-amber-300">
-              <CalendarClock size={11} />
-              {plannerTasks.length}
-            </span>
-          </div>
-          <div className="mt-3 space-y-2">
-            {plannerTasks.map((task) => (
-              <button
-                key={task.id}
-                onClick={() => navigate('/planner')}
-                className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface/70 px-3 py-2.5 text-left transition-all hover:border-amber-500/40 hover:bg-surface"
-              >
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <span className="rounded-md border border-amber-500/35 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-300">
-                    Planner
-                  </span>
-                  <p className="min-w-0 flex-1 truncate text-sm font-medium text-white">{task.title}</p>
+      {collapsed ? (
+        <CollapsedFocus
+          topTask={topTask}
+          primaryCount={primaryTasks.length}
+          secondaryCount={secondaryTasks.length}
+          pendingMissions={pendingMissions}
+          earnedXp={earnedXp}
+          totalXp={totalXp}
+          onOpenTask={(path) => navigate(path)}
+        />
+      ) : (
+        <>
+          {hasFocusTasks && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-caption uppercase tracking-eyebrow text-muted">Misiones de accion</p>
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5">
+                  {overdueCount > 0 && (
+                    <StatusBadge tone="danger" icon={<CircleAlert size={11} />}>
+                      {overdueCount} atrasada{overdueCount > 1 ? 's' : ''}
+                    </StatusBadge>
+                  )}
+                  {dueTodayCount > 0 && (
+                    <StatusBadge tone="warning" icon={<CalendarClock size={11} />}>
+                      {dueTodayCount} hoy
+                    </StatusBadge>
+                  )}
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <span
-                    className={`text-caption font-medium ${
-                      task.isOverdue ? 'text-danger' : 'text-warning'
+              </div>
+
+              <TaskGroup
+                title="Misiones principales"
+                icon={<Flame size={14} />}
+                empty="Sin misiones principales. Deja despejado lo importante."
+                tasks={primaryTasks}
+                onOpen={(task) => navigate(task.path)}
+              />
+              <TaskGroup
+                title="Misiones secundarias"
+                icon={<ListChecks size={14} />}
+                empty="Sin secundarias por ahora."
+                tasks={secondaryTasks}
+                onOpen={(task) => navigate(task.path)}
+              />
+            </div>
+          )}
+
+          {hasFocusTasks && hasMissions && <div className="my-4 border-t border-border/60" />}
+
+          {hasMissions && (
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-caption uppercase tracking-eyebrow text-muted">Misiones XP</p>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <span className="text-caption text-muted">
+                    <span className="font-semibold text-accent-light">{earnedXp}</span> / {totalXp} XP
+                  </span>
+                  {pendingMissions > 0 ? (
+                    <span className="rounded-full border border-warning/35 bg-warning/15 px-2 py-0.5 text-caption font-semibold text-warning">
+                      Pendiente
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-success/35 bg-success/15 px-2 py-0.5 text-caption font-semibold text-success">
+                      OK Completas
+                    </span>
+                  )}
+                  {completedVisibleMissions > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearCompletedMissions}
+                      className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-caption font-semibold text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
+                      title="Ocultar misiones completadas de hoy"
+                    >
+                      <Eraser size={11} />
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 space-y-2">
+                {visibleMissions.map((mission) => (
+                  <div
+                    key={mission.id}
+                    className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-all ${
+                      mission.completed
+                        ? 'border-success/35 bg-success/10'
+                        : 'border-border bg-surface/70'
                     }`}
                   >
-                    {task.isOverdue ? 'Atrasada' : 'Hoy'}
-                  </span>
-                  <ArrowRight size={13} className="text-muted/60" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Separador antes de Misiones si hay Planner */}
-      {hasPlanner && hasMissions && <div className="my-4 border-t border-border/60" />}
-
-      {/* Sección 2: Misiones diarias */}
-      {hasMissions && (
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-caption uppercase tracking-eyebrow text-muted">Misiones</p>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <span className="text-caption text-muted">
-                <span className="font-semibold text-accent-light">{earnedXp}</span> / {totalXp} XP
-              </span>
-              {pendingMissions > 0 ? (
-                <span className="rounded-full border border-warning/35 bg-warning/15 px-2 py-0.5 text-caption font-semibold text-warning">
-                  Pendiente
-                </span>
-              ) : (
-                <span className="rounded-full border border-success/35 bg-success/15 px-2 py-0.5 text-caption font-semibold text-success">
-                  ✓ Completas
-                </span>
-              )}
-              {completedVisibleMissions > 0 && (
-                <button
-                  type="button"
-                  onClick={clearCompletedMissions}
-                  className="inline-flex items-center gap-1 rounded-full border border-border bg-surface px-2 py-0.5 text-caption font-semibold text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
-                  title="Ocultar misiones completadas de hoy"
-                >
-                  <Eraser size={11} />
-                  Limpiar
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-3 space-y-2">
-            {visibleMissions.map((mission) => (
-              <div
-                key={mission.id}
-                className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-all ${
-                  mission.completed
-                    ? 'border-success/35 bg-success/10'
-                    : 'border-border bg-surface/70'
-                }`}
-              >
-                <div className="flex min-w-0 items-center gap-2.5">
-                  {mission.completed ? (
-                    <CheckCircle2 size={16} className="shrink-0 text-success" />
-                  ) : (
-                    <Circle size={14} className="shrink-0 text-muted" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">{mission.title}</p>
-                    <p className="truncate text-xs text-muted">{mission.description}</p>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      {mission.completed ? (
+                        <CheckCircle2 size={16} className="shrink-0 text-success" />
+                      ) : (
+                        <Circle size={14} className="shrink-0 text-muted" />
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-white">{mission.title}</p>
+                        <p className="truncate text-xs text-muted">{mission.description}</p>
+                      </div>
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-semibold ${
+                        mission.completed ? 'bg-success/15 text-success' : 'bg-accent/15 text-accent-light'
+                      }`}
+                    >
+                      +{mission.xp} XP
+                    </span>
                   </div>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-caption font-semibold ${
-                    mission.completed ? 'bg-success/15 text-success' : 'bg-accent/15 text-accent-light'
-                  }`}
-                >
-                  +{mission.xp} XP
-                </span>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {allMissionsCompleted && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-success/30 bg-success/12 px-3 py-2 text-sm text-success animate-fade-in">
-              <Sparkles size={14} />
-              <span>Día completo · +{bonusXp} XP bonus{missionsCompletedDate ? ' aplicado' : ' pendiente'}</span>
+              {allMissionsCompleted && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl border border-success/30 bg-success/12 px-3 py-2 text-sm text-success animate-fade-in">
+                  <Sparkles size={14} />
+                  <span>Dia completo - +{bonusXp} XP bonus{missionsCompletedDate ? ' aplicado' : ' pendiente'}</span>
+                </div>
+              )}
+
+              {!allMissionsCompleted && pendingMissions === 1 && (
+                <p className="mt-2 text-center text-xs text-muted">Queda 1 mision. Casi.</p>
+              )}
             </div>
           )}
-
-          {!allMissionsCompleted && pendingMissions === 1 && (
-            <p className="mt-2 text-center text-xs text-muted">Queda 1 misión — casi.</p>
-          )}
-        </div>
+        </>
       )}
     </section>
   )
+}
+
+function CollapsedFocus({
+  topTask,
+  primaryCount,
+  secondaryCount,
+  pendingMissions,
+  earnedXp,
+  totalXp,
+  onOpenTask,
+}: {
+  topTask: FocusTask | undefined
+  primaryCount: number
+  secondaryCount: number
+  pendingMissions: number
+  earnedXp: number
+  totalXp: number
+  onOpenTask: (path: string) => void
+}) {
+  const xpPct = totalXp > 0 ? Math.min(100, Math.round((earnedXp / totalXp) * 100)) : 0
+
+  return (
+    <div className="mt-3 grid grid-cols-1 gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
+      <button
+        type="button"
+        onClick={() => topTask && onOpenTask(topTask.path)}
+        disabled={!topTask}
+        className="flex min-h-[76px] items-center justify-between gap-3 rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-left transition-colors hover:border-accent/50 disabled:cursor-default disabled:opacity-70"
+      >
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-caption uppercase tracking-wider text-accent-light">
+            <Flame size={12} />
+            Siguiente mejor accion
+          </p>
+          <p className="mt-1 truncate text-sm font-semibold text-white">{topTask?.title ?? 'Nada urgente por ahora'}</p>
+          <p className="mt-0.5 text-caption text-muted">
+            {topTask ? `${sourceLabel(topTask.source)} - ${DIFFICULTY_LABEL[topTask.difficulty]}` : 'Tu foco esta limpio'}
+          </p>
+        </div>
+        {topTask && <ArrowRight size={15} className="shrink-0 text-accent-light" />}
+      </button>
+
+      <div className="grid grid-cols-2 gap-2">
+        <Metric label="Principales" value={primaryCount} tone="text-danger" />
+        <Metric label="Secundarias" value={secondaryCount} tone="text-emerald-300" />
+      </div>
+
+      <div className="rounded-xl border border-border bg-surface px-4 py-3">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="flex items-center gap-1.5 text-caption uppercase tracking-wider text-muted">
+            <Gauge size={12} />
+            Pulso XP
+          </p>
+          <span className="text-caption font-semibold text-accent-light">{earnedXp}/{totalXp || 0}</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-surface-lighter">
+          <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${xpPct}%` }} />
+        </div>
+        <p className="mt-2 text-caption text-muted">{pendingMissions} misiones XP pendientes</p>
+      </div>
+    </div>
+  )
+}
+
+function TaskGroup({
+  title,
+  icon,
+  empty,
+  tasks,
+  onOpen,
+}: {
+  title: string
+  icon: React.ReactNode
+  empty: string
+  tasks: FocusTask[]
+  onOpen: (task: FocusTask) => void
+}) {
+  return (
+    <div className="mt-3">
+      <div className="mb-2 flex items-center gap-2 text-caption uppercase tracking-eyebrow text-muted">
+        {icon}
+        <span>{title}</span>
+        <span className="rounded-full border border-border bg-surface px-1.5 py-0.5 text-micro">{tasks.length}</span>
+      </div>
+      {tasks.length === 0 ? (
+        <div className="rounded-xl border border-border bg-surface/55 px-3 py-2.5 text-sm text-muted">{empty}</div>
+      ) : (
+        <div className="grid grid-cols-1 gap-2 xl:grid-cols-2">
+          {tasks.map((task) => (
+            <button
+              key={task.id}
+              onClick={() => onOpen(task)}
+              className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-surface/70 px-3 py-2.5 text-left transition-all hover:border-accent/40 hover:bg-surface"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-1.5">
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${sourceStyle(task.source)}`}>
+                    {sourceLabel(task.source)}
+                  </span>
+                  <span className={`rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${DIFFICULTY_STYLE[task.difficulty]}`}>
+                    {DIFFICULTY_LABEL[task.difficulty]}
+                  </span>
+                </div>
+                <p className="truncate text-sm font-medium text-white">{task.title}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span
+                  className={`text-caption font-medium ${
+                    task.isOverdue ? 'text-danger' : task.isDueToday ? 'text-warning' : 'text-muted'
+                  }`}
+                >
+                  {task.meta}
+                </span>
+                <ArrowRight size={13} className="text-muted/60" />
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function StatusBadge({ tone, icon, children }: { tone: 'danger' | 'warning'; icon: React.ReactNode; children: React.ReactNode }) {
+  const cls = tone === 'danger'
+    ? 'border-danger/35 bg-danger/10 text-danger'
+    : 'border-warning/35 bg-warning/10 text-warning'
+  return (
+    <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-caption font-semibold ${cls}`}>
+      {icon}
+      {children}
+    </span>
+  )
+}
+
+function Metric({ label, value, tone }: { label: string; value: number; tone: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface px-3 py-3">
+      <p className="text-caption uppercase tracking-wider text-muted">{label}</p>
+      <p className={`mt-1 text-2xl font-semibold tabular-nums ${tone}`}>{value}</p>
+    </div>
+  )
+}
+
+function sourceLabel(source: FocusTaskSource): string {
+  return source === 'work' ? 'Work' : 'Planner'
+}
+
+function sourceStyle(source: FocusTaskSource): string {
+  return source === 'work'
+    ? 'border-violet-500/35 bg-violet-500/10 text-violet-300'
+    : 'border-amber-500/35 bg-amber-500/10 text-amber-300'
 }

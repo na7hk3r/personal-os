@@ -2,6 +2,7 @@ import { storageAPI } from '@core/storage/StorageAPI'
 import { useCoreStore } from '@core/state/coreStore'
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { getAIContextProviders } from './aiContextRegistry'
+import { loadFitnessSettings } from '@plugins/fitness/settings'
 
 /**
  * Snapshot del estado del usuario que se entrega como contexto a Ollama.
@@ -25,7 +26,7 @@ export interface UserContextSnapshot {
     workoutsLast7: number
     avgSleepLast7: number | null
     lastWeight: number | null
-    cigarettesLast7: number
+    cigarettesLast7?: number
     daysSinceLastWorkout: number | null
   }
   work?: {
@@ -91,6 +92,8 @@ async function tableExists(table: string): Promise<boolean> {
 
 async function getFitnessSnapshot(): Promise<UserContextSnapshot['fitness'] | undefined> {
   if (!(await tableExists('fitness_daily_entries'))) return undefined
+  const settings = await loadFitnessSettings().catch(() => undefined)
+  const includeSmoking = Boolean(settings?.smokingCessationEnabled)
   const since = isoDaysAgo(7)
   const rows = await storageAPI.query<FitnessRow>(
     'SELECT date, weight, workout, cigarettes, sleep FROM fitness_daily_entries WHERE date >= ? ORDER BY date DESC',
@@ -102,10 +105,10 @@ async function getFitnessSnapshot(): Promise<UserContextSnapshot['fitness'] | un
   const lastWorkoutRow = await storageAPI.query<{ date: string }>(
     "SELECT date FROM fitness_daily_entries WHERE workout IS NOT NULL AND TRIM(workout) <> '' ORDER BY date DESC LIMIT 1",
   )
-  const sleeps = rows.map((r) => r.sleep).filter((s): s is number => typeof s === 'number')
+  const sleeps = rows.map((r) => r.sleep).filter((s): s is number => typeof s === 'number' && s > 0)
   const avgSleep = sleeps.length ? sleeps.reduce((a, b) => a + b, 0) / sleeps.length : null
   const workouts = rows.filter((r) => (r.workout ?? '').trim().length > 0).length
-  const cigs = rows.reduce((acc, r) => acc + (r.cigarettes ?? 0), 0)
+  const cigs = includeSmoking ? rows.reduce((acc, r) => acc + (r.cigarettes ?? 0), 0) : undefined
   let daysSince: number | null = null
   if (lastWorkoutRow[0]?.date) {
     daysSince = Math.floor((Date.now() - new Date(lastWorkoutRow[0].date).getTime()) / 86_400_000)
@@ -115,7 +118,7 @@ async function getFitnessSnapshot(): Promise<UserContextSnapshot['fitness'] | un
     workoutsLast7: workouts,
     avgSleepLast7: avgSleep != null ? Math.round(avgSleep * 10) / 10 : null,
     lastWeight: lastWeightRow[0]?.weight ?? null,
-    cigarettesLast7: cigs,
+    ...(includeSmoking ? { cigarettesLast7: cigs ?? 0 } : {}),
     daysSinceLastWorkout: daysSince,
   }
 }
@@ -235,7 +238,8 @@ export const aiContextService = {
       const f = snapshot.fitness
       lines.push(
         `Fitness (7d): registros=${f.daysWithDataLast7} entrenos=${f.workoutsLast7} ` +
-        `sueño_prom=${f.avgSleepLast7 ?? 'n/d'} cigarrillos=${f.cigarettesLast7} ` +
+        `sueño_prom=${f.avgSleepLast7 ?? 'n/d'} ` +
+        `${f.cigarettesLast7 == null ? '' : `cigarrillos=${f.cigarettesLast7} `}` +
         `peso_actual=${f.lastWeight ?? 'n/d'}kg objetivo=${snapshot.profile.weightGoal || 'n/d'}kg ` +
         `días_sin_entrenar=${f.daysSinceLastWorkout ?? 'n/d'}`,
       )
