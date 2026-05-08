@@ -12,29 +12,36 @@ import { useFinanceStore } from './store'
 import { FINANCE_EVENTS } from './events'
 import { runRecurringEngine } from './operations'
 import { detectAnomaly } from './insights'
-import { registerAIContextProvider } from '@core/services/aiContextRegistry'
-import { financeAIProvider } from './aiProvider'
 import { eventBus } from '@core/events/EventBus'
-import { FinanceSummaryWidget } from './components/FinanceSummaryWidget'
-import { FinanceDashboard } from './pages/FinanceDashboard'
-import { TransactionsPage } from './pages/TransactionsPage'
-import { CategoriesPage } from './pages/CategoriesPage'
-import { BudgetsPage } from './pages/BudgetsPage'
-import { RecurringPage } from './pages/RecurringPage'
-import { InsightsPage } from './pages/InsightsPage'
+import { DEFAULT_FINANCE_SETTINGS, loadFinanceSettings } from './settings'
+import { buildFinanceUi } from './pluginUi'
+import { applyFinanceRuntimeSettings, clearFinanceRuntime } from './runtime'
 import type { Account, Category, Transaction, Recurring, Budget, RecurringTemplate } from './types'
+
+const defaultFinanceUi = buildFinanceUi(DEFAULT_FINANCE_SETTINGS)
 
 const financePlugin: PluginManifest = {
   id: 'finance',
   name: 'Finanzas',
   version: '1.0.0',
   description: 'Movimientos, cuentas, presupuestos y gastos recurrentes.',
-  icon: 'Wallet',
+  icon: 'Landmark',
   domain: 'finance',
   domainKeywords: ['money', 'budget', 'transactions', 'recurring'],
   iconography: {
-    primary: 'Wallet',
-    gallery: ['Wallet', 'Receipt', 'Tag', 'Repeat', 'PiggyBank', 'Coins', 'TrendingUp', 'TrendingDown', 'BarChart3', 'LineChart'],
+    primary: 'Landmark',
+    gallery: [
+      'Landmark',
+      'WalletCards',
+      'ReceiptText',
+      'BadgeDollarSign',
+      'PiggyBank',
+      'CalendarSync',
+      'ChartNoAxesCombined',
+      'Banknote',
+      'Scale',
+      'HandCoins',
+    ],
   },
 
   migrations: [
@@ -120,33 +127,11 @@ const financePlugin: PluginManifest = {
     },
   ],
 
-  widgets: [
-    {
-      id: 'finance-summary',
-      pluginId: 'finance',
-      title: 'Finanzas',
-      component: FinanceSummaryWidget,
-      defaultSize: { w: 1, h: 1 },
-    },
-  ],
+  widgets: defaultFinanceUi.widgets,
 
-  pages: [
-    { id: 'finance-dashboard', pluginId: 'finance', path: '/finance', title: 'Finanzas', icon: 'Wallet', component: FinanceDashboard },
-    { id: 'finance-tx', pluginId: 'finance', path: '/finance/transactions', title: 'Movimientos', icon: 'Receipt', component: TransactionsPage },
-    { id: 'finance-cat', pluginId: 'finance', path: '/finance/categories', title: 'Categorías', icon: 'Tag', component: CategoriesPage },
-    { id: 'finance-bud', pluginId: 'finance', path: '/finance/budgets', title: 'Presupuestos', icon: 'BarChart3', component: BudgetsPage },
-    { id: 'finance-rec', pluginId: 'finance', path: '/finance/recurring', title: 'Recurrentes', icon: 'Repeat', component: RecurringPage },
-    { id: 'finance-ins', pluginId: 'finance', path: '/finance/insights', title: 'Insights', icon: 'LineChart', component: InsightsPage },
-  ],
+  pages: defaultFinanceUi.pages,
 
-  navItems: [
-    { id: 'finance-nav', pluginId: 'finance', label: 'Finanzas', icon: 'Wallet', path: '/finance', order: 30 },
-    { id: 'finance-tx-nav', pluginId: 'finance', label: 'Movimientos', icon: 'Receipt', path: '/finance/transactions', order: 31, parentId: 'finance-nav' },
-    { id: 'finance-bud-nav', pluginId: 'finance', label: 'Presupuestos', icon: 'BarChart3', path: '/finance/budgets', order: 32, parentId: 'finance-nav' },
-    { id: 'finance-rec-nav', pluginId: 'finance', label: 'Recurrentes', icon: 'Repeat', path: '/finance/recurring', order: 33, parentId: 'finance-nav' },
-    { id: 'finance-cat-nav', pluginId: 'finance', label: 'Categorías', icon: 'Tag', path: '/finance/categories', order: 34, parentId: 'finance-nav' },
-    { id: 'finance-ins-nav', pluginId: 'finance', label: 'Insights', icon: 'LineChart', path: '/finance/insights', order: 35, parentId: 'finance-nav' },
-  ],
+  navItems: defaultFinanceUi.navItems,
 
   events: {
     emits: Object.values(FINANCE_EVENTS),
@@ -154,6 +139,12 @@ const financePlugin: PluginManifest = {
   },
 
   async init(api: CoreAPI) {
+    const settings = await loadFinanceSettings()
+    const ui = buildFinanceUi(settings)
+    financePlugin.widgets = ui.widgets
+    financePlugin.pages = ui.pages
+    financePlugin.navItems = ui.navItems
+
     const accountsRaw = await api.storage.query('SELECT * FROM finance_accounts ORDER BY created_at ASC')
     const categoriesRaw = await api.storage.query('SELECT * FROM finance_categories ORDER BY name ASC')
     const transactionsRaw = await api.storage.query('SELECT * FROM finance_transactions ORDER BY occurred_at DESC, created_at DESC')
@@ -226,12 +217,12 @@ const financePlugin: PluginManifest = {
     store.setTransactions(transactions)
     store.setRecurring(recurring)
     store.setBudgets(budgets)
-
-    // AI context provider (decoupled)
-    registerAIContextProvider(financeAIProvider)
+    applyFinanceRuntimeSettings(settings)
 
     // Materializar recurrentes atrasadas (best-effort, no bloquear init)
-    void runRecurringEngine().catch((err) => console.warn('[finance] recurring engine error:', err))
+    if (settings.recurringEnabled) {
+      void runRecurringEngine().catch((err) => console.warn('[finance] recurring engine error:', err))
+    }
 
     // Anomaly detection sobre cada transacción nueva.
     api.events.on(FINANCE_EVENTS.TRANSACTION_CREATED, (payload) => {
@@ -257,6 +248,10 @@ const financePlugin: PluginManifest = {
     api.events.on(FINANCE_EVENTS.BUDGET_CREATED, () => {
       api.gamification.addPoints(5, 'Presupuesto definido')
     })
+  },
+
+  deactivate() {
+    clearFinanceRuntime()
   },
 }
 

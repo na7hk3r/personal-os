@@ -13,7 +13,7 @@ import { ollamaService } from '@core/services/ollamaService'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { useFinanceStore } from './store'
 import { categoryP90, monthlySpendMedian, formatCents, startOfMonth, endOfMonth, previousMonth, formatLocalDate } from './utils'
-import type { Transaction, Category } from './types'
+import type { Category } from './types'
 
 export interface AnomalyResult {
   txId: string
@@ -28,7 +28,8 @@ export interface AnomalyResult {
  * menos 1.5x. Devuelve null si no aplica (sin categoría, sin muestras, etc.).
  */
 export function detectAnomaly(txId: string): AnomalyResult | null {
-  const { transactions, categories } = useFinanceStore.getState()
+  const { transactions, categories, settings } = useFinanceStore.getState()
+  if (!settings.anomalyAlertsEnabled) return null
   const tx = transactions.find((t) => t.id === txId)
   if (!tx || tx.kind !== 'expense' || !tx.categoryId) return null
   const p90 = categoryP90(transactions, tx.categoryId)
@@ -128,7 +129,8 @@ export async function generateMonthlySummary(opts?: { withAI?: boolean; previous
     narrative: null,
   }
 
-  if (opts?.withAI) {
+  const aiAllowed = Boolean(opts?.withAI && useFinanceStore.getState().settings.aiContextEnabled)
+  if (aiAllowed) {
     summary.narrative = await tryAINarrative(summary).catch(() => fallbackNarrative(summary))
   } else {
     summary.narrative = fallbackNarrative(summary)

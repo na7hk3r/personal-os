@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Sparkles, Save, Trash2 } from 'lucide-react'
+import { PiggyBank, Save, Trash2 } from 'lucide-react'
 import { useFinanceStore } from '../store'
 import { upsertBudget, deleteBudget } from '../operations'
 import { suggestBudgets } from '../insights'
@@ -87,7 +87,7 @@ export function BudgetsPage() {
         </div>
         <button type="button" onClick={() => void applySuggestions()}
           className="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-xs text-accent-light hover:bg-accent/25">
-          <Sparkles size={12} /> Sugerir desde mediana 3 meses
+          <PiggyBank size={12} /> Sugerir desde mediana 3 meses
         </button>
       </header>
 

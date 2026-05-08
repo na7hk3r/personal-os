@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Plus, Repeat, Play, Pause } from 'lucide-react'
+import { CalendarSync, Plus, Play, Pause } from 'lucide-react'
 import { useFinanceStore } from '../store'
 import { createRecurring, setRecurringActive, runRecurringEngine } from '../operations'
 import { parseAmountToCents, formatCents, todayISO } from '../utils'
@@ -93,7 +93,7 @@ export function RecurringPage() {
         <div className="flex gap-2">
           <button type="button" onClick={() => void onRun()}
             className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs text-muted hover:text-white">
-            <Repeat size={12} /> Ejecutar ahora
+            <CalendarSync size={12} /> Ejecutar ahora
           </button>
           <button type="button" onClick={() => setOpen((v) => !v)}
             className="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-xs text-accent-light hover:bg-accent/25">

@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Plus, Trash2, Wallet } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Plus, Trash2, WalletCards } from 'lucide-react'
 import { useFinanceStore } from '../store'
 import { createAccount, archiveAccount } from '../operations'
 import { parseAmountToCents, formatCents, computeAccountBalance } from '../utils'
@@ -21,14 +21,19 @@ const TYPE_LABELS: Record<AccountType, string> = {
 export function AccountsManager() {
   const accounts = useFinanceStore((s) => s.accounts)
   const transactions = useFinanceStore((s) => s.transactions)
+  const defaultCurrency = useFinanceStore((s) => s.settings.defaultCurrency)
   const { toast } = useToast()
 
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('cash')
-  const [currency, setCurrency] = useState('UYU')
+  const [currency, setCurrency] = useState(defaultCurrency)
   const [initial, setInitial] = useState('')
   const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!open) setCurrency(defaultCurrency)
+  }, [defaultCurrency, open])
 
   const onCreate = async () => {
     if (!name.trim()) return
@@ -66,7 +71,7 @@ export function AccountsManager() {
     <section className="rounded-2xl border border-border bg-surface-light/90 p-4 shadow-xl">
       <header className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Wallet size={14} className="text-accent-light" />
+          <WalletCards size={14} className="text-accent-light" />
           <h2 className="text-sm font-semibold text-white">Cuentas</h2>
         </div>
         <button type="button" onClick={() => setOpen((v) => !v)}

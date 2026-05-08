@@ -42,7 +42,7 @@ export async function createAccount(input: CreateAccountInput): Promise<Account>
     id: genId('acc'),
     name: input.name.trim(),
     type: input.type,
-    currency: (input.currency ?? 'UYU').toUpperCase(),
+    currency: (input.currency ?? useFinanceStore.getState().settings.defaultCurrency).toUpperCase(),
     initialBalance: input.initialBalance ?? 0,
     archived: false,
     createdAt: new Date().toISOString(),
@@ -207,6 +207,7 @@ export async function createTransfer(input: {
   occurredAt?: string
   note?: string | null
 }): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+  if (!useFinanceStore.getState().settings.transfersEnabled) throw new Error('Transferencias deshabilitadas.')
   if (input.fromAccountId === input.toAccountId) throw new Error('Cuentas distintas requeridas.')
   if (input.amount <= 0) throw new Error('Monto inválido.')
   const from = useFinanceStore.getState().accounts.find((a) => a.id === input.fromAccountId)
@@ -305,6 +306,7 @@ export async function setRecurringActive(id: string, active: boolean): Promise<v
  * en background: respeta filosofía local-first sin scheduler.
  */
 export async function runRecurringEngine(): Promise<number> {
+  if (!useFinanceStore.getState().settings.recurringEnabled) return 0
   const today = todayISO()
   const recs = useFinanceStore.getState().recurring.filter((r) => r.active)
   let created = 0

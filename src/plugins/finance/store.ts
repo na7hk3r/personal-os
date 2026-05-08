@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { Account, Category, Transaction, Recurring, Budget } from './types'
+import { DEFAULT_FINANCE_SETTINGS, type FinancePluginSettings } from './settings'
 
 interface FinanceState {
   accounts: Account[]
@@ -7,12 +8,14 @@ interface FinanceState {
   transactions: Transaction[]
   recurring: Recurring[]
   budgets: Budget[]
+  settings: FinancePluginSettings
 
   setAccounts: (accounts: Account[]) => void
   setCategories: (categories: Category[]) => void
   setTransactions: (transactions: Transaction[]) => void
   setRecurring: (recurring: Recurring[]) => void
   setBudgets: (budgets: Budget[]) => void
+  setSettings: (settings: FinancePluginSettings) => void
 
   upsertAccount: (account: Account) => void
   removeAccount: (id: string) => void
@@ -45,12 +48,14 @@ export const useFinanceStore = create<FinanceState>((set) => ({
   transactions: [],
   recurring: [],
   budgets: [],
+  settings: DEFAULT_FINANCE_SETTINGS,
 
   setAccounts: (accounts) => set({ accounts }),
   setCategories: (categories) => set({ categories }),
   setTransactions: (transactions) => set({ transactions }),
   setRecurring: (recurring) => set({ recurring }),
   setBudgets: (budgets) => set({ budgets }),
+  setSettings: (settings) => set({ settings }),
 
   upsertAccount: (account) => set((s) => ({ accounts: upsertById(s.accounts, account) })),
   removeAccount: (id) => set((s) => ({ accounts: s.accounts.filter((a) => a.id !== id) })),

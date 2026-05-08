@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save } from 'lucide-react'
 import { useCoreStore } from '../state/coreStore'
@@ -25,6 +25,15 @@ import {
   normalizeFitnessSettings,
   type FitnessPluginSettings,
 } from '@plugins/fitness/settings'
+import {
+  DEFAULT_FINANCE_SETTINGS,
+  FINANCE_SETTINGS_KEY,
+  normalizeFinanceSettings,
+  saveFinanceSettings,
+  type FinancePluginSettings,
+} from '@plugins/finance/settings'
+import { buildFinanceUi } from '@plugins/finance/pluginUi'
+import { applyFinanceRuntimeSettings } from '@plugins/finance/runtime'
 import {
   ShieldAlert,
   User,
@@ -67,6 +76,7 @@ export function ControlCenter() {
   const updateSettings = useCoreStore((s) => s.updateSettings)
   const persistSettings = useCoreStore((s) => s.persistSettings)
   const setPluginEnabled = useCoreStore((s) => s.setPluginEnabled)
+  const bumpPluginUiVersion = useCoreStore((s) => s.bumpPluginUiVersion)
 
   const [busyPluginId, setBusyPluginId] = useState<string | null>(null)
   const [pluginMessage, setPluginMessage] = useState('')
@@ -76,6 +86,7 @@ export function ControlCenter() {
   const [settingsMessage, setSettingsMessage] = useState('')
   const [fitnessSettings, setFitnessSettings] = useState<FitnessPluginSettings>(DEFAULT_FITNESS_SETTINGS)
   const [workSettings, setWorkSettings] = useState<WorkPluginSettings>(DEFAULT_WORK_SETTINGS)
+  const [financeSettings, setFinanceSettings] = useState<FinancePluginSettings>(DEFAULT_FINANCE_SETTINGS)
   const [savingPluginSettings, setSavingPluginSettings] = useState(false)
   const [pluginSettingsMessage, setPluginSettingsMessage] = useState('')
 
@@ -146,6 +157,13 @@ export function ControlCenter() {
           [WORK_SETTINGS_KEY, JSON.stringify(workSettings)],
         )
       }
+      if (activePluginIds.includes('finance')) {
+        const normalized = await saveFinanceSettings(financeSettings)
+        setFinanceSettings(normalized)
+        applyFinanceRuntimeSettings(normalized)
+        pluginManager.replacePluginUi('finance', buildFinanceUi(normalized))
+        bumpPluginUiVersion()
+      }
       setPluginSettingsMessage('Configuración de plugins guardada correctamente.')
     } catch {
       setPluginSettingsMessage('No se pudo guardar la configuración de plugins.')
@@ -158,8 +176,8 @@ export function ControlCenter() {
     if (!window.storage) return
     void window.storage
       .query(
-        `SELECT key, value FROM settings WHERE key IN (?, ?)` ,
-        [FITNESS_SETTINGS_KEY, WORK_SETTINGS_KEY],
+        `SELECT key, value FROM settings WHERE key IN (?, ?, ?)` ,
+        [FITNESS_SETTINGS_KEY, WORK_SETTINGS_KEY, FINANCE_SETTINGS_KEY],
       )
       .then(async (rows) => {
         const list = rows as { key: string; value: string }[]
@@ -190,14 +208,20 @@ export function ControlCenter() {
             // ignore malformed value
           }
         }
+
+        if (map[FINANCE_SETTINGS_KEY]) {
+          try {
+            const parsed = JSON.parse(map[FINANCE_SETTINGS_KEY]) as Partial<FinancePluginSettings>
+            setFinanceSettings((prev) => normalizeFinanceSettings({ ...prev, ...parsed }))
+          } catch {
+            // ignore malformed value
+          }
+        }
       })
       .catch(() => {})
   }, [])
 
-  const activePlugins = useMemo(
-    () => plugins.filter((plugin) => plugin.status === 'active').length,
-    [plugins, activePluginIds],
-  )
+  const activePlugins = plugins.filter((plugin) => plugin.status === 'active').length
 
   const metrics = {
     widgets: pluginManager.getActiveWidgets().length,
@@ -206,7 +230,8 @@ export function ControlCenter() {
   }
   const isFitnessActive = activePluginIds.includes('fitness')
   const isWorkActive = activePluginIds.includes('work')
-  const hasActivePluginSettings = isFitnessActive || isWorkActive
+  const isFinanceActive = activePluginIds.includes('finance')
+  const hasActivePluginSettings = isFitnessActive || isWorkActive || isFinanceActive
 
   return (
     <div className="space-y-6">
@@ -435,7 +460,7 @@ export function ControlCenter() {
           description="Ajustes operativos para módulos activos."
           icon={<Wrench size={18} aria-hidden />}
           defaultOpen={false}
-          summary={[isFitnessActive && 'Fitness', isWorkActive && 'Work'].filter(Boolean).join(' · ')}
+          summary={[isFitnessActive && 'Fitness', isWorkActive && 'Work', isFinanceActive && 'Finanzas'].filter(Boolean).join(' · ')}
         >
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {isFitnessActive && (
@@ -645,6 +670,59 @@ export function ControlCenter() {
             </label>
               </article>
             )}
+
+            {isFinanceActive && (
+              <article className="rounded-xl border border-border bg-surface p-4">
+                <h3 className="text-sm font-semibold text-white">Finanzas</h3>
+                <p className="mt-1 text-xs text-muted">Activa solo las herramientas que uses en tu flujo diario.</p>
+
+                <label className="mt-3 block space-y-1">
+                  <span className="text-xs text-muted">Moneda predeterminada</span>
+                  <input
+                    value={financeSettings.defaultCurrency}
+                    maxLength={3}
+                    onChange={(e) => setFinanceSettings((prev) => ({
+                      ...prev,
+                      defaultCurrency: e.target.value.toUpperCase(),
+                    }))}
+                    className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+                  />
+                </label>
+
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <FinanceToggle
+                    label="Presupuestos"
+                    checked={financeSettings.budgetsEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, budgetsEnabled: checked }))}
+                  />
+                  <FinanceToggle
+                    label="Recurrentes"
+                    checked={financeSettings.recurringEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, recurringEnabled: checked }))}
+                  />
+                  <FinanceToggle
+                    label="Insights"
+                    checked={financeSettings.insightsEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, insightsEnabled: checked }))}
+                  />
+                  <FinanceToggle
+                    label="Transferencias"
+                    checked={financeSettings.transfersEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, transfersEnabled: checked }))}
+                  />
+                  <FinanceToggle
+                    label="Alertas de gastos inusuales"
+                    checked={financeSettings.anomalyAlertsEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, anomalyAlertsEnabled: checked }))}
+                  />
+                  <FinanceToggle
+                    label="Contexto IA"
+                    checked={financeSettings.aiContextEnabled}
+                    onChange={(checked) => setFinanceSettings((prev) => ({ ...prev, aiContextEnabled: checked }))}
+                  />
+                </div>
+              </article>
+            )}
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -798,5 +876,27 @@ function AuditHeaderBadge() {
       <ShieldAlert size={12} />
       {errorCount > 0 ? `${errorCount} error${errorCount === 1 ? '' : 'es'}` : `${warnCount} aviso${warnCount === 1 ? '' : 's'}`}
     </span>
+  )
+}
+
+function FinanceToggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}) {
+  return (
+    <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-light px-3 py-2">
+      <span className="text-xs text-muted">{label}</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 shrink-0"
+      />
+    </label>
   )
 }

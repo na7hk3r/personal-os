@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Wallet, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { Landmark, ArrowUpRight, ArrowDownRight } from 'lucide-react'
 import { useFinanceStore } from '../store'
 import { formatCents, startOfMonth, formatLocalDate, computeAccountBalance } from '../utils'
 import { messages } from '@core/ui/messages'
@@ -50,7 +50,7 @@ export function FinanceSummaryWidget() {
       className="flex w-full flex-col gap-3 rounded-2xl border border-border bg-surface-light/90 p-5 text-left shadow-xl transition-colors hover:border-accent/50"
     >
       <div className="flex items-center gap-2">
-        <Wallet size={16} className="text-accent-light" />
+        <Landmark size={16} className="text-accent-light" />
         <span className="text-caption uppercase tracking-eyebrow text-muted">Balance del mes</span>
       </div>
       <div>

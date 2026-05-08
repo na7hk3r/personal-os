@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Sparkles, Loader2 } from 'lucide-react'
+import { ChartNoAxesCombined, Loader2 } from 'lucide-react'
 import { generateMonthlySummary } from '../insights'
 import { formatCents } from '../utils'
 import { messages } from '@core/ui/messages'
 import { useToast } from '@core/ui/components/ToastProvider'
+import { useFinanceStore } from '../store'
 
 interface Summary {
   monthLabel: string
@@ -25,6 +26,7 @@ interface Summary {
  */
 export function InsightsPage() {
   const { toast } = useToast()
+  const aiContextEnabled = useFinanceStore((s) => s.settings.aiContextEnabled)
   const [summary, setSummary] = useState<Summary | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -52,10 +54,12 @@ export function InsightsPage() {
             className="inline-flex items-center gap-1 rounded-lg border border-border px-3 py-2 text-xs text-muted hover:text-white disabled:opacity-40">
             {busy ? <Loader2 size={12} className="animate-spin" /> : null} Resumen
           </button>
-          <button type="button" onClick={() => void load(true)} disabled={busy}
-            className="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-xs text-accent-light hover:bg-accent/25 disabled:opacity-40">
-            {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} Con IA
-          </button>
+          {aiContextEnabled && (
+            <button type="button" onClick={() => void load(true)} disabled={busy}
+              className="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-xs text-accent-light hover:bg-accent/25 disabled:opacity-40">
+              {busy ? <Loader2 size={12} className="animate-spin" /> : <ChartNoAxesCombined size={12} />} Con IA
+            </button>
+          )}
         </div>
       </header>
 
@@ -107,7 +111,7 @@ export function InsightsPage() {
           {summary.narrative && (
             <div className="rounded-2xl border border-border bg-surface-light/90 p-5 shadow-xl">
               <h2 className="mb-2 flex items-center gap-1 text-xs uppercase tracking-wider text-muted">
-                <Sparkles size={12} /> Narrativa
+                <ChartNoAxesCombined size={12} /> Narrativa
               </h2>
               <p className="text-sm leading-relaxed text-white/90">{summary.narrative}</p>
             </div>

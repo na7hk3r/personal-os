@@ -13,6 +13,16 @@ import {
   Tag,
   Bell,
   Wrench,
+  Landmark,
+  ReceiptText,
+  BadgeDollarSign,
+  PiggyBank,
+  CalendarSync,
+  ChartNoAxesCombined,
+  WalletCards,
+  Banknote,
+  Scale,
+  HandCoins,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -31,6 +41,16 @@ const iconMap: Record<string, LucideIcon> = {
   Tag,
   Bell,
   Wrench,
+  Landmark,
+  ReceiptText,
+  BadgeDollarSign,
+  PiggyBank,
+  CalendarSync,
+  ChartNoAxesCombined,
+  WalletCards,
+  Banknote,
+  Scale,
+  HandCoins,
 }
 
 interface Props {

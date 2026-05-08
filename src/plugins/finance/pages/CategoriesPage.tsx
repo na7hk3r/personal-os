@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Plus, Trash2, Tag } from 'lucide-react'
+import { BadgeDollarSign, Plus, Trash2 } from 'lucide-react'
 import { useFinanceStore } from '../store'
 import { createCategory, deleteCategory } from '../operations'
 import { useToast } from '@core/ui/components/ToastProvider'
@@ -77,7 +77,7 @@ export function CategoriesPage() {
             return (
               <div key={c.id} className="flex items-center justify-between rounded-xl border border-border bg-surface px-3 py-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <Tag size={14} className={c.kind === 'income' ? 'text-emerald-300' : 'text-rose-300'} />
+                  <BadgeDollarSign size={14} className={c.kind === 'income' ? 'text-emerald-300' : 'text-rose-300'} />
                   <span className="text-white">{c.name}</span>
                   <span className="text-xs text-muted">· {c.kind === 'income' ? 'Ingreso' : 'Gasto'} · {uses} usos</span>
                 </div>

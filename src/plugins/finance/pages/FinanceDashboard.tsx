@@ -1,6 +1,15 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowDownRight, ArrowUpRight, Receipt, Repeat, Tag, BarChart3, Sparkles } from 'lucide-react'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  BadgeDollarSign,
+  Banknote,
+  CalendarSync,
+  ChartNoAxesCombined,
+  PiggyBank,
+  ReceiptText,
+} from 'lucide-react'
 import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useFinanceStore } from '../store'
 import { QuickAddTransaction } from '../components/QuickAddTransaction'
@@ -14,6 +23,7 @@ export function FinanceDashboard() {
   const transactions = useFinanceStore((s) => s.transactions)
   const budgets = useFinanceStore((s) => s.budgets)
   const categories = useFinanceStore((s) => s.categories)
+  const settings = useFinanceStore((s) => s.settings)
   const accounts = useMemo(() => allAccounts.filter((a) => !a.archived), [allAccounts])
 
   const stats = useMemo(() => {
@@ -75,18 +85,18 @@ export function FinanceDashboard() {
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          <NavChip icon={<Receipt size={12} />} label="Movimientos" onClick={() => navigate('/finance/transactions')} />
-          <NavChip icon={<Tag size={12} />} label="Categorías" onClick={() => navigate('/finance/categories')} />
-          <NavChip icon={<Repeat size={12} />} label="Recurrentes" onClick={() => navigate('/finance/recurring')} />
-          <NavChip icon={<BarChart3 size={12} />} label="Presupuestos" onClick={() => navigate('/finance/budgets')} />
-          <NavChip icon={<Sparkles size={12} />} label="Insights" onClick={() => navigate('/finance/insights')} />
+          <NavChip icon={<ReceiptText size={12} />} label="Movimientos" onClick={() => navigate('/finance/transactions')} />
+          <NavChip icon={<BadgeDollarSign size={12} />} label="Categorías" onClick={() => navigate('/finance/categories')} />
+          {settings.recurringEnabled && <NavChip icon={<CalendarSync size={12} />} label="Recurrentes" onClick={() => navigate('/finance/recurring')} />}
+          {settings.budgetsEnabled && <NavChip icon={<PiggyBank size={12} />} label="Presupuestos" onClick={() => navigate('/finance/budgets')} />}
+          {settings.insightsEnabled && <NavChip icon={<ChartNoAxesCombined size={12} />} label="Insights" onClick={() => navigate('/finance/insights')} />}
         </div>
       </header>
 
       <section className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3">
         <Kpi label="Ingresos del mes" value={formatCents(stats.income, stats.currency, { compact: true })} accent="text-emerald-300" icon={<ArrowDownRight size={14} />} />
         <Kpi label="Gastos del mes" value={formatCents(stats.expense, stats.currency, { compact: true })} accent="text-rose-300" icon={<ArrowUpRight size={14} />} hint={stats.deltaPct != null ? `${stats.deltaPct > 0 ? '+' : ''}${stats.deltaPct}% vs mes anterior` : undefined} />
-        <Kpi label="Saldo neto del mes" value={formatCents(stats.income - stats.expense, stats.currency, { compact: true })} accent={stats.income - stats.expense >= 0 ? 'text-emerald-300' : 'text-rose-300'} icon={<BarChart3 size={14} />} />
+        <Kpi label="Saldo neto del mes" value={formatCents(stats.income - stats.expense, stats.currency, { compact: true })} accent={stats.income - stats.expense >= 0 ? 'text-emerald-300' : 'text-rose-300'} icon={<Banknote size={14} />} />
       </section>
 
       <QuickAddTransaction />
