@@ -1,43 +1,75 @@
 import { useState } from 'react'
-import { Download, Upload, ShieldCheck } from 'lucide-react'
+import { Download, KeyRound, ShieldCheck, Upload, X } from 'lucide-react'
+import { messages } from '../messages'
 
-function passphrasePrompt(action: string): string | null {
-  const value = window.prompt(`Ingresá tu passphrase para ${action} (mínimo 8 caracteres). Esta clave NO se guarda; sin ella el backup no se puede restaurar.`)
-  if (value == null) return null
-  if (value.length < 8) {
-    window.alert('La passphrase debe tener al menos 8 caracteres')
-    return null
-  }
-  return value
+type BackupAction = 'export-plain' | 'export-encrypted' | 'import-plain' | 'import-encrypted'
+type PassphraseAction = Extract<BackupAction, 'export-encrypted' | 'import-encrypted'>
+
+const MIN_PASSPHRASE_LENGTH = 8
+
+const passphraseDialogCopy: Record<
+  PassphraseAction,
+  { title: string; description: string; submitLabel: string; autoComplete: string }
+> = {
+  'export-encrypted': {
+    title: 'Exportar backup cifrado',
+    description:
+      'Elegí una passphrase de al menos 8 caracteres. Sin esta clave, el backup no se puede restaurar.',
+    submitLabel: 'Exportar backup cifrado',
+    autoComplete: 'new-password',
+  },
+  'import-encrypted': {
+    title: 'Restaurar backup cifrado',
+    description:
+      'Ingresá la passphrase usada al exportar. Restaurar reemplaza tu base actual y no se puede deshacer.',
+    submitLabel: 'Restaurar backup cifrado',
+    autoComplete: 'current-password',
+  },
 }
 
 export function BackupSection() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string>('')
+  const [passphraseAction, setPassphraseAction] = useState<PassphraseAction | null>(null)
+  const [passphrase, setPassphrase] = useState('')
+  const [passphraseError, setPassphraseError] = useState('')
+  const [confirmPlainRestore, setConfirmPlainRestore] = useState(false)
 
-  const run = async (kind: 'export-plain' | 'export-encrypted' | 'import-plain' | 'import-encrypted') => {
+  const closePassphraseDialog = () => {
+    if (busy) return
+    setPassphraseAction(null)
+    setPassphrase('')
+    setPassphraseError('')
+  }
+
+  const openPassphraseDialog = (kind: PassphraseAction) => {
+    if (busy) return
+    setMessage('')
+    setPassphrase('')
+    setPassphraseError('')
+    setPassphraseAction(kind)
+  }
+
+  const run = async (kind: BackupAction, pass?: string) => {
     if (busy) return
     setBusy(true)
     setMessage('')
+
     try {
-      let result: { ok: boolean; path?: string; error?: string }
+      let result: { ok: boolean; path?: string; error?: string; canceled?: boolean }
       if (kind === 'export-plain') result = await window.backup.exportPlain()
-      else if (kind === 'export-encrypted') {
-        const pass = passphrasePrompt('cifrar el backup')
-        if (!pass) { setBusy(false); return }
-        result = await window.backup.exportEncrypted(pass)
-      } else if (kind === 'import-plain') {
-        if (!window.confirm('Restaurar reemplaza tu base de datos actual. ¿Continuar?')) { setBusy(false); return }
-        result = await window.backup.importPlain()
-      } else {
-        const pass = passphrasePrompt('descifrar el backup')
-        if (!pass) { setBusy(false); return }
-        if (!window.confirm('Restaurar reemplaza tu base de datos actual. ¿Continuar?')) { setBusy(false); return }
-        result = await window.backup.importEncrypted(pass)
-      }
+      else if (kind === 'export-encrypted') result = await window.backup.exportEncrypted(pass ?? '')
+      else if (kind === 'import-plain') result = await window.backup.importPlain()
+      else result = await window.backup.importEncrypted(pass ?? '')
+
       if (result?.ok) {
-        setMessage(result.path ? `OK · ${result.path}` : 'OK')
-        if (kind.startsWith('import')) window.alert('Restauración completa. Reiniciá la app para aplicar los cambios.')
+        setMessage(
+          kind.startsWith('import')
+            ? messages.success.backupRestored
+            : result.path
+              ? messages.success.backupSaved(result.path)
+              : 'OK',
+        )
       } else {
         setMessage(result?.error ?? 'Operación cancelada')
       }
@@ -45,8 +77,24 @@ export function BackupSection() {
       setMessage((err as Error).message)
     } finally {
       setBusy(false)
+      setPassphraseAction(null)
+      setPassphrase('')
+      setPassphraseError('')
+      setConfirmPlainRestore(false)
     }
   }
+
+  const submitPassphrase = () => {
+    if (!passphraseAction || busy) return
+    if (passphrase.length < MIN_PASSPHRASE_LENGTH) {
+      setPassphraseError(messages.errors.backupPassphraseShort)
+      return
+    }
+
+    void run(passphraseAction, passphrase)
+  }
+
+  const dialogCopy = passphraseAction ? passphraseDialogCopy[passphraseAction] : null
 
   return (
     <article className="rounded-2xl border border-border bg-surface-light/85 p-6">
@@ -60,20 +108,23 @@ export function BackupSection() {
 
       <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <button
-          onClick={() => void run('export-encrypted')}
+          type="button"
+          onClick={() => openPassphraseDialog('export-encrypted')}
           disabled={busy}
           className="flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-60"
         >
           <Download size={13} /> Exportar cifrado (recomendado)
         </button>
         <button
-          onClick={() => void run('import-encrypted')}
+          type="button"
+          onClick={() => openPassphraseDialog('import-encrypted')}
           disabled={busy}
           className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-xs text-muted hover:text-white disabled:opacity-60"
         >
           <Upload size={13} /> Restaurar cifrado
         </button>
         <button
+          type="button"
           onClick={() => void run('export-plain')}
           disabled={busy}
           className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-xs text-muted hover:text-white disabled:opacity-60"
@@ -81,7 +132,12 @@ export function BackupSection() {
           <Download size={13} /> Exportar sin cifrar (.db)
         </button>
         <button
-          onClick={() => void run('import-plain')}
+          type="button"
+          onClick={() => {
+            if (busy) return
+            setMessage('')
+            setConfirmPlainRestore(true)
+          }}
           disabled={busy}
           className="flex items-center justify-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-xs text-muted hover:text-white disabled:opacity-60"
         >
@@ -89,7 +145,124 @@ export function BackupSection() {
         </button>
       </div>
 
-      {message && <p className="mt-3 text-xs text-muted">{message}</p>}
+      {message && <p className="mt-3 text-xs text-muted" aria-live="polite">{message}</p>}
+
+      {dialogCopy && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="backup-passphrase-title"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+          onClick={closePassphraseDialog}
+        >
+          <form
+            className="w-full max-w-md rounded-2xl border border-border bg-surface-light p-5 text-left text-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault()
+              submitPassphrase()
+            }}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <p className="text-caption uppercase tracking-eyebrow text-muted">Backup</p>
+                <h3 id="backup-passphrase-title" className="mt-1 text-lg font-semibold">
+                  {dialogCopy.title}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={closePassphraseDialog}
+                disabled={busy}
+                className="shrink-0 rounded-md p-1.5 text-muted hover:bg-surface hover:text-white disabled:opacity-50"
+                aria-label="Cerrar backup cifrado"
+                title="Cerrar"
+              >
+                <X size={16} aria-hidden />
+              </button>
+            </div>
+
+            <p className="mt-3 text-sm leading-relaxed text-muted">{dialogCopy.description}</p>
+
+            <label className="mt-4 block text-xs text-muted">
+              Passphrase
+              <span className="mt-1 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 focus-within:border-accent">
+                <KeyRound size={14} aria-hidden className="shrink-0 text-muted" />
+                <input
+                  type="password"
+                  value={passphrase}
+                  onChange={(event) => {
+                    setPassphrase(event.target.value)
+                    setPassphraseError('')
+                  }}
+                  autoComplete={dialogCopy.autoComplete}
+                  className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+                  placeholder="Mínimo 8 caracteres"
+                  autoFocus
+                />
+              </span>
+            </label>
+
+            {passphraseError && (
+              <p className="mt-2 text-xs text-rose-300" aria-live="polite">{passphraseError}</p>
+            )}
+
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={closePassphraseDialog}
+                disabled={busy}
+                className="rounded-lg border border-border bg-surface px-4 py-2 text-xs text-muted hover:text-white disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={busy || passphrase.length < MIN_PASSPHRASE_LENGTH}
+                className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-50"
+              >
+                {dialogCopy.submitLabel}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {confirmPlainRestore && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="backup-restore-title"
+          className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
+          onClick={() => !busy && setConfirmPlainRestore(false)}
+        >
+          <section
+            className="w-full max-w-md rounded-2xl border border-border bg-surface-light p-5 text-left text-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="backup-restore-title" className="text-lg font-semibold">Restaurar backup sin cifrar</h3>
+            <p className="mt-3 text-sm leading-relaxed text-muted">{messages.confirm.restoreBackup}</p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmPlainRestore(false)}
+                disabled={busy}
+                className="rounded-lg border border-border bg-surface px-4 py-2 text-xs text-muted hover:text-white disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void run('import-plain')}
+                disabled={busy}
+                className="rounded-lg bg-accent px-4 py-2 text-xs font-medium text-white hover:bg-accent/85 disabled:opacity-50"
+              >
+                Restaurar backup
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </article>
   )
 }

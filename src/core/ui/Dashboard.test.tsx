@@ -59,14 +59,22 @@ describe('dashboard layout helpers', () => {
   })
 
   it('clamps dashboard tile sizes and expands in place', () => {
-    expect(getDashboardTileSize({ w: 3, h: 1 })).toEqual({ w: 3, h: 1 })
-    expect(getDashboardTileSize({ w: 8, h: 9 })).toEqual({ w: 3, h: 2 })
+    expect(getDashboardTileSize({ w: 3, h: 1 })).toEqual({ w: 2, h: 1 })
+    expect(getDashboardTileSize({ w: 8, h: 9 })).toEqual({ w: 2, h: 2 })
     expect(getDashboardTileSize({ w: 1, h: 1 }, true)).toEqual({ w: 2, h: 2 })
-    expect(getDashboardTileSize({ w: 3, h: 1 }, true)).toEqual({ w: 3, h: 2 })
+    expect(getDashboardTileSize({ w: 3, h: 1 }, true)).toEqual({ w: 2, h: 2 })
+  })
+
+  it('keeps dashboard tile spans within the discrete grid shapes', () => {
+    expect(getDashboardTileSpanClasses({ w: 3, h: 1 })).toContain('xl:col-span-2')
+    expect(getDashboardTileSpanClasses({ w: 1, h: 1 })).toContain('row-span-3')
+    expect(getDashboardTileSpanClasses({ w: 1, h: 2 })).toContain('row-span-6')
+    expect(getDashboardTileSpanClasses({ w: 1, h: 2 })).toContain('min-h-[456px]')
   })
 
   it('uses compact height classes for minimized dashboard tiles', () => {
     expect(getDashboardTileSpanClasses({ w: 1, h: 1 }, true)).toContain('min-h-[64px]')
+    expect(getDashboardTileSpanClasses({ w: 1, h: 1 }, true)).toContain('row-span-1')
     expect(getDashboardTileSpanClasses({ w: 1, h: 1 }, true)).not.toContain('min-h-[220px]')
   })
 })

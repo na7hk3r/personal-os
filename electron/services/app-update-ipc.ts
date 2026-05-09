@@ -1,6 +1,12 @@
-import { ipcMain, BrowserWindow, app } from 'electron'
+import { ipcMain, app } from 'electron'
+import type { BrowserWindow } from 'electron'
 import type { AppUpdateStatus } from '../../src/core/types'
 import { scheduleAutoUpdateChecks, type AutoUpdateScheduleHandle } from '../updater'
+import {
+  getAppUpdateErrorMessage,
+  isRecoverableAppUpdateError,
+  toAppUpdateErrorStatus,
+} from './app-update-errors'
 
 /**
  * Auto-update wiring (electron-updater).
@@ -65,6 +71,13 @@ function tryLoadUpdater(): UpdaterModule['autoUpdater'] | null {
   }
 }
 
+function broadcastUpdateError(context: string, err: unknown): void {
+  const technicalMessage = getAppUpdateErrorMessage(err)
+  const recoverable = isRecoverableAppUpdateError(err)
+  console.warn(`[app-update] ${context}`, { recoverable, technicalMessage, error: err })
+  broadcast(toAppUpdateErrorStatus(err))
+}
+
 export function registerAppUpdateIpc(getMainWindow: () => BrowserWindow | null): void {
   mainWindowGetter = getMainWindow
 
@@ -109,9 +122,7 @@ export function registerAppUpdateIpc(getMainWindow: () => BrowserWindow | null):
         const version = (info as { version?: string } | undefined)?.version ?? 'desconocida'
         broadcast({ state: 'downloaded', version })
       })
-      updater.on('error', (err: unknown) => {
-        broadcast({ state: 'error', message: err instanceof Error ? err.message : String(err) })
-      })
+      updater.on('error', (err: unknown) => broadcastUpdateError('autoUpdater error', err))
     }
   }
 
@@ -122,7 +133,7 @@ export function registerAppUpdateIpc(getMainWindow: () => BrowserWindow | null):
     try {
       await updater.checkForUpdates()
     } catch (err) {
-      broadcast({ state: 'error', message: err instanceof Error ? err.message : 'Error al chequear updates' })
+      broadcastUpdateError('checkForUpdates failed', err)
     }
     return currentStatus
   })
@@ -132,7 +143,7 @@ export function registerAppUpdateIpc(getMainWindow: () => BrowserWindow | null):
     try {
       await updater.downloadUpdate()
     } catch (err) {
-      broadcast({ state: 'error', message: err instanceof Error ? err.message : 'Error al descargar update' })
+      broadcastUpdateError('downloadUpdate failed', err)
     }
     return currentStatus
   })

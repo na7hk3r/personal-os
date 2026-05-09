@@ -183,7 +183,7 @@ export type AppUpdateStatus =
   | { state: 'available'; version: string; releaseNotes?: string }
   | { state: 'downloading'; percent: number; transferredBytes: number; totalBytes: number }
   | { state: 'downloaded'; version: string }
-  | { state: 'error'; message: string }
+  | { state: 'error'; message: string; manualDownloadUrl: string }
   | { state: 'disabled'; reason: string }
 
 export interface AppUpdateBridge {

@@ -101,19 +101,18 @@ const DASHBOARD_DND_MEASURING: MeasuringConfiguration = {
 const COL_SPAN_CLASSES: Record<number, string> = {
   1: 'col-span-1 md:col-span-1 xl:col-span-1',
   2: 'col-span-1 md:col-span-2 xl:col-span-2',
-  3: 'col-span-1 md:col-span-2 xl:col-span-3',
 }
 
 const ROW_SPAN_CLASSES: Record<number, string> = {
-  1: 'row-span-1',
-  2: 'row-span-1 md:row-span-2',
+  1: 'row-span-3',
+  2: 'row-span-6',
 }
 
 const TILE_HEIGHT_CLASSES: Record<number, string> = {
   1: 'min-h-[220px]',
-  2: 'min-h-[220px] md:min-h-[456px]',
+  2: 'min-h-[456px]',
 }
-const COMPACT_TILE_HEIGHT_CLASS = 'min-h-[64px]'
+const COMPACT_TILE_HEIGHT_CLASS = 'row-span-1 min-h-[64px]'
 
 const animateDashboardLayoutChanges: AnimateLayoutChanges = (args) => {
   if (args.isSorting) return true
@@ -189,21 +188,20 @@ export function getDashboardTileSize(
   expanded = false,
 ): DashboardTileSize {
   const base = {
-    w: clampNumber(size.w, 1, 3, DEFAULT_TILE_SIZE.w),
+    w: clampNumber(size.w, 1, 2, DEFAULT_TILE_SIZE.w),
     h: clampNumber(size.h, 1, 2, DEFAULT_TILE_SIZE.h),
   }
 
   if (!expanded) return base
 
-  return {
-    w: clampNumber(Math.max(base.w, 2), 1, 3, DEFAULT_TILE_SIZE.w),
-    h: clampNumber(Math.max(base.h, 2), 1, 2, DEFAULT_TILE_SIZE.h),
-  }
+  return { w: 2, h: 2 }
 }
 
 export function getDashboardTileSpanClasses(size: DashboardTileSize, compact = false): string {
   const safeSize = getDashboardTileSize(size)
-  const heightClass = compact ? COMPACT_TILE_HEIGHT_CLASS : TILE_HEIGHT_CLASSES[safeSize.h]
+  if (compact) return `${COL_SPAN_CLASSES[safeSize.w]} ${COMPACT_TILE_HEIGHT_CLASS}`
+
+  const heightClass = TILE_HEIGHT_CLASSES[safeSize.h]
   return `${COL_SPAN_CLASSES[safeSize.w]} ${ROW_SPAN_CLASSES[safeSize.h]} ${heightClass}`
 }
 
@@ -268,13 +266,10 @@ function DashboardTileCard({
   isOverlay = false,
 }: DashboardTileCardProps) {
   const Component = tile.component
-  const compact = tile.compact && !isOverlay
 
   return (
     <div
-      className={`group flex flex-col rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg transition-[border-color,box-shadow,opacity,transform] duration-200 ease-out ${
-        compact ? 'min-h-[64px]' : 'h-full'
-      } ${
+      className={`group flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-surface-light/85 p-4 shadow-lg transition-[border-color,box-shadow,opacity,transform] duration-200 ease-out ${
         isOverlay
           ? 'cursor-grabbing border-accent/70 bg-surface-light shadow-2xl ring-1 ring-accent/40 scale-[1.01]'
           : isDragging
@@ -359,7 +354,7 @@ function DashboardTileCard({
 
       {!isOverlay && tile.kind === 'widget' && Component && (
         <div
-          className={`min-h-0 flex-1 ${tile.expanded ? 'max-h-[62vh] overflow-y-auto pr-1' : ''}`}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1"
         >
           <Component />
         </div>
@@ -402,7 +397,7 @@ function SortableDashboardTile(props: SortableDashboardTileProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`${getDashboardTileSpanClasses(tile.size, tile.compact)} ${isDragging ? 'relative' : ''}`}
+      className={`min-h-0 ${getDashboardTileSpanClasses(tile.size, tile.compact)} ${isDragging ? 'relative' : ''}`}
       data-dashboard-tile={tile.id}
     >
       <DashboardTileCard
@@ -704,7 +699,7 @@ export function Dashboard() {
               items={dashboardTiles.map((tile) => tile.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-flow-dense auto-rows-[minmax(64px,auto)] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-flow-dense auto-rows-[64px] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {dashboardTiles.map((tile) => (
                   <SortableDashboardTile
                     key={tile.id}

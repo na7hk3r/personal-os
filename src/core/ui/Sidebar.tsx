@@ -420,15 +420,17 @@ export function Sidebar() {
               <div className="flex items-center justify-between gap-2 px-3 pb-1 pt-3">
                 <p className="text-micro uppercase tracking-eyebrow text-muted">Módulos</p>
                 {canReorderModules && (
-                  <button
-                    type="button"
-                    onClick={toggleModuleOrderLock}
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-md border border-border bg-surface text-muted transition-colors hover:border-accent/40 hover:text-accent-light"
-                    aria-label={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento de modulos' : 'Bloquear reordenamiento de modulos'}
-                    title={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento' : 'Bloquear reordenamiento'}
-                  >
-                    {sidebarNavState.moduleOrderLocked ? <Lock size={13} /> : <Unlock size={13} />}
-                  </button>
+                  <span className="flex w-7 justify-center">
+                    <button
+                      type="button"
+                      onClick={toggleModuleOrderLock}
+                      className="inline-flex h-5 w-5 items-center justify-center rounded-md text-muted/55 transition-colors hover:bg-surface-lighter hover:text-accent-light"
+                      aria-label={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento de modulos' : 'Bloquear reordenamiento de modulos'}
+                      title={sidebarNavState.moduleOrderLocked ? 'Desbloquear reordenamiento' : 'Bloquear reordenamiento'}
+                    >
+                      {sidebarNavState.moduleOrderLocked ? <Lock size={12} /> : <Unlock size={12} />}
+                    </button>
+                  </span>
                 )}
               </div>
             )}

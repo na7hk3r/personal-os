@@ -113,6 +113,20 @@ Sin firma, Windows SmartScreen muestra "Editor desconocido" la primera vez.
 El feed se sirve desde el GitHub Release; `latest.yml` es el manifest que
 electron-updater consulta. **No hay que hostear nada extra.**
 
+Si el check falla por DNS, red o feed roto, la app debe ocultar el error
+tecnico y mostrar una salida manual: descargar la ultima version desde
+`https://na7hk3r.github.io/nora-os/#download`.
+
+## Compatibilidad del feed
+
+- No borrar tags, Releases publicados, `latest.yml` ni assets `.blockmap` de
+  versiones ya publicadas.
+- Si cambia el repo, dominio, provider o layout del feed, publicar primero una
+  version puente que sepa leer el destino nuevo.
+- Una version ya instalada con el updater roto no puede corregirse remotamente;
+  esos usuarios deben bajar manualmente la ultima version desde el sitio
+  oficial.
+
 ## Troubleshooting
 
 | Sintoma                                       | Causa probable                            | Fix                                                                                       |
@@ -121,6 +135,7 @@ electron-updater consulta. **No hay que hostear nada extra.**
 | `update.exe is not signed`                    | Build sin code signing                    | Configurar `CSC_LINK` o documentar al usuario que ignore SmartScreen                      |
 | El banner no aparece nunca                    | Estas en dev (`!app.isPackaged`)          | Probar con la app instalada (`npm run dist` -> instalar el .exe)                          |
 | `404` al chequear updates                     | El Release no tiene `latest.yml`          | Revisar el job `build-windows` en GitHub Actions; reintentar con `workflow_dispatch`      |
+| `net::ERR_NAME_NOT_RESOLVED` o `ENOTFOUND`    | DNS/red/feed no disponible                | La UI debe mostrar el fallback manual al sitio oficial; revisar que el feed siga estable  |
 | Better-sqlite3 ABI mismatch al iniciar la app | Rebuild contra Node, no contra Electron   | Borrar `node_modules` y `npm ci` (postinstall corre `electron-rebuild`)                   |
 | Tag pusheado pero CI no corre                 | Tag no matchea `v*.*.*`                   | Los tags deben ser `vX.Y.Z` (ej `v1.8.1`)                                                 |
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Download, RefreshCw, RotateCw } from 'lucide-react'
+import { Download, ExternalLink, RefreshCw, RotateCw } from 'lucide-react'
 import type { AppUpdateStatus } from '../../types'
 
 function statusLabel(state: AppUpdateStatus['state']): string {
@@ -34,7 +34,7 @@ export function AutoUpdateSection() {
       cancelled = true
       off()
     }
-  }, [])
+  }, [bridge])
 
   if (!bridge) {
     return (
@@ -65,6 +65,7 @@ export function AutoUpdateSection() {
   const version = status && 'version' in status ? status.version : null
   const percent = status && status.state === 'downloading' ? status.percent : null
   const errorMessage = status && status.state === 'error' ? status.message : null
+  const manualDownloadUrl = status && status.state === 'error' ? status.manualDownloadUrl : null
   const disabledReason = status && status.state === 'disabled' ? status.reason : null
 
   return (
@@ -89,6 +90,17 @@ export function AutoUpdateSection() {
         )}
         {errorMessage && (
           <p className="text-xs text-rose-300">{errorMessage}</p>
+        )}
+        {manualDownloadUrl && (
+          <a
+            href={manualDownloadUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-accent-light hover:text-white"
+          >
+            <ExternalLink size={13} aria-hidden />
+            Descargar desde el sitio oficial
+          </a>
         )}
         {disabled && (
           <p className="text-xs text-muted">

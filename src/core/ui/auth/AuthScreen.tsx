@@ -1,9 +1,37 @@
-import { type FormEvent, useMemo, useState } from 'react'
-import { AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react'
+import { type FormEvent, type Ref, useMemo, useRef, useState } from 'react'
+import { AlertCircle, CheckCircle2, Eye, EyeOff, UserRound, X } from 'lucide-react'
 import { useAuthStore } from '@core/state/authStore'
 import { NoraLogoMark } from '@core/ui/components/NoraLogo'
 
 type AuthMode = 'login' | 'register' | 'recovery'
+
+export const REMEMBERED_LOGIN_USERNAME_KEY = 'auth:rememberedUsername:v1'
+
+function readRememberedUsername(): string {
+  if (typeof window === 'undefined') return ''
+
+  try {
+    return window.localStorage.getItem(REMEMBERED_LOGIN_USERNAME_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function writeRememberedUsername(username: string): void {
+  try {
+    window.localStorage.setItem(REMEMBERED_LOGIN_USERNAME_KEY, username)
+  } catch {
+    // ignore localStorage failures
+  }
+}
+
+function forgetRememberedUsername(): void {
+  try {
+    window.localStorage.removeItem(REMEMBERED_LOGIN_USERNAME_KEY)
+  } catch {
+    // ignore localStorage failures
+  }
+}
 
 export function AuthScreen() {
   const login = useAuthStore((s) => s.login)
@@ -18,6 +46,9 @@ export function AuthScreen() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberedUsername, setRememberedUsername] = useState(readRememberedUsername)
+  const [rememberLogin, setRememberLogin] = useState(() => Boolean(readRememberedUsername()))
+  const passwordInputRef = useRef<HTMLInputElement | null>(null)
 
   const [registerQuestion, setRegisterQuestion] = useState('')
   const [registerAnswer, setRegisterAnswer] = useState('')
@@ -53,6 +84,15 @@ export function AuthScreen() {
     event.preventDefault()
     resetLocalMessages()
     await login(username, password)
+
+    const nextRememberedUsername = username.trim()
+    if (rememberLogin && nextRememberedUsername) {
+      writeRememberedUsername(nextRememberedUsername)
+      setRememberedUsername(nextRememberedUsername)
+    } else {
+      forgetRememberedUsername()
+      setRememberedUsername('')
+    }
   }
 
   const handleRegister = async (event: FormEvent) => {
@@ -95,6 +135,24 @@ export function AuthScreen() {
     setPassword('')
   }
 
+  const useRememberedUsername = () => {
+    if (!rememberedUsername) return
+    setMode('login')
+    setUsername(rememberedUsername)
+    setPassword('')
+    setRememberLogin(true)
+    setShowPassword(false)
+    window.setTimeout(() => passwordInputRef.current?.focus(), 0)
+  }
+
+  const forgetRememberedLogin = () => {
+    forgetRememberedUsername()
+    if (username === rememberedUsername) setUsername('')
+    setRememberedUsername('')
+    setRememberLogin(false)
+    setPassword('')
+  }
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top_left,_#1d0e3d_0%,_#110a24_42%,_#07060d_100%)] px-4 text-white">
       {/* Decoración de marca: aura cosmic purple coherente con identidad oficial. */}
@@ -131,6 +189,33 @@ export function AuthScreen() {
 
         {mode === 'login' && (
           <form className="space-y-3" onSubmit={handleLogin}>
+            {rememberedUsername && (
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-2 py-2">
+                <button
+                  type="button"
+                  onClick={useRememberedUsername}
+                  className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-white transition-colors hover:bg-surface-lighter"
+                  aria-label={`Usar usuario ${rememberedUsername}`}
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/70 bg-surface-light text-muted">
+                    <UserRound size={14} aria-hidden />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block truncate font-medium">{rememberedUsername}</span>
+                    <span className="block text-caption text-muted">Usuario recordado</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={forgetRememberedLogin}
+                  className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-surface-lighter hover:text-white"
+                  aria-label={`Olvidar usuario ${rememberedUsername}`}
+                  title="Olvidar usuario"
+                >
+                  <X size={14} aria-hidden />
+                </button>
+              </div>
+            )}
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -146,7 +231,17 @@ export function AuthScreen() {
               autoComplete="current-password"
               visible={showPassword}
               onToggle={() => setShowPassword((visible) => !visible)}
+              inputRef={passwordInputRef}
             />
+            <label className="flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted">
+              <input
+                type="checkbox"
+                checked={rememberLogin}
+                onChange={(event) => setRememberLogin(event.target.checked)}
+                className="h-4 w-4 accent-accent"
+              />
+              <span>Recordar usuario en este equipo</span>
+            </label>
             <button
               type="submit"
               disabled={loading}
@@ -281,6 +376,7 @@ function PasswordField({
   autoComplete,
   visible,
   onToggle,
+  inputRef,
 }: {
   value: string
   onChange: (value: string) => void
@@ -288,10 +384,12 @@ function PasswordField({
   autoComplete: string
   visible: boolean
   onToggle: () => void
+  inputRef?: Ref<HTMLInputElement>
 }) {
   return (
     <div className="relative">
       <input
+        ref={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
