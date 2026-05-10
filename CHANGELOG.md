@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.16.0] - 2026-05-10
+
 ### Config, tags y flujos no tecnicos
 
 - Configuracion pasa a un modelo de drafts por seccion: los cambios se aplican
