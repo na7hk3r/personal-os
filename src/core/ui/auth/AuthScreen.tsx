@@ -182,7 +182,7 @@ export function AuthScreen() {
     setPassword('')
   }
 
-  const useRememberedUsername = (rememberedUsername: string) => {
+  const selectRememberedUsername = (rememberedUsername: string) => {
     setMode('login')
     setUsername(rememberedUsername)
     setPassword('')
@@ -265,7 +265,7 @@ export function AuthScreen() {
                     <div key={rememberedUsername} className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => useRememberedUsername(rememberedUsername)}
+                        onClick={() => selectRememberedUsername(rememberedUsername)}
                         className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-white transition-colors hover:bg-surface-lighter"
                         aria-label={`Usar usuario ${rememberedUsername}`}
                       >
