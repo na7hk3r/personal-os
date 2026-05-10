@@ -1,5 +1,14 @@
 # Changelog - Nora OS
 
+## [1.15.1] - 2026-05-10
+
+### Hotfix Nori en app instalada
+
+- Corrige la carga de sprites de Nori en Electron empaquetado usando rutas
+  relativas al renderer, evitando imagenes rotas en Sidebar y Progreso.
+- `NoriSprite` ahora muestra un fallback local con nombre y nivel si un asset no
+  puede cargarse.
+
 ## [1.15.0] - 2026-05-10
 
 ### Pulso Nora, Nori y progresion de 15 evoluciones

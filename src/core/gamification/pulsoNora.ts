@@ -238,7 +238,9 @@ export function getNoriStage(level: number): NoriStage {
 
 export function getNoriSprite(level: number): string {
   const safeLevel = clampLevel(level)
-  return `/nora-evo/nori-${String(safeLevel).padStart(2, '0')}.png`
+  const baseUrl = import.meta.env.BASE_URL || '/'
+  const normalizedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`
+  return `${normalizedBase}nora-evo/nori-${String(safeLevel).padStart(2, '0')}.png`
 }
 
 export function getNoriProgress(points: number): NoriProgress {
@@ -287,4 +289,3 @@ export function isRewardUnlocked(id: string, level: number): boolean {
   const reward = NORA_REWARDS.find((item) => item.id === id)
   return Boolean(reward && reward.level <= safeLevel)
 }
-

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   NORA_MAX_LEVEL,
   getNoriLevel,
@@ -9,6 +9,10 @@ import {
 } from './pulsoNora'
 
 describe('Pulso Nora progression', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
   it('maps XP to a capped 15-level curve', () => {
     expect(NORA_MAX_LEVEL).toBe(15)
     expect(getNoriLevel(0)).toBe(1)
@@ -45,6 +49,12 @@ describe('Pulso Nora progression', () => {
     expect(getNoriSprite(15)).toBe('/nora-evo/nori-15.png')
   })
 
+  it('resolves sprite paths relative to the packaged Electron renderer', () => {
+    vi.stubEnv('BASE_URL', './')
+
+    expect(getNoriSprite(1)).toBe('./nora-evo/nori-01.png')
+  })
+
   it('unlocks rewards by level', () => {
     expect(isRewardUnlocked('weekly-review', 4)).toBe(false)
     expect(isRewardUnlocked('weekly-review', 5)).toBe(true)
@@ -53,4 +63,3 @@ describe('Pulso Nora progression', () => {
     expect(getUnlockedRewards(6).map((reward) => reward.id)).toContain('copilot-actions')
   })
 })
-
