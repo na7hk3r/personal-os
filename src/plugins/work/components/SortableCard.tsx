@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Card } from '../types'
 import { CalendarClock, CheckCircle2, CheckSquare, FileText, Flag, Pause, Play, Target, Timer } from 'lucide-react'
+import { GlobalTagChip } from '@core/ui/components/GlobalTagPicker'
 
 interface Props {
   card: Card
@@ -13,6 +14,8 @@ interface Props {
   onStopFocus: () => void
   onComplete?: (card: Card) => void
   isFocusActive: boolean
+  dragDisabled?: boolean
+  activeTag?: string | null
 }
 
 const PRIORITY_STYLES: Record<NonNullable<Card['priority']>, { label: string; className: string }> = {
@@ -61,6 +64,8 @@ export function SortableCard({
   onStopFocus,
   onComplete,
   isFocusActive,
+  dragDisabled = false,
+  activeTag = null,
 }: Props) {
   const {
     attributes,
@@ -72,6 +77,7 @@ export function SortableCard({
   } = useSortable({
     id: card.id,
     data: { type: 'card', cardId: card.id, columnId: card.columnId },
+    disabled: dragDisabled,
   })
 
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -89,7 +95,7 @@ export function SortableCard({
     : {
         transform: CSS.Transform.toString(transform),
         transition,
-        cursor: 'grab',
+        cursor: dragDisabled ? 'default' : 'grab',
       }
 
   const due = card.dueDate ? formatDueDate(card.dueDate) : null
@@ -184,12 +190,12 @@ export function SortableCard({
             </span>
           )}
           {visibleLabels.map((label) => (
-            <span
+            <GlobalTagChip
               key={label}
-              className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-micro text-muted"
-            >
-              {label}
-            </span>
+              tag={{ name: label, color: null }}
+              selected={activeTag?.toLowerCase() === label.toLowerCase()}
+              className="px-2 py-0.5 text-micro"
+            />
           ))}
           {extraLabels > 0 && (
             <span className="rounded-full border border-border/70 bg-surface-light/60 px-2 py-0.5 text-micro text-muted">

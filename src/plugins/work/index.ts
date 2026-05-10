@@ -7,6 +7,23 @@ import { NotesPage } from './pages/NotesPage'
 import { WorkSummaryWidget } from './components/WorkSummaryWidget'
 import { startWorkFocusSession } from './focus'
 import type { Board, Column, Card, Note, Link, FocusSession } from './types'
+import { TAG_ENTITY_TYPES, tagsService } from '@core/services/tagsService'
+
+async function migrateEntityTags(entityType: string, entityId: string, names: string[]): Promise<void> {
+  const legacyNames = [...new Set(names.map((name) => name.trim()).filter(Boolean))]
+  if (legacyNames.length === 0) return
+  const existing = await tagsService.forEntity(entityType, entityId)
+  if (existing.length > 0) return
+  const tags = await Promise.all(legacyNames.map((name) => tagsService.ensure(name)))
+  await tagsService.setForEntity(entityType, entityId, tags.map((tag) => tag.id))
+}
+
+async function migrateLegacyTags(cards: Card[], notes: Note[]): Promise<void> {
+  await Promise.all([
+    ...cards.map((card) => migrateEntityTags(TAG_ENTITY_TYPES.WORK_CARD, card.id, card.labels ?? [])),
+    ...notes.map((note) => migrateEntityTags(TAG_ENTITY_TYPES.WORK_NOTE, note.id, note.tags ?? [])),
+  ])
+}
 
 const workPlugin: PluginManifest = {
   id: 'work',
@@ -239,6 +256,32 @@ const workPlugin: PluginManifest = {
       })
       : []
 
+    await migrateLegacyTags(cards, notes)
+    const cardTags = await tagsService.forEntities(TAG_ENTITY_TYPES.WORK_CARD, cards.map((card) => card.id))
+    const noteTags = await tagsService.forEntities(TAG_ENTITY_TYPES.WORK_NOTE, notes.map((note) => note.id))
+    const cardsWithGlobalTags = cards.map((card) => {
+      const globalTags = cardTags[card.id] ?? []
+      return globalTags.length > 0 ? { ...card, labels: globalTags.map((tag) => tag.name) } : card
+    })
+    const notesWithGlobalTags = notes.map((note) => {
+      const globalTags = noteTags[note.id] ?? []
+      return globalTags.length > 0 ? { ...note, tags: globalTags.map((tag) => tag.name) } : note
+    })
+    await Promise.all([
+      ...cardsWithGlobalTags
+        .filter((card, index) => JSON.stringify(card.labels) !== JSON.stringify(cards[index]?.labels ?? []))
+        .map((card) => api.storage.execute(
+          `UPDATE work_cards SET labels = ? WHERE id = ?`,
+          [JSON.stringify(card.labels), card.id],
+        )),
+      ...notesWithGlobalTags
+        .filter((note, index) => JSON.stringify(note.tags) !== JSON.stringify(notes[index]?.tags ?? []))
+        .map((note) => api.storage.execute(
+          `UPDATE work_notes SET tags = ? WHERE id = ?`,
+          [JSON.stringify(note.tags), note.id],
+        )),
+    ])
+
     // Limpieza de sesiones "zombie": si la app se cerró con una sesión abierta
     // hace más de 8 horas, la cerramos como interrumpida con cap de 8h.
     const ZOMBIE_THRESHOLD_MS = 8 * 60 * 60 * 1000
@@ -264,8 +307,8 @@ const workPlugin: PluginManifest = {
     const store = useWorkStore.getState()
     store.setBoards(boards as Board[])
     store.setColumns(parsedColumns)
-    store.setCards(cards)
-    store.setNotes(notes)
+    store.setCards(cardsWithGlobalTags)
+    store.setNotes(notesWithGlobalTags)
     store.setLinks(links as Link[])
     store.setFocusSessions(focusSessions)
 
@@ -283,7 +326,7 @@ const workPlugin: PluginManifest = {
     })
 
     const toArchive: string[] = []
-    for (const card of cards) {
+    for (const card of cardsWithGlobalTags) {
       if (card.archived) continue
       if (!doneColumnIds.includes(card.columnId)) continue
       const lastActivity = focusByTask.get(card.id) ?? 0
@@ -303,7 +346,7 @@ const workPlugin: PluginManifest = {
       )
       // Reflejar en el store
       const archivedSet = new Set(toArchive)
-      const updatedCards = cards.map((c) =>
+      const updatedCards = cardsWithGlobalTags.map((c) =>
         archivedSet.has(c.id) ? { ...c, archived: true, archivedAt: now } : c,
       )
       store.setCards(updatedCards)

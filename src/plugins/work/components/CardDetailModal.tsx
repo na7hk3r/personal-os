@@ -11,6 +11,8 @@ import {
   resumeWorkFocusSession,
   startWorkFocusSession,
 } from '../focus'
+import { GlobalTagPicker, type TagSelection } from '@core/ui/components/GlobalTagPicker'
+import { TAG_ENTITY_TYPES, tagsService } from '@core/services/tagsService'
 
 interface Props {
   card: Card
@@ -33,11 +35,31 @@ export function CardDetailModal({ card, onClose }: Props) {
   const [estimateMinutes, setEstimateMinutes] = useState<number | null>(card.estimateMinutes ?? null)
   const [dueDate, setDueDate] = useState<string | null>(card.dueDate ?? null)
   const [checklist, setChecklist] = useState<ChecklistItem[]>(card.checklist ?? [])
+  const [selectedTags, setSelectedTags] = useState<TagSelection[]>([])
   const [newChecklistText, setNewChecklistText] = useState('')
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
   const isActiveFocusTask = currentFocusSession?.taskId === card.id
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadTags() {
+      let tags = await tagsService.forEntity(TAG_ENTITY_TYPES.WORK_CARD, card.id)
+      if (tags.length === 0 && (card.labels ?? []).length > 0) {
+        const ensured = await Promise.all(card.labels.map((tag) => tagsService.ensure(tag)))
+        await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_CARD, card.id, ensured.map((tag) => tag.id))
+        tags = ensured
+      }
+      if (!cancelled) setSelectedTags(tags)
+    }
+    void loadTags().catch(() => {
+      if (!cancelled) setSelectedTags([])
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [card.id, card.labels])
 
   // Close on ESC
   useEffect(() => {
@@ -55,6 +77,7 @@ export function CardDetailModal({ card, onClose }: Props) {
       title,
       content,
       description,
+      labels: selectedTags.map((tag) => tag.name),
       priority,
       estimateMinutes,
       dueDate,
@@ -64,12 +87,13 @@ export function CardDetailModal({ card, onClose }: Props) {
     if (window.storage) {
       await window.storage.execute(
         `UPDATE work_cards
-         SET title = ?, description = ?, content = ?, priority = ?, estimate_minutes = ?, due_date = ?, checklist = ?
+         SET title = ?, description = ?, content = ?, labels = ?, priority = ?, estimate_minutes = ?, due_date = ?, checklist = ?
          WHERE id = ?`,
         [
           title,
           description,
           content,
+          JSON.stringify(selectedTags.map((tag) => tag.name)),
           priority,
           estimateMinutes,
           dueDate,
@@ -78,6 +102,7 @@ export function CardDetailModal({ card, onClose }: Props) {
         ],
       )
     }
+    await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_CARD, card.id, selectedTags.map((tag) => tag.id))
     eventBus.emit(WORK_EVENTS.TASK_UPDATED, { taskId: card.id, title, description })
     setSaving(false)
     onClose()
@@ -119,6 +144,7 @@ export function CardDetailModal({ card, onClose }: Props) {
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [card.id])
     }
+    await tagsService.unlinkEntity(TAG_ENTITY_TYPES.WORK_CARD, card.id)
     eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: card.id, title: card.title })
     onClose()
   }
@@ -299,6 +325,13 @@ export function CardDetailModal({ card, onClose }: Props) {
               </button>
             </div>
           </div>
+
+          <GlobalTagPicker
+            selected={selectedTags}
+            onChange={setSelectedTags}
+            label="Tags globales"
+            placeholder="Buscar o crear tag para esta tarea"
+          />
 
           <div className="rounded-xl border border-border bg-surface-light/50 p-4">
             <div className="flex items-center justify-between gap-3">

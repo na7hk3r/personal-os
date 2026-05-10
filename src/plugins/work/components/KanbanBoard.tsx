@@ -44,6 +44,8 @@ import {
 import { SortableCard } from './SortableCard'
 import { CardDetailModal } from './CardDetailModal'
 import type { Card, Column } from '../types'
+import { TAG_ENTITY_TYPES, tagsService } from '@core/services/tagsService'
+import { GlobalTagChip } from '@core/ui/components/GlobalTagPicker'
 
 interface ColumnDropZoneProps {
   id: string
@@ -78,21 +80,39 @@ export function KanbanBoard() {
   const [columnDraft, setColumnDraft] = useState<{ name: string; wipLimit: string }>({ name: '', wipLimit: '' })
   const [creatingColumn, setCreatingColumn] = useState(false)
   const [newColumnName, setNewColumnName] = useState('')
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
   const dragStartCardsRef = useRef<Card[] | null>(null)
   const lastOverId = useRef<UniqueIdentifier | null>(null)
   const recentlyMovedToNewColumn = useRef(false)
 
   const displayCards = dragCards ?? cards
+  const availableTags = useMemo(() => {
+    const byName = new Map<string, { name: string; count: number }>()
+    for (const card of cards) {
+      if (card.archived) continue
+      for (const label of card.labels) {
+        const clean = label.trim()
+        if (!clean) continue
+        const key = clean.toLowerCase()
+        const current = byName.get(key)
+        byName.set(key, { name: current?.name ?? clean, count: (current?.count ?? 0) + 1 })
+      }
+    }
+    return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  }, [cards])
+  const filteredDisplayCards = tagFilter
+    ? displayCards.filter((card) => card.labels.some((label) => label.toLowerCase() === tagFilter.toLowerCase()))
+    : displayCards
   const sortedColumns = useMemo(() => [...columns].sort((a, b) => a.position - b.position), [columns])
   const columnIds = useMemo(() => sortedColumns.map((column) => column.id), [sortedColumns])
   const columnIdSet = useMemo(() => new Set(columnIds), [columnIds])
   const visibleCardIdsByColumn = useMemo(() => {
     const map = new Map<string, string[]>()
     columnIds.forEach((columnId) => {
-      map.set(columnId, getVisibleCardsForColumn(displayCards, columnId).map((card) => card.id))
+      map.set(columnId, getVisibleCardsForColumn(filteredDisplayCards, columnId).map((card) => card.id))
     })
     return map
-  }, [columnIds, displayCards])
+  }, [columnIds, filteredDisplayCards])
 
   // Conteo de sesiones de foco por tarea (solo sesiones finalizadas).
   const focusCountByTask = focusSessions.reduce<Map<string, number>>((acc, session) => {
@@ -359,6 +379,7 @@ export function KanbanBoard() {
     if (window.storage) {
       await window.storage.execute(`DELETE FROM work_cards WHERE id = ?`, [id])
     }
+    await tagsService.unlinkEntity(TAG_ENTITY_TYPES.WORK_CARD, id)
     eventBus.emit(WORK_EVENTS.TASK_DELETED, { taskId: id, title: target.title ?? null })
 
     toast.undo({
@@ -386,6 +407,8 @@ export function KanbanBoard() {
             ],
           )
         }
+        const tags = await Promise.all((target.labels ?? []).map((tag) => tagsService.ensure(tag)))
+        await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_CARD, target.id, tags.map((tag) => tag.id))
         eventBus.emit(WORK_EVENTS.TASK_CREATED, { id: target.id, title: target.title, columnId: target.columnId })
       },
     })
@@ -561,6 +584,35 @@ export function KanbanBoard() {
 
   return (
     <>
+      {availableTags.length > 0 && (
+        <div className="mb-3 rounded-xl border border-border bg-surface-light/75 px-3 py-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-caption uppercase tracking-wide text-muted">Tags del tablero</span>
+            {availableTags.slice(0, 14).map((tag) => (
+              <GlobalTagChip
+                key={tag.name}
+                tag={{ name: tag.name, color: null }}
+                count={tag.count}
+                selected={tagFilter?.toLowerCase() === tag.name.toLowerCase()}
+              />
+            ))}
+            {tagFilter && (
+              <button
+                type="button"
+                onClick={() => setTagFilter(null)}
+                className="ml-auto text-caption text-muted underline-offset-2 hover:text-white hover:underline"
+              >
+                Limpiar filtro
+              </button>
+            )}
+          </div>
+          {tagFilter && (
+            <p className="mt-1 text-caption text-muted">
+              Mostrando tareas con #{tagFilter}. El arrastre queda pausado mientras el filtro esta activo.
+            </p>
+          )}
+        </div>
+      )}
       <DndContext
         sensors={sensors}
         collisionDetection={collisionDetectionStrategy}
@@ -572,7 +624,7 @@ export function KanbanBoard() {
       >
         <div className={trackClass}>
           {sortedColumns.map((col) => {
-            const colCards = getVisibleCardsForColumn(displayCards, col.id)
+            const colCards = getVisibleCardsForColumn(filteredDisplayCards, col.id)
 
             const overWip = col.wipLimit != null && col.wipLimit > 0 && colCards.length > col.wipLimit
             const isDone = isDoneColumnUtil(col)
@@ -697,6 +749,8 @@ export function KanbanBoard() {
                         onStopFocus={() => { void stopWorkTask(card.id) }}
                         onComplete={isInProgressColumn(col.id) ? (selected) => completeWorkTask(selected.id) : undefined}
                         isFocusActive={currentFocusSession?.taskId === card.id}
+                        dragDisabled={Boolean(tagFilter)}
+                        activeTag={tagFilter}
                       />
                     ))}
 

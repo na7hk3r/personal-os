@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, Notebook, Link2, ListTodo, LayoutDashboard, SlidersHorizontal, CalendarDays, Sparkles, BarChart3 } from 'lucide-react'
+import { Search, X, Notebook, Link2, ListTodo, LayoutDashboard, SlidersHorizontal, CalendarDays, Sparkles, BarChart3, Hash } from 'lucide-react'
 import { storageAPI } from '@core/storage/StorageAPI'
 import { pluginManager } from '@core/plugins/PluginManager'
+import {
+  isTagSearchQuery,
+  searchTagConnections,
+  TAG_CONNECTION_KIND_LABEL,
+  type TagConnectionItem,
+} from '@core/services/tagConnectionsService'
 
 export interface CommandResult {
   id: string
-  kind: 'note' | 'link' | 'card' | 'nav' | 'action'
+  kind: 'note' | 'link' | 'card' | 'planner' | 'tag' | 'nav' | 'action'
   title: string
   subtitle?: string
   ctaPath: string
@@ -28,6 +34,8 @@ const ICONS: Record<CommandResult['kind'], React.ComponentType<{ size?: number; 
   note: Notebook,
   link: Link2,
   card: ListTodo,
+  planner: CalendarDays,
+  tag: Hash,
   nav: LayoutDashboard,
   action: Sparkles,
 }
@@ -70,6 +78,46 @@ function searchPluginPages(q: string): CommandResult[] {
   return pluginManager.getActivePages()
     .filter((p) => p.title.toLowerCase().includes(q) || p.path.toLowerCase().includes(q))
     .map((p) => ({ id: `nav:${p.id}`, kind: 'nav', title: p.title, subtitle: p.path, ctaPath: p.path }))
+}
+
+function kindForConnection(item: TagConnectionItem): CommandResult['kind'] {
+  if (item.kind === 'note') return 'note'
+  if (item.kind === 'work_card') return 'card'
+  if (item.kind === 'planner_task') return 'planner'
+  return 'tag'
+}
+
+async function searchTags(q: string): Promise<CommandResult[]> {
+  try {
+    const matches = await searchTagConnections(q, 8)
+    const results: CommandResult[] = []
+
+    for (const match of matches) {
+      const tagName = match.tag?.name ?? match.queryName
+      if (!tagName) continue
+      results.push({
+        id: `tag:${tagName}`,
+        kind: 'tag',
+        title: `#${tagName}`,
+        subtitle: `${match.items.length} conexion${match.items.length === 1 ? '' : 'es'} globales`,
+        ctaPath: '/control',
+      })
+
+      for (const item of match.items) {
+        results.push({
+          id: `tag:${tagName}:${item.entityType}:${item.id}`,
+          kind: kindForConnection(item),
+          title: item.title,
+          subtitle: `#${tagName} - ${TAG_CONNECTION_KIND_LABEL[item.kind]}${item.subtitle ? ` - ${item.subtitle}` : ''}`,
+          ctaPath: item.ctaPath,
+        })
+      }
+    }
+
+    return results.slice(0, 25)
+  } catch {
+    return []
+  }
 }
 
 export function CommandPalette() {
@@ -141,6 +189,14 @@ export function CommandPalette() {
     }
     let cancelled = false
     void (async () => {
+      if (isTagSearchQuery(q)) {
+        const tagResults = await searchTags(q)
+        if (cancelled) return
+        setResults(tagResults)
+        setActiveIndex(0)
+        return
+      }
+
       const [notes, links, cards] = await Promise.all([
         searchNotes(q),
         searchLinks(q),
@@ -215,7 +271,7 @@ export function CommandPalette() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Buscar notas, tareas, enlaces, navegación..."
+            placeholder="Buscar notas, tareas, enlaces, navegacion o #tag..."
             aria-label="Buscar comandos"
             role="combobox"
             aria-expanded={visibleResults.length > 0}
@@ -243,7 +299,7 @@ export function CommandPalette() {
           {visibleResults.length === 0 ? (
             <div className="px-3 py-8 text-center">
               <p className="text-sm text-foreground">Nada por ahora</p>
-              <p className="mt-1 text-xs text-muted">Probá con el nombre de una nota, tarea, enlace o sección.</p>
+              <p className="mt-1 text-xs text-muted">Proba con una nota, tarea, enlace, seccion o #tag.</p>
             </div>
           ) : (
             visibleResults.map((r, i) => {

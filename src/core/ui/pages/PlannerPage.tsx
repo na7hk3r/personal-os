@@ -11,6 +11,8 @@ import {
 import { useGamificationStore } from '@core/gamification/gamificationStore'
 import { eventBus } from '@core/events/EventBus'
 import { CORE_EVENTS } from '@core/events/events'
+import { GlobalTagChip, GlobalTagPicker, type TagSelection } from '@core/ui/components/GlobalTagPicker'
+import { TAG_ENTITY_TYPES, tagsService } from '@core/services/tagsService'
 
 type PlannerCategory = 'domestica' | 'recordatorio' | 'trabajo' | 'personal'
 type PlannerComplexity = 'baja' | 'media' | 'alta'
@@ -24,6 +26,7 @@ interface PlannerTask {
   complexity: PlannerComplexity
   date: string
   note?: string
+  tags: string[]
   completed: boolean
   createdAt: string
   rewardedAt?: string
@@ -113,9 +116,32 @@ function normalizeTask(raw: unknown): PlannerTask | null {
     complexity,
     date: String(task.date),
     note: task.note ? String(task.note) : undefined,
+    tags: Array.isArray(task.tags) ? task.tags.map(String) : [],
     completed: Boolean(task.completed),
     createdAt: String(task.createdAt),
     rewardedAt: task.rewardedAt ? String(task.rewardedAt) : undefined,
+  }
+}
+
+async function migratePlannerTaskTags(tasks: PlannerTask[]): Promise<{
+  tasks: PlannerTask[]
+  tagMap: Record<string, TagSelection[]>
+}> {
+  for (const task of tasks) {
+    if (task.tags.length === 0) continue
+    const existing = await tagsService.forEntity(TAG_ENTITY_TYPES.PLANNER_TASK, task.id)
+    if (existing.length > 0) continue
+    const tags = await Promise.all(task.tags.map((tag) => tagsService.ensure(tag)))
+    await tagsService.setForEntity(TAG_ENTITY_TYPES.PLANNER_TASK, task.id, tags.map((tag) => tag.id))
+  }
+
+  const tagMap = await tagsService.forEntities(TAG_ENTITY_TYPES.PLANNER_TASK, tasks.map((task) => task.id))
+  return {
+    tagMap,
+    tasks: tasks.map((task) => {
+      const globalTags = tagMap[task.id] ?? []
+      return globalTags.length > 0 ? { ...task, tags: globalTags.map((tag) => tag.name) } : task
+    }),
   }
 }
 
@@ -134,8 +160,11 @@ export function CorePlannerPage() {
   const [complexity, setComplexity] = useState<PlannerComplexity>('media')
   const [taskDate, setTaskDate] = useState(today)
   const [note, setNote] = useState('')
+  const [draftTags, setDraftTags] = useState<TagSelection[]>([])
+  const [taskTags, setTaskTags] = useState<Record<string, TagSelection[]>>({})
   const [statusFilter, setStatusFilter] = useState<TaskFilterStatus>('all')
   const [categoryFilter, setCategoryFilter] = useState<'all' | PlannerCategory>('all')
+  const [tagFilter, setTagFilter] = useState<'all' | string>('all')
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null)
 
   const saveTasks = (nextTasks: PlannerTask[]) => {
@@ -152,7 +181,7 @@ export function CorePlannerPage() {
 
     void window.storage
       .query(`SELECT value FROM settings WHERE key = ? LIMIT 1`, [STORAGE_KEY])
-      .then((rows) => {
+      .then(async (rows) => {
         const list = rows as { value: string }[]
         const raw = list[0]?.value
         if (!raw) return
@@ -161,7 +190,15 @@ export function CorePlannerPage() {
         const normalized = parsed
           .map((item) => normalizeTask(item))
           .filter((item): item is PlannerTask => Boolean(item))
-        setTasks(normalized)
+        const migrated = await migratePlannerTaskTags(normalized)
+        setTaskTags(migrated.tagMap)
+        setTasks(migrated.tasks)
+        if (JSON.stringify(normalized) !== JSON.stringify(migrated.tasks)) {
+          void window.storage.execute(
+            `INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)`,
+            [STORAGE_KEY, JSON.stringify(migrated.tasks)],
+          )
+        }
       })
       .catch(() => {})
   }, [])
@@ -196,10 +233,20 @@ export function CorePlannerPage() {
           (statusFilter === 'pending' && !task.completed) ||
           (statusFilter === 'completed' && task.completed)
         const categoryOk = categoryFilter === 'all' || task.category === categoryFilter
-        return statusOk && categoryOk
+        const tags = taskTags[task.id] ?? []
+        const tagOk = tagFilter === 'all' || tags.some((tag) => String(tag.id) === tagFilter)
+        return statusOk && categoryOk && tagOk
       })
       .sort((a, b) => Number(a.completed) - Number(b.completed))
-  }, [tasksByDate, selectedDate, statusFilter, categoryFilter])
+  }, [tasksByDate, selectedDate, statusFilter, categoryFilter, taskTags, tagFilter])
+
+  const availableTags = useMemo(() => {
+    const byId = new Map<number, TagSelection>()
+    for (const tags of Object.values(taskTags)) {
+      for (const tag of tags) byId.set(tag.id, tag)
+    }
+    return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  }, [taskTags])
 
   const weekCells = useMemo(() => {
     const start = startOfWeek(new Date(`${selectedDate}T00:00:00`))
@@ -215,6 +262,7 @@ export function CorePlannerPage() {
     const cleanTitle = title.trim()
     if (!cleanTitle) return
 
+    const tagNames = draftTags.map((tag) => tag.name)
     const newTask: PlannerTask = {
       id: crypto.randomUUID(),
       title: cleanTitle,
@@ -222,13 +270,21 @@ export function CorePlannerPage() {
       complexity,
       date: taskDate,
       note: note.trim() || undefined,
+      tags: tagNames,
       completed: false,
       createdAt: new Date().toISOString(),
     }
 
     saveTasks([newTask, ...tasks])
+    void tagsService.setForEntity(
+      TAG_ENTITY_TYPES.PLANNER_TASK,
+      newTask.id,
+      draftTags.map((tag) => tag.id),
+    )
+    setTaskTags((prev) => ({ ...prev, [newTask.id]: draftTags }))
     setTitle('')
     setNote('')
+    setDraftTags([])
     setComplexity('media')
     setSelectedDate(taskDate)
     setViewMonth(new Date(`${taskDate}T00:00:00`))
@@ -273,6 +329,20 @@ export function CorePlannerPage() {
   const removeTask = (id: string) => {
     const next = tasks.filter((task) => task.id !== id)
     saveTasks(next)
+    setTaskTags((prev) => {
+      const copy = { ...prev }
+      delete copy[id]
+      return copy
+    })
+    void tagsService.unlinkEntity(TAG_ENTITY_TYPES.PLANNER_TASK, id)
+  }
+
+  const updateTaskTags = (taskId: string, tags: TagSelection[]) => {
+    const tagNames = tags.map((tag) => tag.name)
+    const next = tasks.map((task) => (task.id === taskId ? { ...task, tags: tagNames } : task))
+    setTaskTags((prev) => ({ ...prev, [taskId]: tags }))
+    saveTasks(next)
+    void tagsService.setForEntity(TAG_ENTITY_TYPES.PLANNER_TASK, taskId, tags.map((tag) => tag.id))
   }
 
   const gotoMonth = (delta: number) => {
@@ -423,6 +493,13 @@ export function CorePlannerPage() {
               />
             </label>
 
+            <GlobalTagPicker
+              selected={draftTags}
+              onChange={setDraftTags}
+              label="Tags globales"
+              placeholder="Buscar o crear tag para esta tarea"
+            />
+
             <button
               type="submit"
               className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/85"
@@ -513,7 +590,7 @@ export function CorePlannerPage() {
           </span>
         </div>
 
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">
           <label className="space-y-1">
             <span className="text-caption uppercase tracking-wide text-muted">Estado</span>
             <select
@@ -527,7 +604,7 @@ export function CorePlannerPage() {
             </select>
           </label>
 
-          <label className="space-y-1 sm:col-span-1 xl:col-span-2">
+          <label className="space-y-1">
             <span className="text-caption uppercase tracking-wide text-muted">Categoría</span>
             <select
               value={categoryFilter}
@@ -542,10 +619,36 @@ export function CorePlannerPage() {
             </select>
           </label>
 
+          <label className="space-y-1">
+            <span className="text-caption uppercase tracking-wide text-muted">Tag</span>
+            <select
+              value={tagFilter}
+              onChange={(e) => setTagFilter(e.target.value)}
+              className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-xs"
+            >
+              <option value="all">Todos</option>
+              {availableTags.map((tag) => (
+                <option key={tag.id} value={String(tag.id)}>{tag.name}</option>
+              ))}
+            </select>
+          </label>
+
           <div className="rounded-md border border-border bg-surface px-2 py-1 text-[11px] leading-tight text-muted flex items-center">
             Arrastra tareas al calendario para reprogramarlas
           </div>
         </div>
+        {availableTags.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-caption uppercase tracking-wide text-muted">Tags</span>
+            {availableTags.map((tag) => (
+              <GlobalTagChip
+                key={tag.id}
+                tag={tag}
+                selected={tagFilter === String(tag.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {selectedTasks.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No hay tareas para este día.</p>
@@ -579,9 +682,16 @@ export function CorePlannerPage() {
                   </p>
                   {task.note && <p className="mt-0.5 text-xs text-muted">{task.note}</p>}
                   <div className="mt-1.5 flex items-center gap-2 text-caption text-muted">
-                    <span className={`rounded-full border px-2 py-0.5 ${CATEGORY_STYLES[task.category]}`}>
+                    <button
+                      type="button"
+                      onClick={() => setCategoryFilter((current) => current === task.category ? 'all' : task.category)}
+                      className={`rounded-full border px-2 py-0.5 transition-colors hover:bg-surface-lighter ${CATEGORY_STYLES[task.category]} ${
+                        categoryFilter === task.category ? 'ring-1 ring-white/30' : ''
+                      }`}
+                      title={`Filtrar categoria ${CATEGORY_LABELS[task.category]}`}
+                    >
                       {CATEGORY_LABELS[task.category]}
-                    </span>
+                    </button>
                     <span className={`rounded-full border px-2 py-0.5 ${COMPLEXITY_STYLES[task.complexity]}`}>
                       {complexityLabel(task.complexity)} · +{COMPLEXITY_XP[task.complexity]} XP
                     </span>
@@ -590,6 +700,25 @@ export function CorePlannerPage() {
                       Mision diaria
                     </span>
                   </div>
+                  {(taskTags[task.id] ?? []).length > 0 && (
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {(taskTags[task.id] ?? []).map((tag) => (
+                        <GlobalTagChip
+                          key={tag.id}
+                          tag={tag}
+                          selected={tagFilter === String(tag.id)}
+                          className="px-2 py-0.5"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <GlobalTagPicker
+                    selected={taskTags[task.id] ?? []}
+                    onChange={(tags) => updateTaskTags(task.id, tags)}
+                    label="Tags"
+                    placeholder="Agregar tag"
+                    className="mt-3"
+                  />
                 </div>
 
                 <button

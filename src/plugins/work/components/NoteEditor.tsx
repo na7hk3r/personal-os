@@ -6,6 +6,8 @@ import { WORK_EVENTS } from '../events'
 import { useToast } from '@core/ui/components/ToastProvider'
 import { messages } from '@core/ui/messages'
 import { noteExtractionService } from '../noteExtractionService'
+import { GlobalTagChip, GlobalTagPicker, type TagSelection } from '@core/ui/components/GlobalTagPicker'
+import { TAG_ENTITY_TYPES, tagsService } from '@core/services/tagsService'
 
 type SortMode = 'recent' | 'alpha'
 
@@ -18,6 +20,7 @@ export function NoteEditor() {
   const [sortMode, setSortMode] = useState<SortMode>('recent')
   const { toast } = useToast()
   const [extracting, setExtracting] = useState(false)
+  const [selectedTags, setSelectedTags] = useState<TagSelection[]>([])
 
   const handleExtractTasks = async () => {
     if (!selected) return
@@ -45,9 +48,42 @@ export function NoteEditor() {
 
   const selected = notes.find((n) => n.id === selectedId)
 
+  const loadTagsForNote = async (note: { id: string; tags: string[] }) => {
+    let tags = await tagsService.forEntity(TAG_ENTITY_TYPES.WORK_NOTE, note.id)
+    if (tags.length === 0 && note.tags.length > 0) {
+      const ensured = await Promise.all(note.tags.map((tag) => tagsService.ensure(tag)))
+      await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_NOTE, note.id, ensured.map((tag) => tag.id))
+      tags = ensured
+    }
+    setSelectedTags(tags)
+  }
+
+  const noteTags = useMemo(() => {
+    const byName = new Map<string, { name: string; count: number }>()
+    for (const note of notes) {
+      for (const tag of note.tags) {
+        const clean = tag.trim()
+        if (!clean) continue
+        const key = clean.toLowerCase()
+        const current = byName.get(key)
+        byName.set(key, { name: current?.name ?? clean, count: (current?.count ?? 0) + 1 })
+      }
+    }
+    return [...byName.values()].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  }, [notes])
+
+  const tagSearch = useMemo(() => {
+    const q = search.trim()
+    if (q.startsWith('#')) return q.slice(1).trim().toLowerCase()
+    if (q.toLowerCase().startsWith('tag:')) return q.slice(4).trim().toLowerCase()
+    return ''
+  }, [search])
+
   const filteredNotes = useMemo(() => {
     const q = search.trim().toLowerCase()
-    const filtered = q
+    const filtered = tagSearch
+      ? notes.filter((n) => n.tags.some((t) => t.toLowerCase() === tagSearch || t.toLowerCase().includes(tagSearch)))
+      : q
       ? notes.filter(
           (n) =>
             n.title.toLowerCase().includes(q) ||
@@ -64,7 +100,7 @@ export function NoteEditor() {
     })
 
     return sorted
-  }, [notes, search, sortMode])
+  }, [notes, search, sortMode, tagSearch])
 
   const handleNew = () => {
     const id = crypto.randomUUID()
@@ -82,8 +118,9 @@ export function NoteEditor() {
     setSelectedId(id)
     setTitle(note.title)
     setContent('')
+    setSelectedTags([])
 
-    window.storage.execute(
+    void window.storage.execute(
       'INSERT INTO work_notes (id, title, content, tags, created_at, updated_at, pinned) VALUES (?, ?, ?, ?, ?, ?, 0)',
       [id, note.title, '', '[]', now, now],
     )
@@ -99,14 +136,20 @@ export function NoteEditor() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleSave = () => {
+  const persistNote = async (tags: TagSelection[] = selectedTags) => {
     if (!selectedId) return
     const now = new Date().toISOString()
-    updateNote(selectedId, { title, content, updatedAt: now })
-    window.storage.execute(
-      'UPDATE work_notes SET title = ?, content = ?, updated_at = ? WHERE id = ?',
-      [title, content, now, selectedId],
+    const tagNames = tags.map((tag) => tag.name)
+    updateNote(selectedId, { title, content, tags: tagNames, updatedAt: now })
+    await window.storage.execute(
+      'UPDATE work_notes SET title = ?, content = ?, tags = ?, updated_at = ? WHERE id = ?',
+      [title, content, JSON.stringify(tagNames), now, selectedId],
     )
+    await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_NOTE, selectedId, tags.map((tag) => tag.id))
+  }
+
+  const handleSave = async () => {
+    await persistNote()
   }
 
   const handleDelete = (id: string) => {
@@ -115,10 +158,12 @@ export function NoteEditor() {
 
     deleteNote(id)
     void window.storage.execute('DELETE FROM work_notes WHERE id = ?', [id])
+    void tagsService.unlinkEntity(TAG_ENTITY_TYPES.WORK_NOTE, id)
     if (selectedId === id) {
       setSelectedId(null)
       setTitle('')
       setContent('')
+      setSelectedTags([])
     }
 
     toast.undo({
@@ -138,6 +183,8 @@ export function NoteEditor() {
             note.pinned ? 1 : 0,
           ],
         )
+        const tags = await Promise.all((note.tags ?? []).map((tag) => tagsService.ensure(tag)))
+        await tagsService.setForEntity(TAG_ENTITY_TYPES.WORK_NOTE, note.id, tags.map((tag) => tag.id))
       },
     })
   }
@@ -154,6 +201,7 @@ export function NoteEditor() {
       setSelectedId(id)
       setTitle(note.title)
       setContent(note.content)
+      void loadTagsForNote(note)
     }
   }
 
@@ -181,7 +229,7 @@ export function NoteEditor() {
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar..."
+              placeholder="Buscar texto o #tag..."
               className="w-full rounded-md border border-border bg-surface pl-7 pr-2 py-1.5 text-xs placeholder:text-muted/50 focus:border-accent/60 focus:outline-none focus:ring-1 focus:ring-accent/30"
             />
           </div>
@@ -207,6 +255,27 @@ export function NoteEditor() {
               A→Z
             </button>
           </div>
+          {noteTags.length > 0 && (
+            <div className="flex max-h-16 flex-wrap gap-1 overflow-y-auto pr-1">
+              {noteTags.slice(0, 10).map((tag) => (
+                <GlobalTagChip
+                  key={tag.name}
+                  tag={{ name: tag.name, color: null }}
+                  count={tag.count}
+                  selected={tagSearch === tag.name.toLowerCase()}
+                />
+              ))}
+            </div>
+          )}
+          {tagSearch && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              className="text-caption text-muted underline-offset-2 hover:text-white hover:underline"
+            >
+              Limpiar filtro de tag
+            </button>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -235,12 +304,12 @@ export function NoteEditor() {
                     {n.tags.length > 0 && (
                       <div className="mt-1 flex flex-wrap gap-1">
                         {n.tags.slice(0, 3).map((tag) => (
-                          <span
+                          <GlobalTagChip
                             key={tag}
-                            className="rounded-full bg-surface px-1.5 py-0.5 text-[9px] text-muted/80"
-                          >
-                            {tag}
-                          </span>
+                            tag={{ name: tag, color: null }}
+                            selected={tagSearch === tag.toLowerCase()}
+                            className="px-1.5 py-0.5 text-[9px]"
+                          />
                         ))}
                       </div>
                     )}
@@ -281,10 +350,21 @@ export function NoteEditor() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleSave}
+              onBlur={() => void handleSave()}
               className="bg-transparent border-b border-border px-4 py-3 text-lg font-semibold outline-none"
               placeholder="Título"
             />
+            <div className="border-b border-border/60 px-4 py-3">
+              <GlobalTagPicker
+                selected={selectedTags}
+                onChange={(tags) => {
+                  setSelectedTags(tags)
+                  void persistNote(tags)
+                }}
+                label="Tags globales"
+                placeholder="Buscar o crear tag para esta nota"
+              />
+            </div>
             {(content ?? '').trim().length > 200 ? (
               <div className="flex items-center justify-end gap-2 border-b border-border/60 px-4 py-1.5">
                 <button
@@ -302,7 +382,7 @@ export function NoteEditor() {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              onBlur={handleSave}
+              onBlur={() => void handleSave()}
               className="flex-1 bg-transparent px-4 py-3 text-sm resize-none outline-none leading-relaxed"
               placeholder="Escribí la nota…"
             />
