@@ -6,31 +6,76 @@ import { NoraLogoMark } from '@core/ui/components/NoraLogo'
 type AuthMode = 'login' | 'register' | 'recovery'
 
 export const REMEMBERED_LOGIN_USERNAME_KEY = 'auth:rememberedUsername:v1'
+export const REMEMBERED_LOGIN_USERNAMES_KEY = 'auth:rememberedUsernames:v2'
 
-function readRememberedUsername(): string {
-  if (typeof window === 'undefined') return ''
+const MAX_REMEMBERED_USERNAMES = 5
+
+function normalizeRememberedUsernames(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const result: string[] = []
+
+  for (const item of raw) {
+    const username = typeof item === 'string' ? item.trim() : ''
+    if (!username) continue
+    const key = username.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(username)
+    if (result.length >= MAX_REMEMBERED_USERNAMES) break
+  }
+
+  return result
+}
+
+function readRememberedUsernames(): string[] {
+  if (typeof window === 'undefined') return []
 
   try {
-    return window.localStorage.getItem(REMEMBERED_LOGIN_USERNAME_KEY) ?? ''
+    const raw = window.localStorage.getItem(REMEMBERED_LOGIN_USERNAMES_KEY)
+    const parsed = raw ? JSON.parse(raw) : []
+    const remembered = normalizeRememberedUsernames(parsed)
+    const legacy = window.localStorage.getItem(REMEMBERED_LOGIN_USERNAME_KEY)?.trim()
+    const migrated = legacy ? addRememberedUsername(remembered, legacy) : remembered
+
+    if (legacy || JSON.stringify(parsed) !== JSON.stringify(migrated)) {
+      writeRememberedUsernames(migrated)
+      window.localStorage.removeItem(REMEMBERED_LOGIN_USERNAME_KEY)
+    }
+
+    return migrated
   } catch {
-    return ''
+    return []
   }
 }
 
-function writeRememberedUsername(username: string): void {
+function writeRememberedUsernames(usernames: string[]): void {
   try {
-    window.localStorage.setItem(REMEMBERED_LOGIN_USERNAME_KEY, username)
+    window.localStorage.setItem(
+      REMEMBERED_LOGIN_USERNAMES_KEY,
+      JSON.stringify(normalizeRememberedUsernames(usernames)),
+    )
   } catch {
     // ignore localStorage failures
   }
 }
 
-function forgetRememberedUsername(): void {
-  try {
-    window.localStorage.removeItem(REMEMBERED_LOGIN_USERNAME_KEY)
-  } catch {
-    // ignore localStorage failures
-  }
+function addRememberedUsername(usernames: string[], username: string): string[] {
+  const clean = username.trim()
+  if (!clean) return normalizeRememberedUsernames(usernames)
+  return normalizeRememberedUsernames([
+    clean,
+    ...usernames.filter((item) => item.trim().toLowerCase() !== clean.toLowerCase()),
+  ])
+}
+
+function removeRememberedUsername(usernames: string[], username: string): string[] {
+  const clean = username.trim().toLowerCase()
+  return normalizeRememberedUsernames(usernames.filter((item) => item.trim().toLowerCase() !== clean))
+}
+
+function forgetAllRememberedUsernames(): void {
+  writeRememberedUsernames([])
 }
 
 export function AuthScreen() {
@@ -46,8 +91,8 @@ export function AuthScreen() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberedUsername, setRememberedUsername] = useState(readRememberedUsername)
-  const [rememberLogin, setRememberLogin] = useState(() => Boolean(readRememberedUsername()))
+  const [rememberedUsernames, setRememberedUsernames] = useState(readRememberedUsernames)
+  const [rememberLogin, setRememberLogin] = useState(() => readRememberedUsernames().length > 0)
   const passwordInputRef = useRef<HTMLInputElement | null>(null)
 
   const [registerQuestion, setRegisterQuestion] = useState('')
@@ -87,11 +132,13 @@ export function AuthScreen() {
 
     const nextRememberedUsername = username.trim()
     if (rememberLogin && nextRememberedUsername) {
-      writeRememberedUsername(nextRememberedUsername)
-      setRememberedUsername(nextRememberedUsername)
+      const next = addRememberedUsername(rememberedUsernames, nextRememberedUsername)
+      writeRememberedUsernames(next)
+      setRememberedUsernames(next)
     } else {
-      forgetRememberedUsername()
-      setRememberedUsername('')
+      const next = removeRememberedUsername(rememberedUsernames, nextRememberedUsername)
+      writeRememberedUsernames(next)
+      setRememberedUsernames(next)
     }
   }
 
@@ -135,8 +182,7 @@ export function AuthScreen() {
     setPassword('')
   }
 
-  const useRememberedUsername = () => {
-    if (!rememberedUsername) return
+  const useRememberedUsername = (rememberedUsername: string) => {
     setMode('login')
     setUsername(rememberedUsername)
     setPassword('')
@@ -145,10 +191,21 @@ export function AuthScreen() {
     window.setTimeout(() => passwordInputRef.current?.focus(), 0)
   }
 
-  const forgetRememberedLogin = () => {
-    forgetRememberedUsername()
-    if (username === rememberedUsername) setUsername('')
-    setRememberedUsername('')
+  const forgetRememberedLogin = (rememberedUsername: string) => {
+    const next = removeRememberedUsername(rememberedUsernames, rememberedUsername)
+    writeRememberedUsernames(next)
+    if (username.trim().toLowerCase() === rememberedUsername.trim().toLowerCase()) setUsername('')
+    setRememberedUsernames(next)
+    setRememberLogin(next.length > 0)
+    setPassword('')
+  }
+
+  const forgetAllRememberedLogins = () => {
+    forgetAllRememberedUsernames()
+    if (rememberedUsernames.some((item) => item.trim().toLowerCase() === username.trim().toLowerCase())) {
+      setUsername('')
+    }
+    setRememberedUsernames([])
     setRememberLogin(false)
     setPassword('')
   }
@@ -189,31 +246,49 @@ export function AuthScreen() {
 
         {mode === 'login' && (
           <form className="space-y-3" onSubmit={handleLogin}>
-            {rememberedUsername && (
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-surface px-2 py-2">
-                <button
-                  type="button"
-                  onClick={useRememberedUsername}
-                  className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-white transition-colors hover:bg-surface-lighter"
-                  aria-label={`Usar usuario ${rememberedUsername}`}
-                >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/70 bg-surface-light text-muted">
-                    <UserRound size={14} aria-hidden />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block truncate font-medium">{rememberedUsername}</span>
-                    <span className="block text-caption text-muted">Usuario recordado</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={forgetRememberedLogin}
-                  className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-surface-lighter hover:text-white"
-                  aria-label={`Olvidar usuario ${rememberedUsername}`}
-                  title="Olvidar usuario"
-                >
-                  <X size={14} aria-hidden />
-                </button>
+            {rememberedUsernames.length > 0 && (
+              <div className="space-y-2 rounded-lg border border-border bg-surface px-2 py-2">
+                <div className="flex items-center justify-between gap-3 px-2">
+                  <p className="text-caption font-medium uppercase tracking-wide text-muted">Usuarios recordados</p>
+                  {rememberedUsernames.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={forgetAllRememberedLogins}
+                      className="text-caption text-muted underline-offset-2 hover:text-white hover:underline"
+                    >
+                      Olvidar todos
+                    </button>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  {rememberedUsernames.map((rememberedUsername) => (
+                    <div key={rememberedUsername} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => useRememberedUsername(rememberedUsername)}
+                        className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-sm text-white transition-colors hover:bg-surface-lighter"
+                        aria-label={`Usar usuario ${rememberedUsername}`}
+                      >
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border/70 bg-surface-light text-muted">
+                          <UserRound size={14} aria-hidden />
+                        </span>
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium">{rememberedUsername}</span>
+                          <span className="block text-caption text-muted">Usuario recordado</span>
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => forgetRememberedLogin(rememberedUsername)}
+                        className="shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-surface-lighter hover:text-white"
+                        aria-label={`Olvidar usuario ${rememberedUsername}`}
+                        title="Olvidar usuario"
+                      >
+                        <X size={14} aria-hidden />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             <input
