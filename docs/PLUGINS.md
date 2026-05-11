@@ -202,15 +202,16 @@ Hoy hay **8 plugins oficiales** distribuidos por dominio. Cada uno declara `doma
 - **Columnas**: edición inline + `wip_limit`.
 - **Configuración core**: `pluginSettings:work` (duración foco/break, alerta vencimiento, WIP, vista predeterminada).
 - **Quick action**: escucha `core:focus-request` desde la barra global del Core.
+- **Notas**: editor con modo editar/vista previa Markdown/GFM, tags globales y extraccion IA opcional hacia Kanban.
 - **AI Provider**: opcional para Note → Task
 - **Gamificación**: +10 tarea completada, +5 foco completado, −2 foco interrumpido, +3 nota creada
 
 ### finance — `domain: finance`
 - **Tablas**: `finance_accounts`, `finance_categories`, `finance_transactions`, `finance_recurring`, `finance_budgets`, `finance_merchant_aliases`
 - **Páginas**: `/finance`, `/finance/accounts`, `/finance/transactions`, `/finance/budgets`, `/finance/recurring`, `/finance/insights`
-- **Eventos emitidos**: 17 eventos `ACCOUNT_*`, `CATEGORY_*`, `TRANSACTION_*`, `TRANSFER_CREATED`, `RECURRING_*`, `BUDGET_*`, `ANOMALY_DETECTED`
+- **Eventos emitidos**: 18 eventos `ACCOUNT_*`, `CATEGORY_*`, `TRANSACTION_*`, `TRANSFER_CREATED`, `WITHDRAWAL_CREATED`, `RECURRING_*`, `BUDGET_*`, `ANOMALY_DETECTED`
 - **Servicios internos**: `runRecurringEngine` (RRULE-light), `detectAnomaly`, `financeAIProvider`
-- **Configuración core**: `pluginSettings:finance` (moneda default, presupuesto auto)
+- **Configuración core**: `pluginSettings:finance` (moneda base, tasas manuales, presupuestos, recurrentes, transferencias, alertas e IA)
 - **AI Provider**: sí (insights mensuales, sugerencia de presupuestos, gastos inusuales)
 - **Gamificación**: +2 transacción, +5 recurrente creado, +5 presupuesto creado
 
@@ -266,7 +267,7 @@ Desde `Control Center`, el core permite guardar preferencias por plugin sin modi
 
 - `pluginSettings:fitness`: entrenos/semana, sueño objetivo, objetivo de comidas, recordatorio de mediciones y `smokingCessationEnabled` para mostrar el seguimiento de cigarrillos solo si el usuario lo activa.
 - `pluginSettings:work`: duración de foco y break, alerta de vencimiento, límite WIP, vista predeterminada de tablero.
-- `pluginSettings:finance`: moneda default, opciones de presupuesto e insights.
+- `pluginSettings:finance`: moneda base, tasas manuales por moneda, opciones de presupuesto/recurrentes/transferencias, alertas e insights.
 
 Estas preferencias se guardan en `settings` y pueden ser consumidas por componentes/plugins para ajustar su comportamiento.
 

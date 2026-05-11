@@ -2,6 +2,35 @@
 
 ## Unreleased
 
+## [1.17.0] - 2026-05-11
+
+### Finanzas multi-moneda y retiros
+
+- Finanzas suma tasas manuales por moneda en Control Center y conserva monto
+  original, moneda original, monto base y tasa usada en cada movimiento.
+- Las cuentas ahora pueden tener color, tipo "Otra", edicion inline y balances
+  agrupados por moneda.
+- Quick Add permite cargar ingresos/gastos en una moneda distinta a la cuenta,
+  transferencias con monto destino y retiros hacia cuentas de efectivo.
+- Movimientos permite filtrar por moneda, buscar por cuenta, editar ingresos y
+  gastos existentes, y mostrar totales sin mezclar monedas.
+- Dashboard, widget, insights e IA financiera reportan en moneda base cuando
+  hay tasa disponible, avisando cuando faltan conversiones.
+
+### Work y notas
+
+- Notas de Work suma modo editar/vista previa con Markdown GFM, tablas,
+  checklists y links externos seguros.
+- La lista de notas se redisenia con extracto, fecha de actualizacion, contador
+  de palabras y controles mas compactos.
+
+### Core y UI
+
+- Tags globales en Control Center pasan a una seccion colapsable con contador
+  de tags/usos para reducir ruido visual.
+- Electron oculta la barra de menu nativa en Windows/Linux para una experiencia
+  mas limpia en la app instalada.
+
 ## [1.16.0] - 2026-05-10
 
 ### Config, tags y flujos no tecnicos

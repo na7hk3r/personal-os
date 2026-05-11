@@ -61,7 +61,7 @@ A diferencia de un dashboard de SaaS o una app cloud, **toda tu información viv
 - Tareas predefinidas: **coach diario**, **review semanal**, **nudge de foco** — en español rioplatense, sin emojis.
 - **Daily Brief** — una línea accionable cada mañana, cacheada por día, con fallback determinístico cuando Ollama está off.
 - **Smart Focus Nudge** — si llevás 45 s en `/work` sin actividad y la última sesión de foco fue hace más de 4 h, la app te ofrece arrancar foco con la tarea más prioritaria. Una vez por sesión de la app.
-- **Note → Task** — desde el editor de Notas extraés tareas accionables a Kanban con un click (requiere Ollama).
+- **Note → Task** — desde el editor de Notas extraés tareas accionables a Kanban con un click (requiere Ollama). Las notas tambien tienen vista previa Markdown/GFM.
 - El servicio `aiContextService` arma un snapshot real de tu actividad (fitness 7d, work, planner, Pulso Nora, eventos recientes) y lo entrega al LLM como contexto.
 - **Registry de proveedores de contexto** (`registerAIContextProvider`): cada plugin aporta su slice al snapshot sin que el core lo conozca.
 - Configurable desde Control Center: enable, modelo, system prompt, temperatura.
@@ -72,9 +72,9 @@ Sistema de plugins de primera clase. Hoy vienen incluidos **8 plugins oficiales*
 
 | Plugin | Dominio | Qué resuelve |
 | --- | --- | --- |
-| **Work** | productivity | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, distintivos visuales y archivo manual de completadas. Edición rápida: Enter guarda los campos principales de una card. Notas y enlaces con búsqueda y pin. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, mini timer flotante, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
+| **Work** | productivity | Kanban con prioridades, estimaciones, checklists, vencimientos, WIP limit, distintivos visuales y archivo manual de completadas. Edición rápida: Enter guarda los campos principales de una card. Notas y enlaces con búsqueda, pin y vista previa Markdown/GFM. **Focus Engine 2.0** con pause/resume reales, Pomodoro configurable, mini timer flotante, notificaciones nativas y cleanup de sesiones zombie. **Note → Task** con extracción IA desde notas largas. |
 | **Fitness** | fitness | Tracking diario de peso, comidas, ejercicios y sueño. Tabla de medidas corporales, gráficos históricos, resumen mensual y seguimiento opcional para dejar de fumar. |
-| **Finance** | finance | Cuentas, transacciones, categorías, presupuestos mensuales, gastos recurrentes y transferencias entre cuentas. Secciones configurables desde Control Center, moneda predeterminada editable y **Insights IA opcionales** con alertas de gastos inusuales. Default UYU, multi-moneda. |
+| **Finance** | finance | Cuentas, transacciones, categorías, presupuestos mensuales, gastos recurrentes, transferencias y retiros a efectivo. Secciones configurables desde Control Center, moneda base editable, tasas manuales multi-moneda y **Insights IA opcionales** con alertas de gastos inusuales. |
 | **Habits** | habits | Tracking de hábitos con metas diarias / semanales / mensuales, rachas reales, detección de "en riesgo" y proveedor IA con top streaks. Eventos `LOGGED` / `GOAL_MET` integrados a Pulso Nora. |
 | **Journal** | knowledge | Diario con prompts builtin, mood (1–5), tags, búsqueda y pin. Una entrada por día, undo en borrado. Privacy-first: el LLM sólo recibe agregados, nunca el contenido. |
 | **Goals & OKRs** | productivity | Objetivos trimestrales / anuales con Key Results manuales o **auto-sincronizados** desde métricas publicadas por otros plugins (`syncMetricBackedKRs` lee `metricsRegistry`). Milestones y proveedor IA con progreso por período. |

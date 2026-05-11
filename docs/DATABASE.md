@@ -271,9 +271,10 @@ Sesiones de foco del motor de ejecución. Creada en migración v4.
 |---------|------|-------------|
 | `id` | TEXT PK | UUID |
 | `name` | TEXT NOT NULL | Nombre |
-| `type` | TEXT | `cash` \| `bank` \| `card` \| `wallet` \| `crypto` |
+| `type` | TEXT | `cash` \| `bank` \| `card` \| `wallet` \| `other` |
 | `currency` | TEXT NOT NULL | ISO-4217 |
-| `opening_balance` | REAL DEFAULT 0 | Saldo inicial |
+| `initial_balance` | INTEGER DEFAULT 0 | Saldo inicial en centavos, expresado en la moneda de la cuenta |
+| `color` | TEXT | Color opcional `#RRGGBB` para identificar la cuenta |
 | `archived` | INTEGER DEFAULT 0 | 1 = archivada |
 | `created_at` | TEXT | ISO datetime |
 
@@ -293,19 +294,26 @@ Sesiones de foco del motor de ejecución. Creada en migración v4.
 | `account_id` | TEXT NOT NULL | FK `finance_accounts.id` |
 | `category_id` | TEXT | FK `finance_categories.id` (nullable) |
 | `kind` | TEXT NOT NULL | `income` \| `expense` \| `transfer` |
-| `amount` | REAL NOT NULL | Monto positivo (signo lo da `kind`) |
-| `currency` | TEXT NOT NULL | ISO-4217 |
-| `date` | TEXT NOT NULL | ISO `YYYY-MM-DD` |
-| `description` | TEXT | Texto libre |
-| `merchant` | TEXT | Nombre del comercio (puede mapear vía `finance_merchant_aliases`) |
-| `transfer_id` | TEXT | UUID que liga el par income/expense de una transferencia |
+| `amount` | INTEGER NOT NULL | Monto positivo en centavos, en la moneda de la cuenta |
+| `currency` | TEXT NOT NULL | ISO-4217 de la cuenta impactada |
+| `original_amount` | INTEGER | Monto original ingresado por el usuario, en centavos |
+| `original_currency` | TEXT | ISO-4217 del monto original |
+| `base_amount` | INTEGER | Monto convertido a la moneda base para reportes, si hay tasa |
+| `base_currency` | TEXT | Moneda base usada para `base_amount` |
+| `exchange_rate` | REAL | Tasa manual usada para convertir desde `original_currency` |
+| `occurred_at` | TEXT NOT NULL | ISO `YYYY-MM-DD` |
+| `note` | TEXT | Texto libre |
+| `recurring_id` | TEXT | FK opcional a `finance_recurring.id` |
+| `transfer_pair_id` | TEXT | ID del otro lado de una transferencia |
+| `transfer_group_id` | TEXT | UUID que agrupa los dos lados de una transferencia |
+| `movement_subtype` | TEXT NOT NULL DEFAULT 'regular' | `regular` \| `withdrawal` |
 | `created_at` | TEXT | ISO datetime |
 
 ### `finance_recurring`
-Plantilla de transacciones recurrentes. Campos: `id`, `name`, `kind`, `account_id`, `category_id`, `amount`, `currency`, `cadence` (`daily` \| `weekly` \| `monthly` \| `yearly`), `interval` (entero), `start_date`, `end_date?`, `next_run`, `active`. El motor `runRecurringEngine` materializa ocurrencias en `finance_transactions`.
+Plantilla de transacciones recurrentes. Campos: `id`, `name`, `template` (JSON con movimiento base), `rrule`, `next_run`, `active`, `created_at`. El motor `runRecurringEngine` materializa ocurrencias en `finance_transactions`.
 
 ### `finance_budgets`
-Campos: `id`, `category_id`, `period` (`month` \| `quarter` \| `year`), `amount`, `currency`, `start_date`, `rollover` (0/1).
+Campos: `id`, `category_id`, `period` (`monthly`), `limit_amount`, `currency`, `created_at`.
 
 ### `finance_merchant_aliases`
 Mapeo `pattern → merchant` para normalizar descripciones al importar movimientos.

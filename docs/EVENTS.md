@@ -147,7 +147,8 @@ Definidos en `src/plugins/finance/events.ts`. Prefijo: `FINANCE_`.
 | `FINANCE_EVENTS.TRANSACTION_CREATED` | Transacción registrada | `{ transactionId, amount, currency, kind }` |
 | `FINANCE_EVENTS.TRANSACTION_UPDATED` | Transacción editada | `{ transactionId }` |
 | `FINANCE_EVENTS.TRANSACTION_DELETED` | Transacción eliminada | `{ transactionId }` |
-| `FINANCE_EVENTS.TRANSFER_CREATED` | Transferencia entre cuentas | `{ fromAccountId, toAccountId, amount }` |
+| `FINANCE_EVENTS.TRANSFER_CREATED` | Transferencia entre cuentas | `{ from, to, amount, toAmount }` |
+| `FINANCE_EVENTS.WITHDRAWAL_CREATED` | Retiro hacia cuenta de efectivo | `{ from, to, amount, toAmount }` |
 | `FINANCE_EVENTS.RECURRING_CREATED` | Recurrente creada | `{ recurringId, cadence }` |
 | `FINANCE_EVENTS.RECURRING_UPDATED` | Recurrente editada | `{ recurringId }` |
 | `FINANCE_EVENTS.RECURRING_RUN` | Motor RRULE-light ejecutó una ocurrencia | `{ recurringId, transactionId }` |
