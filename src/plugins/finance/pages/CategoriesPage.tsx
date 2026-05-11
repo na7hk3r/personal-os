@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
-import { BadgeDollarSign, Plus, Trash2 } from 'lucide-react'
+import { BadgeDollarSign, Edit2, Plus, Save, Trash2, X } from 'lucide-react'
 import { useFinanceStore } from '../store'
-import { createCategory, deleteCategory } from '../operations'
+import { createCategory, deleteCategory, updateCategory } from '../operations'
 import { useToast } from '@core/ui/components/ToastProvider'
 import { messages } from '@core/ui/messages'
+import type { Category } from '../types'
 
 export function CategoriesPage() {
   const categories = useFinanceStore((s) => s.categories)
@@ -12,6 +13,8 @@ export function CategoriesPage() {
 
   const [name, setName] = useState('')
   const [kind, setKind] = useState<'income' | 'expense'>('expense')
+  const [color, setColor] = useState('#7c3aed')
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   const usageById = useMemo(() => {
@@ -22,12 +25,32 @@ export function CategoriesPage() {
     return map
   }, [transactions])
 
+  const reset = () => {
+    setName('')
+    setKind('expense')
+    setColor('#7c3aed')
+    setEditingId(null)
+  }
+
   const onCreate = async () => {
     if (!name.trim()) return
     setBusy(true)
     try {
-      await createCategory({ name: name.trim(), kind })
-      setName('')
+      await createCategory({ name: name.trim(), kind, color })
+      reset()
+    } catch (err) {
+      toast.error((err as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const onSave = async () => {
+    if (!editingId || !name.trim()) return
+    setBusy(true)
+    try {
+      await updateCategory(editingId, { name: name.trim(), kind, color })
+      reset()
     } catch (err) {
       toast.error((err as Error).message)
     } finally {
@@ -43,16 +66,23 @@ export function CategoriesPage() {
     }
   }
 
+  const startEdit = (category: Category) => {
+    setEditingId(category.id)
+    setName(category.name)
+    setKind(category.kind)
+    setColor(category.color ?? '#7c3aed')
+  }
+
   return (
     <div className="space-y-4">
       <header className="rounded-2xl border border-border bg-surface-light/90 p-4 shadow-xl">
-        <h1 className="text-sm font-semibold text-white">Categorías</h1>
-        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto]">
+        <h1 className="text-sm font-semibold text-white">Categorias</h1>
+        <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto_auto_auto]">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && void onCreate()}
-            placeholder="Nombre de categoría"
+            onKeyDown={(e) => e.key === 'Enter' && void (editingId ? onSave() : onCreate())}
+            placeholder="Nombre de categoria"
             className="rounded-lg border border-border bg-surface px-3 py-2 text-sm text-white outline-none focus:border-accent"
           />
           <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface p-1 text-xs">
@@ -61,10 +91,31 @@ export function CategoriesPage() {
             <button type="button" onClick={() => setKind('income')}
               className={`rounded-md px-2 py-1 ${kind === 'income' ? 'bg-emerald-500/20 text-emerald-100' : 'text-muted'}`}>Ingreso</button>
           </div>
-          <button type="button" onClick={() => void onCreate()} disabled={busy || !name.trim()}
-            className="inline-flex items-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-sm text-accent-light hover:bg-accent/25 disabled:opacity-40">
-            <Plus size={14} /> Crear
+          <input
+            type="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="h-10 rounded-lg border border-border bg-surface p-1"
+            aria-label="Color de categoria"
+          />
+          <button
+            type="button"
+            onClick={() => void (editingId ? onSave() : onCreate())}
+            disabled={busy || !name.trim()}
+            className="inline-flex items-center justify-center gap-1 rounded-lg border border-accent bg-accent/15 px-3 py-2 text-sm text-accent-light hover:bg-accent/25 disabled:opacity-40"
+          >
+            {editingId ? <Save size={14} /> : <Plus size={14} />}
+            {editingId ? 'Guardar' : 'Crear'}
           </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex items-center justify-center gap-1 rounded-lg border border-border px-3 py-2 text-sm text-muted hover:text-white"
+            >
+              <X size={14} /> Cancelar
+            </button>
+          )}
         </div>
       </header>
 
@@ -75,16 +126,27 @@ export function CategoriesPage() {
           {categories.map((c) => {
             const uses = usageById.get(c.id) ?? 0
             return (
-              <div key={c.id} className="flex items-center justify-between rounded-xl border border-border bg-surface px-3 py-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <BadgeDollarSign size={14} className={c.kind === 'income' ? 'text-emerald-300' : 'text-rose-300'} />
-                  <span className="text-white">{c.name}</span>
-                  <span className="text-xs text-muted">· {c.kind === 'income' ? 'Ingreso' : 'Gasto'} · {uses} usos</span>
+              <div key={c.id} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-surface px-3 py-2 text-sm">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-light"
+                    style={c.color ? { color: c.color } : undefined}
+                  >
+                    <BadgeDollarSign size={14} className={c.kind === 'income' ? 'text-emerald-300' : 'text-rose-300'} />
+                  </span>
+                  <span className="truncate text-white">{c.name}</span>
+                  <span className="shrink-0 text-xs text-muted">- {c.kind === 'income' ? 'Ingreso' : 'Gasto'} - {uses} usos</span>
                 </div>
-                <button type="button" onClick={() => void onDelete(c.id)}
-                  className="rounded p-1 text-muted hover:text-rose-300" aria-label="Borrar">
-                  <Trash2 size={14} />
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button type="button" onClick={() => startEdit(c)}
+                    className="rounded p-1 text-muted hover:text-accent-light" aria-label="Editar">
+                    <Edit2 size={14} />
+                  </button>
+                  <button type="button" onClick={() => void onDelete(c.id)}
+                    className="rounded p-1 text-muted hover:text-rose-300" aria-label="Borrar">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             )
           })}

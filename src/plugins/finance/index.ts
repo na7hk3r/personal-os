@@ -125,6 +125,26 @@ const financePlugin: PluginManifest = {
           ('cat_other_inc', 'Otros ingresos', NULL, 'income', NULL, 0);
       `,
     },
+    {
+      version: 3,
+      up: `
+        ALTER TABLE finance_accounts ADD COLUMN color TEXT;
+        ALTER TABLE finance_transactions ADD COLUMN original_amount INTEGER;
+        ALTER TABLE finance_transactions ADD COLUMN original_currency TEXT;
+        ALTER TABLE finance_transactions ADD COLUMN base_amount INTEGER;
+        ALTER TABLE finance_transactions ADD COLUMN base_currency TEXT;
+        ALTER TABLE finance_transactions ADD COLUMN exchange_rate REAL;
+        ALTER TABLE finance_transactions ADD COLUMN transfer_group_id TEXT;
+        ALTER TABLE finance_transactions ADD COLUMN movement_subtype TEXT NOT NULL DEFAULT 'regular';
+        UPDATE finance_transactions
+           SET original_amount = COALESCE(original_amount, amount),
+               original_currency = COALESCE(original_currency, currency),
+               base_amount = COALESCE(base_amount, amount),
+               base_currency = COALESCE(base_currency, currency),
+               exchange_rate = COALESCE(exchange_rate, 1),
+               movement_subtype = COALESCE(movement_subtype, 'regular');
+      `,
+    },
   ],
 
   widgets: defaultFinanceUi.widgets,
@@ -157,6 +177,7 @@ const financePlugin: PluginManifest = {
       type: row.type as Account['type'],
       currency: row.currency as string,
       initialBalance: Number(row.initial_balance ?? 0),
+      color: (row.color ?? null) as string | null,
       archived: Boolean(row.archived),
       createdAt: row.created_at as string,
     }))
@@ -177,10 +198,17 @@ const financePlugin: PluginManifest = {
       kind: row.kind as Transaction['kind'],
       amount: Number(row.amount ?? 0),
       currency: row.currency as string,
+      originalAmount: Number(row.original_amount ?? row.amount ?? 0),
+      originalCurrency: (row.original_currency ?? row.currency) as string,
+      baseAmount: row.base_amount == null ? null : Number(row.base_amount),
+      baseCurrency: (row.base_currency ?? null) as string | null,
+      exchangeRate: row.exchange_rate == null ? null : Number(row.exchange_rate),
       occurredAt: row.occurred_at as string,
       note: (row.note ?? null) as string | null,
       recurringId: (row.recurring_id ?? null) as string | null,
       transferPairId: (row.transfer_pair_id ?? null) as string | null,
+      transferGroupId: (row.transfer_group_id ?? null) as string | null,
+      movementSubtype: (row.movement_subtype ?? 'regular') as Transaction['movementSubtype'],
       createdAt: row.created_at as string,
     }))
 

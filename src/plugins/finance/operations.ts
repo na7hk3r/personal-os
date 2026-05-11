@@ -1,16 +1,21 @@
 /**
- * Operaciones CRUD de Finance. Cada operación:
+ * Operaciones CRUD de Finance. Cada operacion:
  *  - Persiste a SQLite via window.storage.execute.
  *  - Actualiza el store Zustand.
- *  - Emite el evento correspondiente vía eventBus (con persist=true).
- *
- * Mantenemos lógica fuera de los componentes para que las pages sean delgadas.
+ *  - Emite el evento correspondiente via eventBus (con persist=true).
  */
 
 import { eventBus } from '@core/events/EventBus'
 import { useFinanceStore } from './store'
 import { FINANCE_EVENTS } from './events'
-import { genId, materializeRecurring, todayISO } from './utils'
+import {
+  convertCurrencyAmount,
+  genId,
+  getManualRate,
+  materializeRecurring,
+  normalizeCurrencyCode,
+  todayISO,
+} from './utils'
 import type {
   Account,
   Category,
@@ -21,6 +26,7 @@ import type {
   TransactionKind,
   AccountType,
   CategoryKind,
+  MovementSubtype,
 } from './types'
 
 function exec(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid: number }> {
@@ -28,13 +34,114 @@ function exec(sql: string, params: unknown[] = []): Promise<{ changes: number; l
   return window.storage.execute(sql, params)
 }
 
-// ─── Accounts ────────────────────────────────────────────────────────
+interface MoneySnapshot {
+  amount: number
+  currency: string
+  originalAmount: number
+  originalCurrency: string
+  baseAmount: number | null
+  baseCurrency: string
+  exchangeRate: number | null
+}
+
+function buildMoneySnapshot(input: {
+  amount: number
+  currency: string
+  accountCurrency: string
+}): MoneySnapshot {
+  const settings = useFinanceStore.getState().settings
+  const baseCurrency = normalizeCurrencyCode(settings.defaultCurrency)
+  const originalCurrency = normalizeCurrencyCode(input.currency, input.accountCurrency)
+  const accountCurrency = normalizeCurrencyCode(input.accountCurrency)
+
+  const accountAmount = convertCurrencyAmount(
+    input.amount,
+    originalCurrency,
+    accountCurrency,
+    settings.exchangeRates,
+    baseCurrency,
+  )
+
+  if (accountAmount == null) {
+    throw new Error(`Configura una tasa manual para convertir ${originalCurrency} a ${accountCurrency}.`)
+  }
+
+  return {
+    amount: accountAmount,
+    currency: accountCurrency,
+    originalAmount: input.amount,
+    originalCurrency,
+    baseAmount: convertCurrencyAmount(
+      input.amount,
+      originalCurrency,
+      baseCurrency,
+      settings.exchangeRates,
+      baseCurrency,
+    ),
+    baseCurrency,
+    exchangeRate: getManualRate(originalCurrency, baseCurrency, settings.exchangeRates),
+  }
+}
+
+function buildAccountCurrencySnapshot(amount: number, currency: string): MoneySnapshot {
+  const settings = useFinanceStore.getState().settings
+  const baseCurrency = normalizeCurrencyCode(settings.defaultCurrency)
+  const normalizedCurrency = normalizeCurrencyCode(currency, baseCurrency)
+  return {
+    amount,
+    currency: normalizedCurrency,
+    originalAmount: amount,
+    originalCurrency: normalizedCurrency,
+    baseAmount: convertCurrencyAmount(
+      amount,
+      normalizedCurrency,
+      baseCurrency,
+      settings.exchangeRates,
+      baseCurrency,
+    ),
+    baseCurrency,
+    exchangeRate: getManualRate(normalizedCurrency, baseCurrency, settings.exchangeRates),
+  }
+}
+
+async function insertTransactionRow(tx: Transaction): Promise<void> {
+  await exec(
+    `INSERT INTO finance_transactions
+       (id, account_id, category_id, kind, amount, currency, original_amount, original_currency,
+        base_amount, base_currency, exchange_rate, occurred_at, note, recurring_id, transfer_pair_id,
+        transfer_group_id, movement_subtype, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      tx.id,
+      tx.accountId,
+      tx.categoryId,
+      tx.kind,
+      tx.amount,
+      tx.currency,
+      tx.originalAmount,
+      tx.originalCurrency,
+      tx.baseAmount,
+      tx.baseCurrency,
+      tx.exchangeRate,
+      tx.occurredAt,
+      tx.note,
+      tx.recurringId,
+      tx.transferPairId,
+      tx.transferGroupId,
+      tx.movementSubtype,
+      tx.createdAt,
+    ],
+  )
+}
+
+// Accounts ------------------------------------------------------------------
 
 export interface CreateAccountInput {
   name: string
   type: AccountType
   currency?: string
   initialBalance?: number
+  color?: string | null
 }
 
 export async function createAccount(input: CreateAccountInput): Promise<Account> {
@@ -42,28 +149,37 @@ export async function createAccount(input: CreateAccountInput): Promise<Account>
     id: genId('acc'),
     name: input.name.trim(),
     type: input.type,
-    currency: (input.currency ?? useFinanceStore.getState().settings.defaultCurrency).toUpperCase(),
+    currency: normalizeCurrencyCode(input.currency, useFinanceStore.getState().settings.defaultCurrency),
     initialBalance: input.initialBalance ?? 0,
+    color: input.color ?? null,
     archived: false,
     createdAt: new Date().toISOString(),
   }
   await exec(
-    `INSERT INTO finance_accounts (id, name, type, currency, initial_balance, archived, created_at)
-     VALUES (?, ?, ?, ?, ?, 0, ?)`,
-    [account.id, account.name, account.type, account.currency, account.initialBalance, account.createdAt],
+    `INSERT INTO finance_accounts (id, name, type, currency, initial_balance, color, archived, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 0, ?)`,
+    [account.id, account.name, account.type, account.currency, account.initialBalance, account.color, account.createdAt],
   )
   useFinanceStore.getState().upsertAccount(account)
   eventBus.emit(FINANCE_EVENTS.ACCOUNT_CREATED, { id: account.id, name: account.name }, { source: 'finance', persist: true })
   return account
 }
 
-export async function updateAccount(id: string, patch: Partial<Pick<Account, 'name' | 'type' | 'currency' | 'initialBalance'>>): Promise<void> {
+export async function updateAccount(
+  id: string,
+  patch: Partial<Pick<Account, 'name' | 'type' | 'currency' | 'initialBalance' | 'color'>>,
+): Promise<void> {
   const existing = useFinanceStore.getState().accounts.find((a) => a.id === id)
   if (!existing) return
-  const next: Account = { ...existing, ...patch }
+  const next: Account = {
+    ...existing,
+    ...patch,
+    currency: patch.currency ? normalizeCurrencyCode(patch.currency, existing.currency) : existing.currency,
+    color: patch.color === undefined ? existing.color : patch.color,
+  }
   await exec(
-    `UPDATE finance_accounts SET name = ?, type = ?, currency = ?, initial_balance = ? WHERE id = ?`,
-    [next.name, next.type, next.currency, next.initialBalance, id],
+    `UPDATE finance_accounts SET name = ?, type = ?, currency = ?, initial_balance = ?, color = ? WHERE id = ?`,
+    [next.name, next.type, next.currency, next.initialBalance, next.color, id],
   )
   useFinanceStore.getState().upsertAccount(next)
   eventBus.emit(FINANCE_EVENTS.ACCOUNT_UPDATED, { id }, { source: 'finance', persist: true })
@@ -76,7 +192,7 @@ export async function archiveAccount(id: string): Promise<void> {
   eventBus.emit(FINANCE_EVENTS.ACCOUNT_ARCHIVED, { id }, { source: 'finance', persist: true })
 }
 
-// ─── Categories ──────────────────────────────────────────────────────
+// Categories ----------------------------------------------------------------
 
 export interface CreateCategoryInput {
   name: string
@@ -121,13 +237,13 @@ export async function deleteCategory(id: string): Promise<void> {
   eventBus.emit(FINANCE_EVENTS.CATEGORY_DELETED, { id }, { source: 'finance', persist: true })
 }
 
-// ─── Transactions ────────────────────────────────────────────────────
+// Transactions --------------------------------------------------------------
 
 export interface CreateTransactionInput {
   accountId: string
   categoryId: string | null
   kind: TransactionKind
-  amount: number  // centavos
+  amount: number
   currency?: string
   occurredAt?: string
   note?: string | null
@@ -135,29 +251,31 @@ export interface CreateTransactionInput {
 }
 
 export async function createTransaction(input: CreateTransactionInput): Promise<Transaction> {
-  if (input.amount <= 0) throw new Error('Monto inválido. Debe ser mayor a 0.')
+  if (input.amount <= 0) throw new Error('Monto invalido. Debe ser mayor a 0.')
   const account = useFinanceStore.getState().accounts.find((a) => a.id === input.accountId)
-  if (!account) throw new Error('Cuenta inválida.')
+  if (!account) throw new Error('Cuenta invalida.')
+
+  const money = buildMoneySnapshot({
+    amount: input.amount,
+    currency: input.currency ?? account.currency,
+    accountCurrency: account.currency,
+  })
 
   const tx: Transaction = {
     id: genId('tx'),
     accountId: input.accountId,
     categoryId: input.categoryId,
     kind: input.kind,
-    amount: input.amount,
-    currency: (input.currency ?? account.currency).toUpperCase(),
+    ...money,
     occurredAt: input.occurredAt ?? todayISO(),
     note: input.note ?? null,
     recurringId: input.recurringId ?? null,
     transferPairId: null,
+    transferGroupId: null,
+    movementSubtype: 'regular',
     createdAt: new Date().toISOString(),
   }
-  await exec(
-    `INSERT INTO finance_transactions
-       (id, account_id, category_id, kind, amount, currency, occurred_at, note, recurring_id, transfer_pair_id, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)`,
-    [tx.id, tx.accountId, tx.categoryId, tx.kind, tx.amount, tx.currency, tx.occurredAt, tx.note, tx.recurringId, tx.createdAt],
-  )
+  await insertTransactionRow(tx)
   useFinanceStore.getState().upsertTransaction(tx)
   eventBus.emit(
     FINANCE_EVENTS.TRANSACTION_CREATED,
@@ -170,7 +288,6 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 export async function deleteTransaction(id: string): Promise<void> {
   const tx = useFinanceStore.getState().transactions.find((t) => t.id === id)
   if (!tx) return
-  // Si tiene par (transfer), borrar también la contraparte.
   if (tx.transferPairId) {
     await exec(`DELETE FROM finance_transactions WHERE id = ?`, [tx.transferPairId])
     useFinanceStore.getState().removeTransaction(tx.transferPairId)
@@ -180,56 +297,135 @@ export async function deleteTransaction(id: string): Promise<void> {
   eventBus.emit(FINANCE_EVENTS.TRANSACTION_DELETED, { id }, { source: 'finance', persist: true })
 }
 
-export async function updateTransaction(
-  id: string,
-  patch: Partial<Pick<Transaction, 'amount' | 'categoryId' | 'note' | 'occurredAt'>>,
-): Promise<void> {
+export interface UpdateTransactionInput {
+  accountId?: string
+  categoryId?: string | null
+  kind?: Exclude<TransactionKind, 'transfer'>
+  amount?: number
+  currency?: string
+  occurredAt?: string
+  note?: string | null
+}
+
+export async function updateTransaction(id: string, patch: UpdateTransactionInput): Promise<void> {
   const existing = useFinanceStore.getState().transactions.find((t) => t.id === id)
   if (!existing) return
-  const next: Transaction = { ...existing, ...patch }
+
+  const moneyChanging = patch.accountId !== undefined || patch.amount !== undefined || patch.currency !== undefined
+  if (existing.kind === 'transfer' && moneyChanging) {
+    throw new Error('Para cambiar montos de una transferencia, borrala y cargala de nuevo.')
+  }
+
+  const accountId = patch.accountId ?? existing.accountId
+  const account = useFinanceStore.getState().accounts.find((a) => a.id === accountId)
+  if (!account) throw new Error('Cuenta invalida.')
+
+  const money = moneyChanging
+    ? buildMoneySnapshot({
+        amount: patch.amount ?? existing.originalAmount ?? existing.amount,
+        currency: patch.currency ?? existing.originalCurrency ?? existing.currency,
+        accountCurrency: account.currency,
+      })
+    : {
+        amount: existing.amount,
+        currency: existing.currency,
+        originalAmount: existing.originalAmount,
+        originalCurrency: existing.originalCurrency,
+        baseAmount: existing.baseAmount,
+        baseCurrency: existing.baseCurrency ?? useFinanceStore.getState().settings.defaultCurrency,
+        exchangeRate: existing.exchangeRate,
+      }
+
+  const next: Transaction = {
+    ...existing,
+    accountId,
+    categoryId: patch.categoryId === undefined ? existing.categoryId : patch.categoryId,
+    kind: patch.kind ?? (existing.kind === 'transfer' ? 'transfer' : existing.kind),
+    ...money,
+    occurredAt: patch.occurredAt ?? existing.occurredAt,
+    note: patch.note === undefined ? existing.note : patch.note,
+  }
+
   await exec(
-    `UPDATE finance_transactions SET amount = ?, category_id = ?, note = ?, occurred_at = ? WHERE id = ?`,
-    [next.amount, next.categoryId, next.note, next.occurredAt, id],
+    `UPDATE finance_transactions
+        SET account_id = ?, category_id = ?, kind = ?, amount = ?, currency = ?,
+            original_amount = ?, original_currency = ?, base_amount = ?, base_currency = ?,
+            exchange_rate = ?, note = ?, occurred_at = ?
+      WHERE id = ?`,
+    [
+      next.accountId,
+      next.categoryId,
+      next.kind,
+      next.amount,
+      next.currency,
+      next.originalAmount,
+      next.originalCurrency,
+      next.baseAmount,
+      next.baseCurrency,
+      next.exchangeRate,
+      next.note,
+      next.occurredAt,
+      id,
+    ],
   )
   useFinanceStore.getState().upsertTransaction(next)
   eventBus.emit(FINANCE_EVENTS.TRANSACTION_UPDATED, { id }, { source: 'finance', persist: true })
 }
 
-/**
- * Transferencia entre cuentas. Genera dos transactions con el mismo monto y
- * `transferPairId` cruzado: la de salida es expense en la cuenta origen y la
- * de entrada es income en la cuenta destino. Sin afectar P&L global.
- */
-export async function createTransfer(input: {
+export interface CreateTransferInput {
   fromAccountId: string
   toAccountId: string
-  amount: number
+  /** Legacy alias kept for callers/tests; interpreted as fromAmount. */
+  amount?: number
+  fromAmount?: number
+  toAmount?: number
   occurredAt?: string
   note?: string | null
-}): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+  movementSubtype?: MovementSubtype
+}
+
+export async function createTransfer(input: CreateTransferInput): Promise<{ outgoing: Transaction; incoming: Transaction }> {
   if (!useFinanceStore.getState().settings.transfersEnabled) throw new Error('Transferencias deshabilitadas.')
   if (input.fromAccountId === input.toAccountId) throw new Error('Cuentas distintas requeridas.')
-  if (input.amount <= 0) throw new Error('Monto inválido.')
+
+  const fromAmount = input.fromAmount ?? input.amount ?? 0
+  if (fromAmount <= 0) throw new Error('Monto invalido.')
+
   const from = useFinanceStore.getState().accounts.find((a) => a.id === input.fromAccountId)
   const to = useFinanceStore.getState().accounts.find((a) => a.id === input.toAccountId)
-  if (!from || !to) throw new Error('Cuentas inválidas.')
+  if (!from || !to) throw new Error('Cuentas invalidas.')
+
+  const settings = useFinanceStore.getState().settings
+  const toAmount = input.toAmount ?? (
+    from.currency === to.currency
+      ? fromAmount
+      : convertCurrencyAmount(fromAmount, from.currency, to.currency, settings.exchangeRates, settings.defaultCurrency)
+  )
+  if (toAmount == null || toAmount <= 0) {
+    throw new Error(`Ingresa el monto destino para ${to.currency}.`)
+  }
 
   const occurredAt = input.occurredAt ?? todayISO()
   const createdAt = new Date().toISOString()
   const outId = genId('tx')
   const inId = genId('tx')
+  const transferGroupId = genId('trf')
+  const movementSubtype = input.movementSubtype ?? 'regular'
+  const outgoingMoney = buildAccountCurrencySnapshot(fromAmount, from.currency)
+  const incomingMoney = buildAccountCurrencySnapshot(toAmount, to.currency)
 
   const outgoing: Transaction = {
     id: outId,
     accountId: from.id,
     categoryId: null,
     kind: 'transfer',
-    amount: input.amount,
-    currency: from.currency,
+    ...outgoingMoney,
     occurredAt,
     note: input.note ?? null,
     recurringId: null,
     transferPairId: inId,
+    transferGroupId,
+    movementSubtype,
     createdAt,
   }
   const incoming: Transaction = {
@@ -237,38 +433,49 @@ export async function createTransfer(input: {
     accountId: to.id,
     categoryId: null,
     kind: 'transfer',
-    amount: input.amount,
-    currency: to.currency,
+    ...incomingMoney,
     occurredAt,
     note: input.note ?? null,
     recurringId: null,
     transferPairId: outId,
-    // Creado un milisegundo después para que la convención de "incoming = más nuevo" se mantenga.
+    transferGroupId,
+    movementSubtype,
     createdAt: new Date(Date.parse(createdAt) + 1).toISOString(),
   }
 
-  await exec(
-    `INSERT INTO finance_transactions
-       (id, account_id, category_id, kind, amount, currency, occurred_at, note, recurring_id, transfer_pair_id, created_at)
-     VALUES (?, ?, NULL, 'transfer', ?, ?, ?, ?, NULL, ?, ?)`,
-    [outgoing.id, outgoing.accountId, outgoing.amount, outgoing.currency, outgoing.occurredAt, outgoing.note, incoming.id, outgoing.createdAt],
-  )
-  await exec(
-    `INSERT INTO finance_transactions
-       (id, account_id, category_id, kind, amount, currency, occurred_at, note, recurring_id, transfer_pair_id, created_at)
-     VALUES (?, ?, NULL, 'transfer', ?, ?, ?, ?, NULL, ?, ?)`,
-    [incoming.id, incoming.accountId, incoming.amount, incoming.currency, incoming.occurredAt, incoming.note, outgoing.id, incoming.createdAt],
-  )
+  await insertTransactionRow(outgoing)
+  await insertTransactionRow(incoming)
   useFinanceStore.getState().upsertTransactions([outgoing, incoming])
   eventBus.emit(
-    FINANCE_EVENTS.TRANSFER_CREATED,
-    { from: from.id, to: to.id, amount: input.amount },
+    movementSubtype === 'withdrawal' ? FINANCE_EVENTS.WITHDRAWAL_CREATED : FINANCE_EVENTS.TRANSFER_CREATED,
+    { from: from.id, to: to.id, amount: fromAmount, toAmount },
     { source: 'finance', persist: true },
   )
   return { outgoing, incoming }
 }
 
-// ─── Recurring ───────────────────────────────────────────────────────
+export async function createWithdrawal(input: {
+  fromAccountId: string
+  cashAccountId: string
+  amount: number
+  toAmount?: number
+  occurredAt?: string
+  note?: string | null
+}): Promise<{ outgoing: Transaction; incoming: Transaction }> {
+  const cash = useFinanceStore.getState().accounts.find((a) => a.id === input.cashAccountId)
+  if (!cash || cash.type !== 'cash') throw new Error('Elegi una cuenta de efectivo para el retiro.')
+  return createTransfer({
+    fromAccountId: input.fromAccountId,
+    toAccountId: input.cashAccountId,
+    amount: input.amount,
+    toAmount: input.toAmount,
+    occurredAt: input.occurredAt,
+    note: input.note,
+    movementSubtype: 'withdrawal',
+  })
+}
+
+// Recurring -----------------------------------------------------------------
 
 export async function createRecurring(input: {
   template: RecurringTemplate
@@ -300,11 +507,6 @@ export async function setRecurringActive(id: string, active: boolean): Promise<v
   eventBus.emit(FINANCE_EVENTS.RECURRING_UPDATED, { id, active }, { source: 'finance', persist: true })
 }
 
-/**
- * Materializa todas las recurrencias activas atrasadas. Se ejecuta al activar
- * el plugin (en `init`) y se puede invocar manualmente desde la UI. No corre
- * en background: respeta filosofía local-first sin scheduler.
- */
 export async function runRecurringEngine(): Promise<number> {
   if (!useFinanceStore.getState().settings.recurringEnabled) return 0
   const today = todayISO()
@@ -339,12 +541,13 @@ export async function runRecurringEngine(): Promise<number> {
   return created
 }
 
-// ─── Budgets ─────────────────────────────────────────────────────────
+// Budgets -------------------------------------------------------------------
 
 export async function upsertBudget(input: { categoryId: string; limitAmount: number; currency: string }): Promise<Budget> {
+  const currency = normalizeCurrencyCode(input.currency, useFinanceStore.getState().settings.defaultCurrency)
   const existing = useFinanceStore
     .getState()
-    .budgets.find((b) => b.categoryId === input.categoryId && b.currency === input.currency.toUpperCase())
+    .budgets.find((b) => b.categoryId === input.categoryId && b.currency === currency)
   if (existing) {
     await exec(
       `UPDATE finance_budgets SET limit_amount = ? WHERE id = ?`,
@@ -360,7 +563,7 @@ export async function upsertBudget(input: { categoryId: string; limitAmount: num
     categoryId: input.categoryId,
     period: 'monthly',
     limitAmount: input.limitAmount,
-    currency: input.currency.toUpperCase(),
+    currency,
     createdAt: new Date().toISOString(),
   }
   await exec(

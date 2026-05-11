@@ -28,10 +28,11 @@ export function BudgetsPage() {
     for (const t of transactions) {
       if (t.kind !== 'expense' || !t.categoryId) continue
       if (t.occurredAt < monthStart) continue
+      if (t.currency !== currency) continue
       map.set(t.categoryId, (map.get(t.categoryId) ?? 0) + t.amount)
     }
     return map
-  }, [transactions, monthStart])
+  }, [transactions, monthStart, currency])
 
   const budgetByCat = useMemo(() => new Map(budgets.map((b) => [b.categoryId, b])), [budgets])
 

@@ -8,6 +8,7 @@
 import { storageAPI } from '@core/storage/StorageAPI'
 import type { AIContextProvider } from '@core/services/aiContextRegistry'
 import { startOfMonth, formatLocalDate } from './utils'
+import { useFinanceStore } from './store'
 
 interface FinanceSlice {
   monthIncomeCents: number
@@ -33,24 +34,25 @@ export const financeAIProvider: AIContextProvider<FinanceSlice> = {
   async collect() {
     if (!(await tableExists('finance_transactions'))) return undefined
     const monthStart = formatLocalDate(startOfMonth())
+    const currency = useFinanceStore.getState().settings.defaultCurrency
     const incomeRow = await storageAPI.query<{ total: number }>(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM finance_transactions
-        WHERE kind = 'income' AND occurred_at >= ?`,
-      [monthStart],
+      `SELECT COALESCE(SUM(COALESCE(base_amount, amount)), 0) as total FROM finance_transactions
+        WHERE kind = 'income' AND occurred_at >= ? AND COALESCE(base_currency, currency) = ?`,
+      [monthStart, currency],
     )
     const expenseRow = await storageAPI.query<{ total: number }>(
-      `SELECT COALESCE(SUM(amount), 0) as total FROM finance_transactions
-        WHERE kind = 'expense' AND occurred_at >= ?`,
-      [monthStart],
+      `SELECT COALESCE(SUM(COALESCE(base_amount, amount)), 0) as total FROM finance_transactions
+        WHERE kind = 'expense' AND occurred_at >= ? AND COALESCE(base_currency, currency) = ?`,
+      [monthStart, currency],
     )
     const topRows = await storageAPI.query<AggRow>(
-      `SELECT category_id as categoryId, SUM(amount) as total
+      `SELECT category_id as categoryId, SUM(COALESCE(base_amount, amount)) as total
          FROM finance_transactions
-        WHERE kind = 'expense' AND occurred_at >= ?
+        WHERE kind = 'expense' AND occurred_at >= ? AND COALESCE(base_currency, currency) = ?
         GROUP BY category_id
         ORDER BY total DESC
         LIMIT 3`,
-      [monthStart],
+      [monthStart, currency],
     )
     const cats = await storageAPI.query<CategoryRow>(
       `SELECT id, name FROM finance_categories WHERE id IN (${topRows.map(() => '?').join(',') || 'NULL'})`,
@@ -63,9 +65,6 @@ export const financeAIProvider: AIContextProvider<FinanceSlice> = {
       `SELECT COUNT(*) as count FROM finance_recurring WHERE active = 1 AND next_run BETWEEN ? AND ?`,
       [today, inSevenDays],
     )
-    const accountRows = await storageAPI.query<{ currency: string }>(
-      `SELECT currency FROM finance_accounts WHERE archived = 0 LIMIT 1`,
-    )
     return {
       monthIncomeCents: incomeRow[0]?.total ?? 0,
       monthExpenseCents: expenseRow[0]?.total ?? 0,
@@ -74,7 +73,7 @@ export const financeAIProvider: AIContextProvider<FinanceSlice> = {
         amountCents: r.total,
       })),
       recurringDueSoon: dueRows[0]?.count ?? 0,
-      currency: accountRows[0]?.currency ?? 'UYU',
+      currency,
     }
   },
   render(slice) {

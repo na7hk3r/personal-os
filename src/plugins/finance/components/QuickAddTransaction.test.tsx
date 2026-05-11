@@ -13,13 +13,24 @@ vi.mock('../operations', () => ({
     kind: input.kind,
     amount: input.amount,
     currency: 'UYU',
+    originalAmount: input.amount,
+    originalCurrency: input.currency ?? 'UYU',
+    baseAmount: input.amount,
+    baseCurrency: 'UYU',
+    exchangeRate: 1,
     occurredAt: input.occurredAt,
     note: input.note,
     recurringId: null,
     transferPairId: null,
+    transferGroupId: null,
+    movementSubtype: 'regular',
     createdAt: new Date().toISOString(),
   })),
   createTransfer: vi.fn(async () => ({
+    outgoing: { id: 'tx_out' },
+    incoming: { id: 'tx_in' },
+  })),
+  createWithdrawal: vi.fn(async () => ({
     outgoing: { id: 'tx_out' },
     incoming: { id: 'tx_in' },
   })),
@@ -42,8 +53,8 @@ describe('QuickAddTransaction', () => {
     window.localStorage.clear()
     useFinanceStore.setState({
       accounts: [
-        { id: 'acc_cash', name: 'Efectivo', type: 'cash', currency: 'UYU', initialBalance: 0, archived: false, createdAt: '2026-01-01T00:00:00.000Z' },
-        { id: 'acc_bank', name: 'Banco', type: 'bank', currency: 'UYU', initialBalance: 0, archived: false, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'acc_cash', name: 'Efectivo', type: 'cash', currency: 'UYU', initialBalance: 0, color: null, archived: false, createdAt: '2026-01-01T00:00:00.000Z' },
+        { id: 'acc_bank', name: 'Banco', type: 'bank', currency: 'UYU', initialBalance: 0, color: null, archived: false, createdAt: '2026-01-01T00:00:00.000Z' },
       ],
       categories: [
         { id: 'cat_food', name: 'Comida', parentId: null, kind: 'expense', color: null, archived: false },
@@ -72,7 +83,7 @@ describe('QuickAddTransaction', () => {
     renderQuickAdd()
 
     fireEvent.click(screen.getByRole('button', { name: 'Transfer' }))
-    fireEvent.change(screen.getByPlaceholderText('Monto'), { target: { value: '1200' } })
+    fireEvent.change(screen.getByPlaceholderText(/Sale/), { target: { value: '1200' } })
     fireEvent.click(screen.getByRole('button', { name: 'Cargar' }))
 
     await waitFor(() => {

@@ -14,7 +14,18 @@ import { BrandIcon } from '@core/ui/components/BrandIcon'
 import { useFinanceStore } from '../store'
 import { QuickAddTransaction } from '../components/QuickAddTransaction'
 import { AccountsManager } from '../components/AccountsManager'
-import { formatCents, startOfMonth, formatLocalDate, computeAccountBalance, previousMonth } from '../utils'
+import {
+  computeAccountBalance,
+  formatCents,
+  formatCurrencyTotals,
+  formatLocalDate,
+  formatTransactionAmount,
+  getTransactionBaseAmount,
+  getTransactionOriginalAmount,
+  groupAmountsByCurrency,
+  previousMonth,
+  startOfMonth,
+} from '../utils'
 import { messages } from '@core/ui/messages'
 
 export function FinanceDashboard() {
@@ -31,23 +42,51 @@ export function FinanceDashboard() {
     const prev = previousMonth()
     const prevStart = formatLocalDate(prev.start)
     const prevEnd = formatLocalDate(prev.end)
-    let income = 0
-    let expense = 0
-    let prevExpense = 0
+    let incomeBase = 0
+    let expenseBase = 0
+    let prevExpenseBase = 0
+    let missingBase = 0
+    const incomeOriginal: Array<{ amount: number; currency: string }> = []
+    const expenseOriginal: Array<{ amount: number; currency: string }> = []
+
     for (const tx of transactions) {
-      if (tx.kind === 'income' && tx.occurredAt >= monthStart) income += tx.amount
-      else if (tx.kind === 'expense' && tx.occurredAt >= monthStart) expense += tx.amount
-      else if (tx.kind === 'expense' && tx.occurredAt >= prevStart && tx.occurredAt <= prevEnd) {
-        prevExpense += tx.amount
+      if (tx.kind !== 'income' && tx.kind !== 'expense') continue
+      const original = getTransactionOriginalAmount(tx)
+      const base = getTransactionBaseAmount(tx, settings.defaultCurrency, settings.exchangeRates)
+      if (tx.occurredAt >= monthStart) {
+        if (tx.kind === 'income') incomeOriginal.push(original)
+        else expenseOriginal.push(original)
+        if (base == null) missingBase += 1
+        else if (tx.kind === 'income') incomeBase += base
+        else expenseBase += base
+      } else if (tx.kind === 'expense' && tx.occurredAt >= prevStart && tx.occurredAt <= prevEnd && base != null) {
+        prevExpenseBase += base
       }
     }
-    const currency = accounts[0]?.currency ?? 'UYU'
-    const totalBalance = accounts
-      .filter((a) => a.currency === currency)
-      .reduce((acc, a) => acc + computeAccountBalance(a, transactions), 0)
-    const deltaPct = prevExpense > 0 ? Math.round(((expense - prevExpense) / prevExpense) * 100) : null
-    return { income, expense, currency, totalBalance, deltaPct }
-  }, [accounts, transactions])
+
+    const balanceItems = accounts.map((account) => ({
+      amount: computeAccountBalance(account, transactions),
+      currency: account.currency,
+    }))
+    const balancesByCurrency = groupAmountsByCurrency(balanceItems)
+    const primaryBalance = balancesByCurrency.get(settings.defaultCurrency) ?? Array.from(balancesByCurrency.values())[0] ?? 0
+    const primaryCurrency = balancesByCurrency.has(settings.defaultCurrency)
+      ? settings.defaultCurrency
+      : Array.from(balancesByCurrency.keys())[0] ?? settings.defaultCurrency
+    const deltaPct = prevExpenseBase > 0 ? Math.round(((expenseBase - prevExpenseBase) / prevExpenseBase) * 100) : null
+
+    return {
+      incomeBase,
+      expenseBase,
+      incomeOriginal: groupAmountsByCurrency(incomeOriginal),
+      expenseOriginal: groupAmountsByCurrency(expenseOriginal),
+      primaryBalance,
+      primaryCurrency,
+      balancesByCurrency,
+      deltaPct,
+      missingBase,
+    }
+  }, [accounts, transactions, settings])
 
   const monthTxs = useMemo(() => {
     const monthStart = formatLocalDate(startOfMonth())
@@ -70,6 +109,7 @@ export function FinanceDashboard() {
   const budgetByCat = useMemo(() => new Map(budgets.map((b) => [b.categoryId, b])), [budgets])
   const accountById = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts])
   const categoryById = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories])
+  const conversionHint = stats.missingBase > 0 ? `${stats.missingBase} mov. sin tasa manual` : undefined
 
   return (
     <div className="space-y-5">
@@ -78,15 +118,15 @@ export function FinanceDashboard() {
           <BrandIcon name="TreasureChest" size={44} />
           <div>
             <p className="text-caption uppercase tracking-eyebrow text-muted">Finanzas</p>
-            <h1 className="text-2xl font-bold text-white">{formatCents(stats.totalBalance, stats.currency)}</h1>
+            <h1 className="text-2xl font-bold text-white">{formatCents(stats.primaryBalance, stats.primaryCurrency)}</h1>
             <p className="text-xs text-muted">
-              Balance total · {accounts.length} {accounts.length === 1 ? 'cuenta' : 'cuentas'}
+              {accounts.length} {accounts.length === 1 ? 'cuenta' : 'cuentas'} - {formatCurrencyTotals(stats.balancesByCurrency, { compact: true })}
             </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
           <NavChip icon={<ReceiptText size={12} />} label="Movimientos" onClick={() => navigate('/finance/transactions')} />
-          <NavChip icon={<BadgeDollarSign size={12} />} label="Categorías" onClick={() => navigate('/finance/categories')} />
+          <NavChip icon={<BadgeDollarSign size={12} />} label="Categorias" onClick={() => navigate('/finance/categories')} />
           {settings.recurringEnabled && <NavChip icon={<CalendarSync size={12} />} label="Recurrentes" onClick={() => navigate('/finance/recurring')} />}
           {settings.budgetsEnabled && <NavChip icon={<PiggyBank size={12} />} label="Presupuestos" onClick={() => navigate('/finance/budgets')} />}
           {settings.insightsEnabled && <NavChip icon={<ChartNoAxesCombined size={12} />} label="Insights" onClick={() => navigate('/finance/insights')} />}
@@ -94,9 +134,27 @@ export function FinanceDashboard() {
       </header>
 
       <section className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3">
-        <Kpi label="Ingresos del mes" value={formatCents(stats.income, stats.currency, { compact: true })} accent="text-emerald-300" icon={<ArrowDownRight size={14} />} />
-        <Kpi label="Gastos del mes" value={formatCents(stats.expense, stats.currency, { compact: true })} accent="text-rose-300" icon={<ArrowUpRight size={14} />} hint={stats.deltaPct != null ? `${stats.deltaPct > 0 ? '+' : ''}${stats.deltaPct}% vs mes anterior` : undefined} />
-        <Kpi label="Saldo neto del mes" value={formatCents(stats.income - stats.expense, stats.currency, { compact: true })} accent={stats.income - stats.expense >= 0 ? 'text-emerald-300' : 'text-rose-300'} icon={<Banknote size={14} />} />
+        <Kpi
+          label={`Ingresos del mes (${settings.defaultCurrency})`}
+          value={formatCents(stats.incomeBase, settings.defaultCurrency, { compact: true })}
+          accent="text-emerald-300"
+          icon={<ArrowDownRight size={14} />}
+          hint={formatCurrencyTotals(stats.incomeOriginal, { compact: true, empty: 'Sin ingresos' })}
+        />
+        <Kpi
+          label={`Gastos del mes (${settings.defaultCurrency})`}
+          value={formatCents(stats.expenseBase, settings.defaultCurrency, { compact: true })}
+          accent="text-rose-300"
+          icon={<ArrowUpRight size={14} />}
+          hint={stats.deltaPct != null ? `${stats.deltaPct > 0 ? '+' : ''}${stats.deltaPct}% vs mes anterior` : conversionHint}
+        />
+        <Kpi
+          label={`Saldo neto (${settings.defaultCurrency})`}
+          value={formatCents(stats.incomeBase - stats.expenseBase, settings.defaultCurrency, { compact: true })}
+          accent={stats.incomeBase - stats.expenseBase >= 0 ? 'text-emerald-300' : 'text-rose-300'}
+          icon={<Banknote size={14} />}
+          hint={conversionHint}
+        />
       </section>
 
       <QuickAddTransaction />
@@ -110,7 +168,7 @@ export function FinanceDashboard() {
             type="button"
             onClick={() => navigate('/finance/transactions')}
             className="text-xs text-muted hover:text-white"
-          >Ver todo →</button>
+          >Ver todo</button>
         </header>
         {grouped.length === 0 && (
           <p className="text-sm text-muted">{messages.empty.financeTransactions}</p>
@@ -130,14 +188,14 @@ export function FinanceDashboard() {
                         <span className={`flex-shrink-0 ${tx.kind === 'income' ? 'text-emerald-300' : 'text-rose-300'}`}>
                           {tx.kind === 'income' ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}
                         </span>
-                        <span className="truncate text-white">{cat?.name ?? 'Sin categoría'}</span>
-                        {tx.note && <span className="truncate text-xs text-muted">· {tx.note}</span>}
+                        <span className="truncate text-white">{cat?.name ?? 'Sin categoria'}</span>
+                        {tx.note && <span className="truncate text-xs text-muted">- {tx.note}</span>}
                       </div>
                       <div className="flex flex-shrink-0 items-center gap-2 text-xs text-muted">
-                        {budget && <span title="Presupuesto definido" className="text-amber-300/70">●</span>}
+                        {budget && <span title="Presupuesto definido" className="text-amber-300/70">*</span>}
                         <span>{acc?.name}</span>
                         <span className={`font-mono font-medium ${tx.kind === 'income' ? 'text-emerald-200' : 'text-rose-200'}`}>
-                          {tx.kind === 'income' ? '+' : '−'}{formatCents(tx.amount, tx.currency)}
+                          {tx.kind === 'income' ? '+' : '-'}{formatTransactionAmount(tx)}
                         </span>
                       </div>
                     </li>
@@ -182,7 +240,7 @@ function formatHumanDate(iso: string): string {
   if (iso === today) return 'Hoy'
   if (iso === yest) return 'Ayer'
   try {
-    return new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'short' }).format(new Date(`${iso}T00:00:00`))
+    return new Intl.DateTimeFormat('es', { day: 'numeric', month: 'short' }).format(new Date(`${iso}T00:00:00`))
   } catch {
     return iso
   }

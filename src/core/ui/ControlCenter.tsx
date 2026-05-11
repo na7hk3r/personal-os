@@ -28,7 +28,9 @@ import {
 import {
   DEFAULT_FINANCE_SETTINGS,
   FINANCE_SETTINGS_KEY,
+  formatExchangeRatesText,
   normalizeFinanceSettings,
+  parseExchangeRatesText,
   saveFinanceSettings,
   type FinancePluginSettings,
 } from '@plugins/finance/settings'
@@ -469,7 +471,7 @@ export function ControlCenter() {
         </div>
       </section>
 
-      <nav className="sticky top-4 z-20 rounded-2xl border border-border bg-surface-light/95 px-3 py-2 shadow-lg backdrop-blur">
+      <nav className="rounded-2xl border border-border bg-surface-light/95 px-3 py-2 shadow-lg backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           {[
             ['profile', 'Cuenta'],
@@ -942,6 +944,12 @@ export function ControlCenter() {
                   />
                 </label>
 
+                <ExchangeRatesEditor
+                  baseCurrency={financeSettings.defaultCurrency}
+                  rates={financeSettings.exchangeRates}
+                  onChange={(exchangeRates) => setFinanceSettings((prev) => ({ ...prev, exchangeRates }))}
+                />
+
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <FinanceToggle
                     label="Presupuestos"
@@ -1223,6 +1231,38 @@ function AuditHeaderBadge() {
       <ShieldAlert size={12} />
       {errorCount > 0 ? `${errorCount} error${errorCount === 1 ? '' : 'es'}` : `${warnCount} aviso${warnCount === 1 ? '' : 's'}`}
     </span>
+  )
+}
+
+function ExchangeRatesEditor({
+  baseCurrency,
+  rates,
+  onChange,
+}: {
+  baseCurrency: string
+  rates: Record<string, number>
+  onChange: (rates: Record<string, number>) => void
+}) {
+  const [draft, setDraft] = useState(() => formatExchangeRatesText(rates))
+
+  useEffect(() => {
+    setDraft(formatExchangeRatesText(rates))
+  }, [rates])
+
+  return (
+    <label className="mt-3 block space-y-1">
+      <span className="text-xs text-muted">Tasas manuales hacia {baseCurrency}</span>
+      <input
+        value={draft}
+        onChange={(event) => setDraft(event.target.value)}
+        onBlur={() => onChange(parseExchangeRatesText(draft, baseCurrency))}
+        placeholder={`USD=40, EUR=43 (${baseCurrency})`}
+        className="w-full rounded-lg border border-border bg-surface-light px-3 py-2 text-sm"
+      />
+      <span className="block text-caption text-muted">
+        Formato: USD=40 significa 1 USD = 40 {baseCurrency}. Separar con coma, punto y coma o salto de linea.
+      </span>
+    </label>
   )
 }
 

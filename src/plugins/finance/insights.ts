@@ -68,22 +68,23 @@ async function fetchSummaryRaw(start: Date, end: Date): Promise<{
 }> {
   const startISO = formatLocalDate(start)
   const endISO = formatLocalDate(end)
+  const currency = useFinanceStore.getState().settings.defaultCurrency
   const inc = await storageAPI.query<{ total: number }>(
-    `SELECT COALESCE(SUM(amount), 0) as total FROM finance_transactions
-      WHERE kind = 'income' AND occurred_at BETWEEN ? AND ?`,
-    [startISO, endISO],
+    `SELECT COALESCE(SUM(COALESCE(base_amount, amount)), 0) as total FROM finance_transactions
+      WHERE kind = 'income' AND occurred_at BETWEEN ? AND ? AND COALESCE(base_currency, currency) = ?`,
+    [startISO, endISO, currency],
   )
   const exp = await storageAPI.query<{ total: number }>(
-    `SELECT COALESCE(SUM(amount), 0) as total FROM finance_transactions
-      WHERE kind = 'expense' AND occurred_at BETWEEN ? AND ?`,
-    [startISO, endISO],
+    `SELECT COALESCE(SUM(COALESCE(base_amount, amount)), 0) as total FROM finance_transactions
+      WHERE kind = 'expense' AND occurred_at BETWEEN ? AND ? AND COALESCE(base_currency, currency) = ?`,
+    [startISO, endISO, currency],
   )
   const cats = await storageAPI.query<{ categoryId: string | null; total: number }>(
-    `SELECT category_id as categoryId, SUM(amount) as total
+    `SELECT category_id as categoryId, SUM(COALESCE(base_amount, amount)) as total
        FROM finance_transactions
-      WHERE kind = 'expense' AND occurred_at BETWEEN ? AND ?
+      WHERE kind = 'expense' AND occurred_at BETWEEN ? AND ? AND COALESCE(base_currency, currency) = ?
       GROUP BY category_id`,
-    [startISO, endISO],
+    [startISO, endISO, currency],
   )
   const byCategory = new Map<string, number>()
   for (const c of cats) {
@@ -93,7 +94,7 @@ async function fetchSummaryRaw(start: Date, end: Date): Promise<{
 }
 
 export async function generateMonthlySummary(opts?: { withAI?: boolean; previous?: boolean }): Promise<MonthSummary> {
-  const { categories, accounts } = useFinanceStore.getState()
+  const { categories, settings } = useFinanceStore.getState()
   const range = opts?.previous
     ? previousMonth()
     : { start: startOfMonth(), end: endOfMonth() }
@@ -117,7 +118,6 @@ export async function generateMonthlySummary(opts?: { withAI?: boolean; previous
   }
   deltas.sort((a, b) => Math.abs(b.deltaPct) - Math.abs(a.deltaPct))
 
-  const currency = accounts[0]?.currency ?? 'UYU'
   const summary: MonthSummary = {
     monthLabel: describeMonth(range.start),
     incomeCents: current.income,
@@ -125,7 +125,7 @@ export async function generateMonthlySummary(opts?: { withAI?: boolean; previous
     netCents: current.income - current.expense,
     topCategories: top,
     topDeltaCategories: deltas.slice(0, 3),
-    currency,
+    currency: settings.defaultCurrency,
     narrative: null,
   }
 
